@@ -1,0 +1,893 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Prisma Client generator - using default location for Vercel compatibility
+generator client {
+  provider = "prisma-client-js"
+  // Using default output location (node_modules/.prisma/client)
+}
+
+// Define database connection via the `DATABASE_URL` env var
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // Enable connection pooling for Prisma Accelerate (optional for local dev)
+  // directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// User model for authentication and team management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String   // Full name (computed from firstName + lastName)
+  firstName String   @default("") @map("firstName") // Added for better name management
+  lastName  String   @default("") @map("lastName") // Added for better name management
+  role      UserRole @default(RESEARCH_MEMBER)
+  avatar    String?  // Avatar color from palette (fallback)
+  avatarUrl String?  @map("avatarUrl") // URL to avatar image (PNG/JPG)
+  avatarImage Bytes? @map("avatarImage") // Optional: store image data directly
+  initials  String   // Auto-generated from firstName + lastName
+  capacity  Int      @default(40) // Hours per week capacity
+  expertise String[] // Array of expertise areas
+  isActive  Boolean  @default(true) @map("isActive") // Soft delete support
+  metadata  Json?    // Flexible JSONB field for additional data
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+
+  // Relations
+  labs             LabMember[]
+  createdProjects  Project[]     @relation("ProjectCreator")
+  projectMembers   ProjectMember[]
+  createdTasks     Task[]      @relation("TaskCreator")
+  completedTasks   Task[]      @relation("TaskCompleter")
+  assignedTasks    TaskAssignee[]
+  createdIdeas     Idea[]
+  ideaVotes        IdeaVote[]
+  ideaComments     IdeaComment[]
+  createdDeadlines Deadline[]
+  deadlineAssignees DeadlineAssignee[]
+  standupParticipants StandupParticipant[]
+  projectComments   ProjectComment[]
+  taskComments      TaskComment[]
+  uploadedAttachments Attachment[]
+  automationRules   AutomationRule[]
+  notifications     Notification[]
+  viewConfigurations ViewConfiguration[]
+  presence          UserPresence[]
+  actionItems      ActionItem[]
+  sentEmails       EmailLog[]
+}
+
+enum UserRole {
+  PRINCIPAL_INVESTIGATOR
+  CO_PRINCIPAL_INVESTIGATOR
+  RESEARCH_MEMBER
+  LAB_ADMINISTRATOR
+  EXTERNAL_COLLABORATOR
+}
+
+// Lab model for multi-lab management
+model Lab {
+  id          String   @id @default(cuid())
+  name        String
+  shortName   String   @unique @map("shortName") // e.g., "RHEDAS", "RICCC"
+  description String?
+  logo        String?
+  isActive    Boolean  @default(true) @map("isActive") // Soft delete support
+  createdAt   DateTime @default(now()) @map("createdAt")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
+
+  // Relations
+  members  LabMember[]
+  projects Project[]
+  buckets  Bucket[]
+  ideas    Idea[]
+  standups Standup[]
+  deadlines Deadline[]
+  customFields CustomField[]
+  viewConfigurations ViewConfiguration[]
+  automationRules AutomationRule[]
+}
+
+model LabMember {
+  id        String   @id @default(cuid())
+  userId    String   @map("userId")
+  labId     String   @map("labId")
+  isAdmin   Boolean  @default(false) @map("isAdmin")
+  isActive  Boolean  @default(true) @map("isActive") // Soft delete support
+  joinedAt  DateTime @default(now()) @map("joinedAt")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lab  Lab  @relation(fields: [labId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, labId])
+}
+
+// Project model (renamed from Study for clarity)
+model Project {
+  id                    String       @id @default(cuid())
+  parentId              String?      @map("parentId") // For sub-projects
+  parent                Project?     @relation("ProjectHierarchy", fields: [parentId], references: [id])
+  children              Project[]    @relation("ProjectHierarchy")
+  name                  String       // Renamed from title for consistency
+  description           String?      @db.Text // Project description
+  oraNumber             String?      @unique @map("oraNumber") // Auto-generated ORA-YYYY-NNN
+  status                ProjectStatus @default(PLANNING)
+  priority              Priority     @default(MEDIUM)
+  projectType           String       @map("projectType") // Renamed from studyType
+  studyType             String?      @map("studyType") // Research-specific field
+  fundingSource         FundingSource? @map("fundingSource")
+  fundingDetails        String?      @map("fundingDetails")
+  externalCollaborators String?      @map("externalCollaborators")
+  startDate             DateTime?    @map("startDate") // Added for better timeline tracking
+  dueDate               DateTime?    @map("dueDate")
+  completedDate         DateTime?    @map("completedDate") // Added for completion tracking
+  notes                 String?      @db.Text // Better for long text
+  protocolLink          String?      @map("protocolLink") // Research protocol link
+  dataLink              String?      @map("dataLink") // Data repository link
+  progress              Int          @default(0)
+  position              Int          @default(0) // Position within bucket for kanban
+  isActive              Boolean      @default(true) @map("isActive") // Soft delete support
+  metadata              Json?        // JSONB field for flexible data
+  createdAt             DateTime     @default(now()) @map("createdAt")
+  updatedAt             DateTime     @updatedAt @map("updatedAt")
+
+  // Relations
+  labId      String           @map("labId")
+  lab        Lab              @relation(fields: [labId], references: [id], onDelete: Cascade)
+  bucketId   String           @map("bucketId")
+  bucket     Bucket           @relation(fields: [bucketId], references: [id])
+  createdById String          @map("createdById")
+  createdBy  User             @relation("ProjectCreator", fields: [createdById], references: [id])
+  members    ProjectMember[]  // Enhanced from assignees
+  tasks      Task[]
+  ideas      Idea[]
+  relatedIdeas IdeaStudyRelation[]
+  deadlines  Deadline[]
+  comments   ProjectComment[]
+  
+  @@index([labId, status])
+  @@index([oraNumber])
+  @@index([bucketId])
+  @@index([bucketId, position]) // Kanban ordering index
+}
+
+// Enhanced project member model with RACI-like roles
+model ProjectMember {
+  id         String       @id @default(cuid())
+  projectId  String       @map("projectId")
+  userId     String       @map("userId")
+  role       MemberRole   @default(CONTRIBUTOR) // RACI-like role
+  allocation Int          @default(20) // Percentage allocation
+  isActive   Boolean      @default(true) @map("isActive") // Soft delete support
+  joinedAt   DateTime     @default(now()) @map("joinedAt")
+  
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectId, userId])
+  @@index([userId, role])
+}
+
+enum MemberRole {
+  RESPONSIBLE  // R - Does the work
+  ACCOUNTABLE  // A - Ultimately answerable
+  CONSULTED    // C - Two-way communication
+  INFORMED     // I - One-way communication
+  CONTRIBUTOR  // Additional: General contributor
+}
+
+enum ProjectStatus {
+  PLANNING
+  IRB_SUBMISSION
+  IRB_APPROVED
+  DATA_COLLECTION
+  ANALYSIS
+  MANUSCRIPT
+  UNDER_REVIEW
+  PUBLISHED
+  ON_HOLD
+  CANCELLED
+  ARCHIVED  // Added for better lifecycle management
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum FundingSource {
+  NIH
+  NSF
+  INDUSTRY_SPONSORED
+  INTERNAL
+  FOUNDATION
+  OTHER
+}
+
+// Bucket model for organizing studies
+model Bucket {
+  id          String   @id @default(cuid())
+  name        String   // Renamed from title for consistency
+  description String?
+  color       String   @default("#8B5CF6") // Updated to match UI theme
+  icon        String   @default("folder") // Icon for bucket display
+  position    Int      @default(0) // Renamed from order for kanban support
+  isActive    Boolean  @default(true) @map("isActive") // Soft delete support
+  createdAt   DateTime @default(now()) @map("createdAt")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
+
+  // Relations
+  labId    String   @map("labId")
+  lab      Lab      @relation(fields: [labId], references: [id], onDelete: Cascade)
+  projects Project[]
+  
+  @@unique([labId, name]) // Unique bucket names per lab
+  @@index([labId, position]) // Kanban column ordering index
+}
+
+// Task model for task management with subtask support
+model Task {
+  id             String     @id @default(cuid())
+  parentTaskId   String?    @map("parentTaskId") // For subtasks
+  parent         Task?      @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
+  subtasks       Task[]     @relation("TaskHierarchy")
+  title          String
+  description    String?    @db.Text
+  status         TaskStatus @default(TODO)
+  priority       Priority   @default(MEDIUM)
+  estimatedHours Float?     @map("estimatedHours") // Added for capacity planning
+  actualHours    Float?     @map("actualHours") // Added for tracking
+  dueDate        DateTime?  @map("dueDate")
+  startDate      DateTime?  @map("startDate") // Added for better timeline
+  completedAt    DateTime?  @map("completedAt")
+  position       Int        @default(0) // Position within project/parent task
+  tags           String[]   @default([]) // Flexible tagging system
+  isActive       Boolean    @default(true) @map("isActive") // Soft delete support
+  metadata       Json?      // JSONB for flexible data
+  createdAt      DateTime   @default(now()) @map("createdAt")
+  updatedAt      DateTime   @updatedAt @map("updatedAt")
+
+  // Relations
+  projectId     String           @map("projectId") // MUST belong to a project (strict hierarchy)
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdById   String           @map("createdById")
+  createdBy     User             @relation("TaskCreator", fields: [createdById], references: [id])
+  completedById String?          @map("completedById") // Who completed the task
+  completedBy   User?            @relation("TaskCompleter", fields: [completedById], references: [id])
+  assignees     TaskAssignee[]
+  dependencies  TaskDependency[] @relation("DependentTask")
+  dependents    TaskDependency[] @relation("DependsOnTask")
+  comments      TaskComment[]
+  
+  @@index([projectId, status])
+  @@index([projectId, position]) // Kanban ordering within project
+  @@index([parentTaskId, position]) // Subtask ordering
+  @@index([dueDate])
+}
+
+model TaskAssignee {
+  id         String   @id @default(cuid())
+  taskId     String   @map("taskId")
+  userId     String   @map("userId")
+  isActive   Boolean  @default(true) @map("isActive") // Soft delete support
+  assignedAt DateTime @default(now()) @map("assignedAt")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  BLOCKED
+}
+
+// Task dependency model for project management
+model TaskDependency {
+  id              String @id @default(cuid())
+  dependentTaskId String @map("dependentTaskId")
+  dependsOnTaskId String @map("dependsOnTaskId")
+  
+  dependentTask Task @relation("DependentTask", fields: [dependentTaskId], references: [id], onDelete: Cascade)
+  dependsOnTask Task @relation("DependsOnTask", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+  
+  @@unique([dependentTaskId, dependsOnTaskId])
+  @@index([dependsOnTaskId])
+}
+
+// Idea model for research ideation
+model Idea {
+  id                    String        @id @default(cuid())
+  title                 String
+  description           String        @db.Text
+  category              IdeaCategory  @default(RESEARCH_QUESTION)
+  priority              Priority      @default(MEDIUM)
+  status                IdeaStatus    @default(ACTIVE)
+  stage                 IdeaStage     @default(CONCEPT)
+  feasibilityScore      Int?          @map("feasibilityScore")
+  impactScore           Int?          @map("impactScore")
+  resourceRequirement   ResourceLevel @default(MEDIUM)
+  estimatedDuration     String?       @map("estimatedDuration")
+  requiredSkills        String[]      @default([])
+  potentialCollaborators String[]     @default([])
+  tags                  String[]      @default([])
+  attachments           Json[]        @default([])
+  voteScore             Int           @default(0) @map("voteScore")
+  isActive              Boolean       @default(true) @map("isActive") // Soft delete support
+  createdAt             DateTime      @default(now()) @map("createdAt")
+  updatedAt             DateTime      @updatedAt @map("updatedAt")
+
+  // Relations
+  labId                String            @map("labId")
+  lab                  Lab               @relation(fields: [labId], references: [id], onDelete: Cascade)
+  createdById          String            @map("createdById")
+  createdBy            User              @relation(fields: [createdById], references: [id])
+  votes                IdeaVote[]
+  comments             IdeaComment[]
+  relatedStudies       IdeaStudyRelation[]
+  convertedToProjectId String?           @unique @map("convertedToProjectId")
+  convertedToProject   Project?          @relation(fields: [convertedToProjectId], references: [id], onDelete: SetNull)
+  
+  @@index([labId, status])
+  @@index([voteScore])
+  @@index([createdAt])
+}
+
+model IdeaVote {
+  id       String   @id @default(cuid())
+  ideaId   String   @map("ideaId")
+  userId   String   @map("userId")
+  voteType VoteType @map("voteType")
+  votedAt  DateTime @default(now()) @map("votedAt")
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+}
+
+model IdeaComment {
+  id        String   @id @default(cuid())
+  ideaId    String   @map("ideaId")
+  userId    String   @map("userId")
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([ideaId, createdAt])
+}
+
+model IdeaStudyRelation {
+  id        String @id @default(cuid())
+  ideaId    String @map("ideaId")
+  projectId String @map("projectId")
+
+  idea    Idea    @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([ideaId, projectId])
+}
+
+enum IdeaCategory {
+  RESEARCH_QUESTION
+  METHOD_IMPROVEMENT
+  COLLABORATION
+  GRANT_OPPORTUNITY
+  TECHNOLOGY
+  OTHER
+}
+
+enum IdeaStatus {
+  ACTIVE
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  CONVERTED
+  ARCHIVED
+}
+
+enum IdeaStage {
+  CONCEPT
+  EVALUATION
+  PLANNING
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
+
+enum ResourceLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// Standup model for meeting capture
+model Standup {
+  id         String   @id @default(cuid())
+  date       DateTime
+  audioUrl   String?  @map("audioUrl")
+  isActive   Boolean  @default(true) @map("isActive") // Soft delete support
+  createdAt  DateTime @default(now()) @map("createdAt")
+  updatedAt  DateTime @updatedAt @map("updatedAt")
+
+  // Relations
+  labId             String               @map("labId")
+  lab               Lab                  @relation(fields: [labId], references: [id], onDelete: Cascade)
+  participants      StandupParticipant[]
+  actionItems       ActionItem[]
+  blockers          Blocker[]
+  decisions         Decision[]
+  transcriptArchive TranscriptArchive?
+  emailLogs         EmailLog[]
+}
+
+model StandupParticipant {
+  id        String @id @default(cuid())
+  standupId String @map("standupId")
+  userId    String @map("userId")
+
+  standup Standup @relation(fields: [standupId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([standupId, userId])
+}
+
+model ActionItem {
+  id          String    @id @default(cuid())
+  description String    @db.Text
+  completed   Boolean   @default(false)
+  dueDate     DateTime? @map("dueDate")
+  isActive    Boolean   @default(true) @map("isActive") // Soft delete support
+  createdAt   DateTime  @default(now()) @map("createdAt")
+
+  // Relations
+  standupId  String  @map("standupId")
+  standup    Standup @relation(fields: [standupId], references: [id], onDelete: Cascade)
+  assigneeId String? @map("assigneeId")
+  assignee   User?   @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+}
+
+model Blocker {
+  id          String  @id @default(cuid())
+  description String  @db.Text
+  resolved    Boolean @default(false)
+  isActive    Boolean @default(true) @map("isActive") // Soft delete support
+
+  // Relations
+  standupId String  @map("standupId")
+  standup   Standup @relation(fields: [standupId], references: [id], onDelete: Cascade)
+}
+
+model Decision {
+  id          String  @id @default(cuid())
+  description String  @db.Text
+  isActive    Boolean @default(true) @map("isActive") // Soft delete support
+
+  // Relations
+  standupId String  @map("standupId")
+  standup   Standup @relation(fields: [standupId], references: [id], onDelete: Cascade)
+}
+
+// Transcript Archive model for 30-day retention
+model TranscriptArchive {
+  id         String   @id @default(cuid())
+  standupId  String   @unique @map("standupId")
+  transcript String   @db.Text
+  audioUrl   String?  @map("audioUrl")
+  wordCount  Int      @default(0)
+  duration   Int?     // Recording duration in seconds
+  language   String   @default("en")
+  expiresAt  DateTime // Set to createdAt + 30 days
+  createdAt  DateTime @default(now()) @map("createdAt")
+  updatedAt  DateTime @updatedAt @map("updatedAt")
+  
+  // Relations
+  standup    Standup  @relation(fields: [standupId], references: [id], onDelete: Cascade)
+  
+  @@index([expiresAt]) // For efficient cleanup queries
+  @@index([standupId])
+}
+
+// Email log model for tracking sent emails
+model EmailLog {
+  id          String      @id @default(cuid())
+  standupId   String      @map("standupId")
+  recipients  String[]    // Array of email addresses
+  subject     String
+  sentAt      DateTime    @default(now()) @map("sentAt")
+  sentById    String      @map("sentById") // User ID who sent
+  status      EmailStatus @default(SENT)
+  metadata    Json?       // Additional metadata (resendId, etc.)
+  
+  // Relations
+  standup     Standup     @relation(fields: [standupId], references: [id], onDelete: Cascade)
+  sentBy      User        @relation(fields: [sentById], references: [id])
+  
+  @@index([standupId])
+  @@index([sentById])
+}
+
+enum EmailStatus {
+  SENT
+  FAILED
+  SCHEDULED
+  DRAFT
+}
+
+// Activity log for audit trail
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String   @map("userId") // Who performed the action
+  labId      String?  @map("labId") // Lab context
+  entityType String   @map("entityType") // Type of entity (project, task, user, etc.)
+  entityId   String   @map("entityId") // ID of the entity
+  action     String   // Action performed (created, updated, deleted, etc.)
+  metadata   Json?    // Additional context data
+  createdAt  DateTime @default(now()) @map("createdAt")
+  
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+  @@index([labId, createdAt])
+}
+
+// Deadline model for tracking important dates and milestones
+model Deadline {
+  id               String         @id @default(cuid())
+  title            String
+  description      String?        @db.Text
+  dueDate          DateTime       @map("dueDate")
+  type             DeadlineType   @default(MILESTONE)
+  priority         Priority       @default(MEDIUM)
+  status           DeadlineStatus @default(UPCOMING)
+  isRecurring      Boolean        @default(false) @map("isRecurring")
+  recurringPattern RecurringPattern?
+  recurringEndDate DateTime?      @map("recurringEndDate")
+  reminderDays     Int[]          @default([7, 3, 1]) @map("reminderDays")
+  isActive         Boolean        @default(true) @map("isActive")
+  createdAt        DateTime       @default(now()) @map("createdAt")
+  updatedAt        DateTime       @updatedAt @map("updatedAt")
+
+  // Relations
+  projectId   String?             @map("projectId")
+  project     Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  labId       String?             @map("labId")
+  lab         Lab?                @relation(fields: [labId], references: [id], onDelete: SetNull)
+  createdById String              @map("createdById")
+  createdBy   User                @relation(fields: [createdById], references: [id])
+  assignees   DeadlineAssignee[]
+  reminders   DeadlineReminder[]
+
+  @@index([dueDate])
+  @@index([labId, dueDate])
+  @@index([projectId, dueDate])
+  @@index([status, dueDate])
+}
+
+model DeadlineAssignee {
+  id         String   @id @default(cuid())
+  deadlineId String   @map("deadlineId")
+  userId     String   @map("userId")
+  assignedAt DateTime @default(now()) @map("assignedAt")
+
+  deadline Deadline @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([deadlineId, userId])
+}
+
+model DeadlineReminder {
+  id            String         @id @default(cuid())
+  deadlineId    String         @map("deadlineId")
+  scheduledDate DateTime       @map("scheduledDate")
+  daysBefore    Int            @map("daysBefore")
+  status        ReminderStatus @default(PENDING)
+  sentAt        DateTime?      @map("sentAt")
+
+  deadline Deadline @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
+
+  @@index([scheduledDate, status])
+  @@index([deadlineId])
+}
+
+enum DeadlineType {
+  IRB_RENEWAL
+  GRANT_SUBMISSION
+  PAPER_DEADLINE
+  CONFERENCE_ABSTRACT
+  MILESTONE
+  MEETING
+  OTHER
+}
+
+enum DeadlineStatus {
+  UPCOMING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+  CANCELLED
+}
+
+enum RecurringPattern {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum ReminderStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+// ========================================
+// AIRTABLE/MONDAY.COM-LIKE FEATURES
+// ========================================
+
+// Comments system for projects and tasks
+model ProjectComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  projectId String   @map("projectId")
+  userId    String   @map("userId")
+  parentId  String?  @map("parentId") // For threaded comments
+  
+  // Mentions support
+  mentions  String[] @default([]) // Array of userIds mentioned
+  
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+  editedAt  DateTime? @map("editedAt")
+  
+  // Relations
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  parent    ProjectComment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   ProjectComment[] @relation("CommentReplies")
+  
+  @@index([projectId, createdAt])
+  @@index([userId])
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  taskId    String   @map("taskId")
+  userId    String   @map("userId")
+  parentId  String?  @map("parentId") // For threaded comments
+  
+  // Mentions support
+  mentions  String[] @default([]) // Array of userIds mentioned
+  
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+  editedAt  DateTime? @map("editedAt")
+  
+  // Relations
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  parent    TaskComment? @relation("TaskCommentReplies", fields: [parentId], references: [id])
+  replies   TaskComment[] @relation("TaskCommentReplies")
+  
+  @@index([taskId, createdAt])
+  @@index([userId])
+}
+
+// File attachments system
+model Attachment {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int      // Size in bytes
+  url         String
+  thumbnailUrl String?  // For images/videos
+  
+  // Polymorphic relations
+  entityType  String   // 'project', 'task', 'comment', etc.
+  entityId    String
+  
+  uploadedById String  @map("uploadedById")
+  uploadedAt   DateTime @default(now()) @map("uploadedAt")
+  
+  // Relations
+  uploadedBy  User @relation(fields: [uploadedById], references: [id])
+  
+  @@index([entityType, entityId])
+  @@index([uploadedById])
+}
+
+// Custom fields for flexible data structure (like Airtable)
+model CustomField {
+  id          String        @id @default(cuid())
+  name        String
+  fieldType   CustomFieldType
+  entityType  String        // 'project', 'task', etc.
+  labId       String        @map("labId")
+  
+  // Field configuration
+  options     Json?         // For select/multi-select options
+  defaultValue Json?
+  isRequired  Boolean       @default(false)
+  order       Int           @default(0)
+  
+  createdAt   DateTime      @default(now()) @map("createdAt")
+  updatedAt   DateTime      @updatedAt @map("updatedAt")
+  
+  // Relations
+  lab         Lab           @relation(fields: [labId], references: [id])
+  values      CustomFieldValue[]
+  
+  @@unique([labId, entityType, name])
+  @@index([entityType])
+}
+
+enum CustomFieldType {
+  TEXT
+  NUMBER
+  DATE
+  SELECT
+  MULTI_SELECT
+  CHECKBOX
+  URL
+  EMAIL
+  PHONE
+  FORMULA
+  LOOKUP
+  ROLLUP
+}
+
+model CustomFieldValue {
+  id          String   @id @default(cuid())
+  fieldId     String   @map("fieldId")
+  entityId    String   // ID of the project/task/etc
+  value       Json     // Flexible JSON value
+  
+  createdAt   DateTime @default(now()) @map("createdAt")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
+  
+  // Relations
+  field       CustomField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  
+  @@unique([fieldId, entityId])
+  @@index([entityId])
+}
+
+// View configurations (like Monday.com views)
+model ViewConfiguration {
+  id          String   @id @default(cuid())
+  name        String
+  viewType    ViewType
+  entityType  String   // 'project', 'task', etc.
+  userId      String   @map("userId")
+  labId       String   @map("labId")
+  
+  // View configuration
+  config      Json     // Columns, filters, sorting, grouping, etc.
+  isDefault   Boolean  @default(false)
+  isShared    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now()) @map("createdAt")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+  lab         Lab      @relation(fields: [labId], references: [id])
+  
+  @@index([userId, entityType])
+  @@index([labId, entityType])
+}
+
+enum ViewType {
+  KANBAN
+  TABLE
+  TIMELINE
+  CALENDAR
+  GANTT
+  FORM
+  GALLERY
+  MAP
+}
+
+// Automation rules (like Monday.com automations)
+model AutomationRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  labId       String   @map("labId")
+  
+  // Trigger configuration
+  triggerType String   // 'status_change', 'date_arrived', 'item_created', etc.
+  triggerConfig Json
+  
+  // Action configuration
+  actionType  String   // 'assign_user', 'send_notification', 'update_field', etc.
+  actionConfig Json
+  
+  // Conditions
+  conditions  Json?    // Optional conditions for the automation
+  
+  isActive    Boolean  @default(true)
+  createdById String   @map("createdById")
+  createdAt   DateTime @default(now()) @map("createdAt")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
+  
+  // Relations
+  lab         Lab      @relation(fields: [labId], references: [id])
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  
+  @@index([labId, isActive])
+}
+
+// Enhanced notifications system
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String           @map("userId")
+  type        NotificationType
+  title       String
+  message     String?
+  
+  // Related entity
+  entityType  String?          // 'project', 'task', 'comment', etc.
+  entityId    String?
+  
+  // Notification metadata
+  metadata    Json?            // Additional context data
+  
+  isRead      Boolean          @default(false)
+  readAt      DateTime?
+  
+  createdAt   DateTime         @default(now()) @map("createdAt")
+  
+  // Relations
+  user        User             @relation(fields: [userId], references: [id])
+  
+  @@index([userId, isRead, createdAt])
+  @@index([entityType, entityId])
+}
+
+enum NotificationType {
+  MENTION
+  ASSIGNMENT
+  COMMENT
+  STATUS_CHANGE
+  DUE_DATE_REMINDER
+  DEADLINE_APPROACHING
+  TASK_COMPLETED
+  PROJECT_UPDATE
+  SYSTEM_ALERT
+}
+
+// User presence for real-time collaboration
+model UserPresence {
+  id          String   @id @default(cuid())
+  userId      String   @map("userId")
+  entityType  String   // What they're viewing
+  entityId    String
+  
+  lastSeenAt  DateTime @default(now()) @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, entityType, entityId])
+  @@index([entityType, entityId])
+}
