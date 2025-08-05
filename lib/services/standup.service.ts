@@ -1,11 +1,8 @@
-import { PrismaClient, Prisma } from '@prisma/client';
-import { withAccelerate } from '@prisma/extension-accelerate';
+import { Prisma } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import OpenAIService from './openai.service';
 import AudioUploadService from './audio-upload.service';
 import TranscriptArchiveService from './transcript-archive.service';
-
-// Initialize Prisma with Accelerate
-const prisma = new PrismaClient().$extends(withAccelerate());
 
 export interface CreateStandupInput {
   labId: string;

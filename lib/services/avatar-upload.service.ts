@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-import { withAccelerate } from '@prisma/extension-accelerate'
+import { prisma } from '@/lib/prisma'
 import sharp from 'sharp'
 import path from 'path'
 import fs from 'fs'
@@ -7,9 +6,6 @@ import { promisify } from 'util'
 
 const writeFile = promisify(fs.writeFile)
 const mkdir = promisify(fs.mkdir)
-
-// Initialize Prisma with Accelerate
-const prisma = new PrismaClient().$extends(withAccelerate())
 
 export interface AvatarUploadOptions {
   quality?: number // JPEG quality (1-100)

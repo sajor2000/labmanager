@@ -1,15 +1,11 @@
 import { Resend } from 'resend';
 import { StandupMeetingNotesEmail } from '@/emails/standup-meeting-notes';
-import { PrismaClient } from '@prisma/client';
-import { withAccelerate } from '@prisma/extension-accelerate';
+import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
 import { z } from 'zod';
 
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-// Initialize Prisma
-const prisma = new PrismaClient().$extends(withAccelerate());
 
 // Email validation schema
 const EmailRecipientSchema = z.object({

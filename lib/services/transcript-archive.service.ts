@@ -1,9 +1,6 @@
-import { PrismaClient, Prisma } from '@prisma/client';
-import { withAccelerate } from '@prisma/extension-accelerate';
+import { Prisma } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { addDays } from 'date-fns';
-
-// Initialize Prisma with Accelerate
-const prisma = new PrismaClient().$extends(withAccelerate());
 
 export interface CreateTranscriptArchiveInput {
   standupId: string;

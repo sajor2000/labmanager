@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-import { withAccelerate } from '@prisma/extension-accelerate';
+import { prisma } from '@/lib/prisma';
 import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
@@ -7,9 +6,6 @@ import { promisify } from 'util';
 const writeFile = promisify(fs.writeFile);
 const mkdir = promisify(fs.mkdir);
 const unlink = promisify(fs.unlink);
-
-// Initialize Prisma with Accelerate
-const prisma = new PrismaClient().$extends(withAccelerate());
 
 export interface AudioUploadOptions {
   maxSize?: number; // Max file size in bytes
