@@ -1,302 +1,484 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { TeamHeader } from '@/components/team/team-header';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useLab } from '@/lib/contexts/lab-context';
+import { TeamPageSkeleton } from '@/components/skeletons';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  AlertCircle, Plus, Search, Users, UserCheck, 
+  Activity, Award, Grid3x3, List, BarChart3 
+} from 'lucide-react';
+import { 
+  useTeamMembers, 
+  useCreateTeamMember, 
+  useUpdateTeamMember, 
+  useDeleteTeamMember,
+  useTeamMetrics 
+} from '@/hooks/use-api';
+import { debounce } from 'lodash';
+import type { TeamMemberFilters, CreateTeamMemberPayload, UpdateTeamMemberPayload } from '@/types/team';
 import { TeamMemberCard } from '@/components/team/team-member-card';
+import { TeamMemberTable } from '@/components/team/team-member-table';
 import { TeamWorkloadView } from '@/components/team/team-workload-view';
 import { TeamMemberDialog } from '@/components/team/team-member-dialog';
-import { showToast } from '@/components/ui/toast';
-import { api } from '@/lib/utils/enhanced-api-client';
-import { useLab } from '@/lib/contexts/lab-context';
-import type { User as PrismaUser } from '@prisma/client';
-import type { User } from '@/types';
+import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
-// Enhanced team member interface with workload metrics
-interface TeamMemberWithMetrics extends User {
-  taskCount: number;
-  completedTasks: number;
-  activeProjects: number;
-  workload: number;
-  upcomingDeadlines: number;
-  // For form compatibility
-  firstName?: string;
-  lastName?: string;
-}
+type ViewMode = 'grid' | 'list' | 'workload';
+type TabValue = 'all' | 'active' | 'inactive';
 
 export default function TeamPage() {
   const { currentLab, isLoading: labLoading } = useLab();
-  const [members, setMembers] = useState<TeamMemberWithMetrics[]>([]);
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'workload'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showAddMemberForm, setShowAddMemberForm] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedMember, setSelectedMember] = useState<TeamMemberWithMetrics | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
-  // Filter members based on search
-  const filteredMembers = members.filter(member => 
-    member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    member.expertise?.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()))
+  // State
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [filters, setFilters] = useState<TeamMemberFilters>({
+    searchTerm: '',
+    role: undefined,
+    department: undefined,
+    status: 'active',
+  });
+  const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabValue>('active');
+
+  // React Query hooks
+  const { 
+    data: members = [], 
+    isLoading: membersLoading, 
+    error: membersError,
+    refetch: refetchMembers 
+  } = useTeamMembers(currentLab?.id, filters);
+  
+  const { data: metrics } = useTeamMetrics(currentLab?.id);
+  
+  const createMutation = useCreateTeamMember();
+  const updateMutation = useUpdateTeamMember();
+  const deleteMutation = useDeleteTeamMember();
+
+  // Computed values
+  const membersByDepartment = useMemo(() => {
+    const grouped = members.reduce((acc, member) => {
+      const dept = member.department || 'Other';
+      if (!acc[dept]) acc[dept] = [];
+      acc[dept].push(member);
+      return acc;
+    }, {} as Record<string, typeof members>);
+    return grouped;
+  }, [members]);
+
+  const workloadStats = useMemo(() => {
+    if (members.length === 0) return { overloaded: 0, optimal: 0, underutilized: 0, avgWorkload: 0 };
+    
+    const overloaded = members.filter(m => (m.workload || 0) > 80).length;
+    const optimal = members.filter(m => (m.workload || 0) >= 40 && (m.workload || 0) <= 80).length;
+    const underutilized = members.filter(m => (m.workload || 0) < 40).length;
+    const avgWorkload = members.reduce((sum, m) => sum + (m.workload || 0), 0) / members.length;
+    
+    return { overloaded, optimal, underutilized, avgWorkload };
+  }, [members]);
+
+  // Debounced search
+  const debouncedSearch = useMemo(
+    () => debounce((value: string) => {
+      setFilters(prev => ({ ...prev, searchTerm: value }));
+    }, 300),
+    []
   );
-  
-  // Fetch team members when lab changes
+
+  // Keyboard shortcuts
   useEffect(() => {
-    if (!currentLab || labLoading) return;
-    fetchMembers();
-  }, [currentLab, labLoading]);
-  
-  const handleAddMember = () => {
-    setSelectedMember(null);
-    setIsDialogOpen(true);
-  };
-  
-  const handleEditMember = (memberId: string) => {
-    const member = members.find(m => m.id === memberId);
-    if (member) {
-      // Parse name into firstName and lastName for the form
-      const nameParts = member.name.split(' ');
-      const memberWithParsedName = {
-        ...member,
-        firstName: nameParts[0] || '',
-        lastName: nameParts.slice(1).join(' ') || ''
-      };
-      setSelectedMember(memberWithParsedName);
-      setIsDialogOpen(true);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '/' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setCreateDialogOpen(true);
+      }
+      if (e.key === 'Escape' && selectedMember) {
+        setSelectedMember(null);
+      }
+      // View mode shortcuts
+      if (e.key === '1' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setViewMode('grid');
+      }
+      if (e.key === '2' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setViewMode('list');
+      }
+      if (e.key === '3' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setViewMode('workload');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedMember]);
+
+  // Handlers
+  const handleCreateMember = useCallback(async (data: CreateTeamMemberPayload) => {
+    if (!currentLab?.id) {
+      toast.error('No lab selected');
+      return;
     }
-  };
-  
-  const handleDeleteMember = async (memberId: string) => {
-    const member = members.find(m => m.id === memberId);
-    if (!member) return;
-    
-    const confirmDelete = window.confirm(`Are you sure you want to delete ${member.name}? This action cannot be undone.`);
-    if (!confirmDelete) return;
     
     try {
-      const result = await api.deleteUser(memberId);
-      
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      
-      showToast({
-        type: 'success',
-        title: 'Member Deleted',
-        message: `${member.name} has been removed from the team.`,
+      await createMutation.mutateAsync({
+        ...data,
+        labId: currentLab.id,
       });
-      
-      // Refresh the members list
-      fetchMembers();
+      setCreateDialogOpen(false);
+      toast.success('Team member added successfully');
     } catch (error) {
-      console.error('Failed to delete member:', error);
-      showToast({
-        type: 'error',
-        title: 'Delete Failed',
-        message: 'Could not delete the team member. Please try again.',
-      });
+      console.error('Failed to add team member:', error);
     }
-  };
-  
-  const handleDialogSuccess = () => {
-    // Refresh the team members list
-    fetchMembers();
-  };
-  
-  const fetchMembers = async () => {
-    if (!currentLab) return;
+  }, [currentLab?.id, createMutation]);
+
+  const handleUpdateMember = useCallback(async (id: string, data: UpdateTeamMemberPayload) => {
+    try {
+      await updateMutation.mutateAsync({ id, ...data });
+      toast.success('Team member updated successfully');
+    } catch (error) {
+      console.error('Failed to update team member:', error);
+    }
+  }, [updateMutation]);
+
+  const handleDeleteMember = useCallback(async (id: string) => {
+    const member = members.find(m => m.id === id);
+    if (!member || !confirm(`Remove ${member.name} from the team?`)) return;
     
     try {
-      setIsLoading(true);
-      const result = await api.getTeamMembers(currentLab.id);
-      
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      
-      setMembers(result.data || []);
+      await deleteMutation.mutateAsync(id);
+      toast.success('Team member removed successfully');
+      setSelectedMember(null);
     } catch (error) {
-      console.error('Failed to fetch team members:', error);
-      showToast({
-        type: 'error',
-        title: 'Failed to load team members',
-        message: 'Please try refreshing the page',
-      });
-    } finally {
-      setIsLoading(false);
+      console.error('Failed to remove team member:', error);
     }
-  };
-  
-  const handleViewDetails = (memberId: string) => {
-    showToast({
-      type: 'info',
-      title: 'View Details',
-      message: `Viewing details for member ${memberId}`,
-    });
-  };
-  
+  }, [members, deleteMutation]);
+
+  const handleAssignTask = useCallback((memberId: string) => {
+    toast.info('Opening task assignment dialog...');
+    // This would open a task assignment dialog
+  }, []);
+
+  const handleViewProfile = useCallback((memberId: string) => {
+    setSelectedMember(memberId);
+  }, []);
+
+  // Loading state
+  if (labLoading || membersLoading) {
+    return <TeamPageSkeleton />;
+  }
+
+  // Error state
+  if (membersError) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>Failed to load team members</span>
+            <Button onClick={() => refetchMembers()} size="sm" variant="outline" className="ml-4">
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // No lab selected
+  if (!currentLab) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">No lab selected</h2>
+          <p className="mt-2 text-muted-foreground">
+            Please select a lab from the top navigation
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
-      {/* Page Header */}
-      <div className="px-6 py-4 border-b dark:border-gray-800">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Team Members</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Manage team roster and workload distribution
-        </p>
-      </div>
-      
-      {/* Team Header with Controls */}
-      <TeamHeader
-        onAddMember={handleAddMember}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
-      
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950">
-        {isLoading ? (
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className="h-64 rounded-lg bg-gray-200 dark:bg-gray-800 animate-pulse"
-                />
-              ))}
+      {/* Header */}
+      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex flex-col gap-4 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-2">
+                <Users className="h-8 w-8" />
+                Team Members
+              </h1>
+              <p className="text-muted-foreground">
+                Manage team roster and workload distribution
+              </p>
             </div>
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Member
+            </Button>
           </div>
-        ) : viewMode === 'workload' ? (
-          <TeamWorkloadView members={filteredMembers as any} />
-        ) : viewMode === 'grid' ? (
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredMembers.map((member) => (
-                <TeamMemberCard
-                  key={member.id}
-                  member={member as any}
-                  onEdit={() => handleEditMember(member.id)}
-                  onDelete={() => handleDeleteMember(member.id)}
-                  onViewDetails={() => handleViewDetails(member.id)}
-                />
-              ))}
+
+          {/* Metrics */}
+          <div className="grid grid-cols-5 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-normal flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Total Members
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{members.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-normal flex items-center gap-2">
+                  <UserCheck className="h-4 w-4" />
+                  Active
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {members.filter(m => m.status === 'active').length}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-normal flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Avg Workload
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {workloadStats.avgWorkload.toFixed(0)}%
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-normal">Overloaded</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">
+                  {workloadStats.overloaded}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-normal">Optimal</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {workloadStats.optimal}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filters and View Controls */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                ref={searchInputRef}
+                placeholder="Search by name, email, or skills... (Ctrl+/)"
+                className="pl-9"
+                onChange={(e) => debouncedSearch(e.target.value)}
+              />
             </div>
             
-            {filteredMembers.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-500 dark:text-gray-400">
-                  No team members found matching your search.
-                </p>
-              </div>
-            )}
-          </div>
-        ) : (
-          // List view
-          <div className="p-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700">
-              <table className="w-full">
-                <thead className="border-b dark:border-gray-700">
-                  <tr className="text-left">
-                    <th className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                      Member
-                    </th>
-                    <th className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                      Role
-                    </th>
-                    <th className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                      Expertise
-                    </th>
-                    <th className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                      Workload
-                    </th>
-                    <th className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                      Projects
-                    </th>
-                    <th className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                      Tasks
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMembers.map((member) => (
-                    <tr key={member.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-medium">
-                            {member.initials}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              {member.name}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {member.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-gray-900 dark:text-white">
-                          {member.role.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-1">
-                          {member.expertise?.slice(0, 2).map((skill, i) => (
-                            <span key={i} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
-                              {skill}
-                            </span>
-                          ))}
-                          {member.expertise && member.expertise.length > 2 && (
-                            <span className="text-xs text-gray-500">
-                              +{member.expertise.length - 2}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full ${
-                                member.workload > 80 ? 'bg-red-500' : 
-                                member.workload > 60 ? 'bg-yellow-500' : 
-                                'bg-green-500'
-                              }`}
-                              style={{ width: `${member.workload}%` }}
-                            />
-                          </div>
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {member.workload}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-gray-900 dark:text-white">
-                          {member.activeProjects}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-gray-900 dark:text-white">
-                          {member.taskCount}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <Select
+              value={filters.role}
+              onValueChange={(value) => setFilters(prev => ({ 
+                ...prev, 
+                role: value === 'all' ? undefined : value 
+              }))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Roles" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="principal-investigator">Principal Investigator</SelectItem>
+                <SelectItem value="co-investigator">Co-Investigator</SelectItem>
+                <SelectItem value="research-coordinator">Research Coordinator</SelectItem>
+                <SelectItem value="research-assistant">Research Assistant</SelectItem>
+                <SelectItem value="data-analyst">Data Analyst</SelectItem>
+                <SelectItem value="lab-manager">Lab Manager</SelectItem>
+                <SelectItem value="postdoc">Postdoc</SelectItem>
+                <SelectItem value="graduate-student">Graduate Student</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.department}
+              onValueChange={(value) => setFilters(prev => ({ 
+                ...prev, 
+                department: value === 'all' ? undefined : value 
+              }))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Departments" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                <SelectItem value="research">Research</SelectItem>
+                <SelectItem value="clinical">Clinical</SelectItem>
+                <SelectItem value="data-science">Data Science</SelectItem>
+                <SelectItem value="administration">Administration</SelectItem>
+                <SelectItem value="laboratory">Laboratory</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="ml-auto flex items-center gap-1 border rounded-lg p-1">
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                title="Grid View (Ctrl+1)"
+              >
+                <Grid3x3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                title="List View (Ctrl+2)"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'workload' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('workload')}
+                title="Workload View (Ctrl+3)"
+              >
+                <BarChart3 className="h-4 w-4" />
+              </Button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-auto p-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="all">All Members</TabsTrigger>
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="inactive">Inactive</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={activeTab}>
+            {members.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[400px] text-center">
+                <div className="rounded-full bg-muted p-3 mb-4">
+                  <Users className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">No team members found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {filters.searchTerm || filters.role || filters.department
+                    ? 'Try adjusting your filters'
+                    : 'Add your first team member'}
+                </p>
+                {!filters.searchTerm && !filters.role && !filters.department && (
+                  <Button onClick={() => setCreateDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Member
+                  </Button>
+                )}
+              </div>
+            ) : viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {members.map(member => (
+                  <TeamMemberCard
+                    key={member.id}
+                    member={member}
+                    onEdit={() => handleUpdateMember(member.id, {})}
+                    onDelete={() => handleDeleteMember(member.id)}
+                    onViewDetails={() => handleViewProfile(member.id)}
+                    onAssignTask={() => handleAssignTask(member.id)}
+                  />
+                ))}
+              </div>
+            ) : viewMode === 'list' ? (
+              <TeamMemberTable
+                members={members}
+                onEdit={handleUpdateMember}
+                onDelete={handleDeleteMember}
+                onViewProfile={handleViewProfile}
+                onAssignTask={handleAssignTask}
+              />
+            ) : (
+              <TeamWorkloadView 
+                members={members}
+                onMemberClick={handleViewProfile}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Department Groups (shown in grid view) */}
+        {viewMode === 'grid' && Object.keys(membersByDepartment).length > 1 && (
+          <div className="mt-8 space-y-6">
+            <h3 className="text-lg font-semibold">By Department</h3>
+            {Object.entries(membersByDepartment).map(([dept, deptMembers]) => (
+              <div key={dept}>
+                <div className="flex items-center gap-2 mb-3">
+                  <h4 className="font-medium">{dept}</h4>
+                  <Badge variant="secondary">{deptMembers.length}</Badge>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {deptMembers.map(member => (
+                    <TeamMemberCard
+                      key={member.id}
+                      member={member}
+                      onEdit={() => handleUpdateMember(member.id, {})}
+                      onDelete={() => handleDeleteMember(member.id)}
+                      onViewDetails={() => handleViewProfile(member.id)}
+                      onAssignTask={() => handleAssignTask(member.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
-      
-      {/* Team Member Dialog */}
+
+      {/* Dialogs */}
       <TeamMemberDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        member={selectedMember}
-        onSuccess={handleDialogSuccess}
+        open={createDialogOpen || !!selectedMember}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCreateDialogOpen(false);
+            setSelectedMember(null);
+          }
+        }}
+        member={selectedMember ? members.find(m => m.id === selectedMember) : undefined}
+        onSubmit={selectedMember ? 
+          (data) => handleUpdateMember(selectedMember, data) : 
+          handleCreateMember
+        }
       />
     </div>
   );
