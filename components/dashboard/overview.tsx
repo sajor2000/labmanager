@@ -4,64 +4,72 @@ import { useState, useEffect } from "react";
 import { AnimatedMetricCard } from "./animated-metric-card";
 import { RecentStudies } from "./recent-studies";
 import { ActivityFeed } from "./activity-feed";
-import { Building, Beaker, FolderOpen, CheckCircle, TrendingUp, Users, Calendar, Lightbulb } from "lucide-react";
+import { Building, Beaker, FolderOpen, CheckCircle, TrendingUp, Users, Calendar, Lightbulb, Loader2 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { useDashboardMetrics } from "@/hooks/use-dashboard-metrics";
 import { motion } from "framer-motion";
 
 export function DashboardOverview() {
   const { user } = useCurrentUser();
-  const [metrics, setMetrics] = useState([
+  const { data: dashboardData, isLoading, error } = useDashboardMetrics();
+
+  // Transform API data into metric cards format
+  const metrics = dashboardData?.metrics ? [
     {
       title: "Total Labs",
-      value: 3,
+      value: dashboardData.metrics.totalLabs,
       subtitle: "Research laboratories",
       icon: Building,
       color: "green" as const,
-      trend: { value: 12, isPositive: true },
+      trend: { value: 0, isPositive: true },
     },
     {
       title: "Active Studies",
-      value: 24,
-      subtitle: "out of 42 total",
+      value: dashboardData.metrics.activeProjects,
+      subtitle: `out of ${dashboardData.metrics.totalProjects} total`,
       icon: Beaker,
       color: "gold" as const,
-      progress: 57,
-      trend: { value: 8, isPositive: true },
+      progress: dashboardData.metrics.totalProjects > 0 
+        ? Math.round((dashboardData.metrics.activeProjects / dashboardData.metrics.totalProjects) * 100) 
+        : 0,
+      trend: { value: 0, isPositive: true },
     },
     {
       title: "Project Buckets",
-      value: 12,
+      value: dashboardData.metrics.bucketsCount,
       subtitle: "Organized collections",
       icon: FolderOpen,
       color: "blue" as const,
-      trend: { value: 3, isPositive: true },
+      trend: { value: 0, isPositive: true },
     },
     {
       title: "Tasks Progress",
-      value: "186/245",
+      value: `${dashboardData.metrics.completedTasks}/${dashboardData.metrics.totalTasks}`,
       subtitle: "Completed tasks",
       icon: CheckCircle,
       color: "gold" as const,
-      progress: 76,
-      trend: { value: 15, isPositive: true },
+      progress: dashboardData.metrics.totalTasks > 0 
+        ? Math.round((dashboardData.metrics.completedTasks / dashboardData.metrics.totalTasks) * 100) 
+        : 0,
+      trend: { value: 0, isPositive: true },
     },
     {
       title: "Team Members",
-      value: 18,
+      value: dashboardData.metrics.teamMembers,
       subtitle: "Active researchers",
       icon: Users,
       color: "blue" as const,
-      trend: { value: 2, isPositive: false },
+      trend: { value: 0, isPositive: true },
     },
     {
       title: "Ideas Submitted",
-      value: 47,
+      value: dashboardData.metrics.ideasThisMonth,
       subtitle: "This month",
       icon: Lightbulb,
       color: "purple" as const,
-      trend: { value: 23, isPositive: true },
+      trend: { value: 0, isPositive: true },
     },
-  ]);
+  ] : [];
 
   return (
     <motion.div
