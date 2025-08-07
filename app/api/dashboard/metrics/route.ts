@@ -16,7 +16,11 @@ export async function GET(request: NextRequest) {
       
       const completedTasks = await prisma.task?.count({
         where: {
-          assigneeId: userId,
+          assignees: {
+            some: {
+              userId: userId,
+            },
+          },
           status: 'COMPLETED',
           updatedAt: {
             gte: thirtyDaysAgo,
@@ -31,23 +35,23 @@ export async function GET(request: NextRequest) {
         upcomingDeadlines: 0,
       };
 
-      // Try to get study metrics if the models exist
+      // Get project metrics instead (studies are now projects)
       try {
-        const studyCount = await prisma.study?.count({
+        const projectCount = await prisma.project?.count({
           where: {
             OR: [
-              { leadInvestigatorId: userId },
-              { coInvestigatorIds: { has: userId } },
-              { teamMemberIds: { has: userId } },
+              { createdById: userId },
+              { members: { some: { userId: userId } } },
             ],
+            isActive: true,
           },
         }) || 0;
         
-        metrics.totalStudies = studyCount;
-        metrics.activeProjects = studyCount;
+        metrics.totalStudies = projectCount;
+        metrics.activeProjects = projectCount;
       } catch (error) {
-        // Study model might not exist yet
-        console.warn('Study model not available for metrics');
+        // Project model might not be available
+        console.warn('Project model not available for metrics');
       }
 
       console.log('Fetched personalized user metrics', { userId, metrics });

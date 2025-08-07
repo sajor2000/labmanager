@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const labId = searchParams.get('labId') || user.currentLabId;
+    const labId = searchParams.get('labId') || user.labs?.[0]?.lab?.id;
 
     if (!labId) {
       return NextResponse.json({ error: 'No lab selected' }, { status: 400 });

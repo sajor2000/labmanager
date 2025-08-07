@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const users = await prisma.user.findMany({
       include: {
-        labMemberships: {
+        labs: {
           include: {
             lab: true,
           },
@@ -23,7 +23,7 @@ export async function GET() {
       name: user.name,
       email: user.email,
       role: user.role,
-      labs: user.labMemberships.map(membership => ({
+      labs: user.labs.map(membership => ({
         id: membership.lab.id,
         name: membership.lab.name,
         shortName: membership.lab.shortName,
