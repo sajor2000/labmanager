@@ -37,6 +37,12 @@ const navigation = [
 export function Sidebar() {
   const pathname = usePathname();
 
+  // Add click handler to debug navigation issues
+  const handleNavClick = (e: React.MouseEvent, href: string) => {
+    console.log('Navigation clicked:', href);
+    // Let Link handle the navigation naturally
+  };
+
   return (
     <div className="sidebar-rush flex h-full w-64 flex-col">
       {/* Logo Section - Rush University Theme */}
@@ -61,6 +67,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={(e) => handleNavClick(e, item.href)}
               className={cn(
                 "sidebar-item group flex items-center relative",
                 isActive && "sidebar-item-active"

@@ -26,32 +26,32 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <QueryProvider>
-              <UserProvider>
-                <LabProvider>
-                  <ErrorBoundary>
-                    <div className="flex h-screen overflow-hidden">
-                      <Sidebar />
-                      <div className="flex flex-1 flex-col">
-                        <TopNav />
-                        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-                          {children}
-                        </main>
-                      </div>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ErrorBoundary>
+            <UserProvider>
+              <LabProvider>
+                <QueryProvider>
+                  <div className="flex h-screen overflow-hidden">
+                    <Sidebar />
+                    <div className="flex flex-1 flex-col">
+                      <TopNav />
+                      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+                        {children}
+                      </main>
                     </div>
-                    <ToastContainer />
-                    <Toaster position="bottom-right" />
-                  </ErrorBoundary>
-                </LabProvider>
-              </UserProvider>
-            </QueryProvider>
-          </ThemeProvider>
+                  </div>
+                  <ToastContainer />
+                  <Toaster position="bottom-right" />
+                </QueryProvider>
+              </LabProvider>
+            </UserProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
       </body>
     </html>
   );
