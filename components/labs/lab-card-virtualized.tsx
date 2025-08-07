@@ -18,7 +18,8 @@ import {
   Edit,
   ArrowRight,
   Folder,
-  Lightbulb
+  Lightbulb,
+  Trash2
 } from 'lucide-react';
 import type { Lab } from '@/types/lab';
 
@@ -37,6 +38,7 @@ interface LabCardProps {
   lab: Lab;
   index: number;
   onEdit: (lab: Lab) => void;
+  onDelete?: (lab: Lab) => void;
   style?: React.CSSProperties;
   isSelected?: boolean;
   onKeyboardNavigate?: (labId: string, action: 'view' | 'edit') => void;
@@ -46,7 +48,7 @@ interface LabCardProps {
  * Lab card component with keyboard navigation support
  */
 export const LabCard = forwardRef<HTMLDivElement, LabCardProps>(
-  ({ lab, index, onEdit, style, isSelected, onKeyboardNavigate }, ref) => {
+  ({ lab, index, onEdit, onDelete, style, isSelected, onKeyboardNavigate }, ref) => {
     const router = useRouter();
     const iconData = LAB_ICONS[index % LAB_ICONS.length];
     const Icon = iconData.icon;
@@ -100,7 +102,7 @@ export const LabCard = forwardRef<HTMLDivElement, LabCardProps>(
                  style={lab.color ? { backgroundColor: `${lab.color}20`, color: lab.color } : {}}>
               <Icon className="h-6 w-6" />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
@@ -114,6 +116,21 @@ export const LabCard = forwardRef<HTMLDivElement, LabCardProps>(
               >
                 <Edit className="h-4 w-4" />
               </Button>
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(lab);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                  aria-label={`Delete ${lab.name}`}
+                  tabIndex={-1}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"

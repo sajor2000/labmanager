@@ -24,7 +24,8 @@ import {
   Building2,
   AlertCircle,
   Search,
-  Filter
+  Filter,
+  Trash2
 } from 'lucide-react';
 import { useLabs, useCreateLab, useUpdateLab, useDeleteLab } from '@/hooks/use-labs';
 import type { Lab, LabFormData } from '@/types/lab';
@@ -32,6 +33,7 @@ import { LabCard } from '@/components/labs/lab-card-virtualized';
 import { LabsPageSkeleton, StatisticsCardsSkeleton } from '@/components/labs/lab-skeleton';
 import { FixedSizeGrid as Grid } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-dialog';
 
 // Constants
 const INITIAL_FORM_DATA: LabFormData = {
@@ -100,6 +102,8 @@ export default function LabsPage() {
   const [editingLab, setEditingLab] = useState<Lab | null>(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [formData, setFormData] = useState<LabFormData>(INITIAL_FORM_DATA);
+  const [labToDelete, setLabToDelete] = useState<Lab | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // React Query hooks
   const { data: labs = [], isLoading, error, refetch } = useLabs();
@@ -181,17 +185,24 @@ export default function LabsPage() {
     }
   }, [formData, isCreateMode, editingLab, createLabMutation, updateLabMutation]);
 
-  const handleDelete = useCallback(async (labId: string) => {
-    if (!confirm('Are you sure you want to delete this lab? This action cannot be undone.')) {
-      return;
-    }
+  const handleDelete = useCallback((lab: Lab) => {
+    setLabToDelete(lab);
+  }, []);
 
+  const confirmDelete = useCallback(async () => {
+    if (!labToDelete) return;
+    
+    setIsDeleting(true);
     try {
-      await deleteLabMutation.mutateAsync(labId);
+      await deleteLabMutation.mutateAsync(labToDelete.id);
+      setLabToDelete(null);
+      toast.success(`Lab "${labToDelete.name}" deleted successfully`);
     } catch (error) {
-      // Error handling is done in the mutation hook
+      toast.error('Failed to delete lab');
+    } finally {
+      setIsDeleting(false);
     }
-  }, [deleteLabMutation]);
+  }, [labToDelete, deleteLabMutation]);
 
   const handleClose = useCallback(() => {
     setEditingLab(null);
@@ -283,6 +294,7 @@ export default function LabsPage() {
               lab={lab}
               index={index}
               onEdit={handleEdit}
+              onDelete={handleDelete}
               isSelected={selectedLabIndex === index}
             />
           ))}
@@ -363,6 +375,15 @@ export default function LabsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={!!labToDelete}
+        onOpenChange={(open) => !open && setLabToDelete(null)}
+        onConfirm={confirmDelete}
+        itemName={labToDelete?.name}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }
