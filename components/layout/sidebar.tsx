@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { UserProfileDropdown } from "@/components/layout/user-profile-dropdown";
 import {
@@ -36,11 +36,13 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
-  // Add click handler to debug navigation issues
+  // Add click handler to debug navigation issues and force navigation
   const handleNavClick = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
     console.log('Navigation clicked:', href);
-    // Let Link handle the navigation naturally
+    router.push(href);
   };
 
   return (
@@ -64,12 +66,11 @@ export function Sidebar() {
           const isActive = pathname === item.href || 
                           (item.href !== "/" && pathname.startsWith(item.href));
           return (
-            <Link
+            <button
               key={item.name}
-              href={item.href}
               onClick={(e) => handleNavClick(e, item.href)}
               className={cn(
-                "sidebar-item group flex items-center relative",
+                "sidebar-item group flex items-center relative w-full text-left",
                 isActive && "sidebar-item-active"
               )}
             >
@@ -86,7 +87,7 @@ export function Sidebar() {
                 )}
               />
               {item.name}
-            </Link>
+            </button>
           );
         })}
       </nav>
