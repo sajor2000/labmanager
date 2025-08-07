@@ -150,12 +150,12 @@ export function useCreateTask(options?: UseMutationOptions<Task, Error, CreateTa
   });
 }
 
-export function useUpdateTask(id: string, options?: UseMutationOptions<Task, Error, UpdateTaskPayload>) {
+export function useUpdateTask(options?: UseMutationOptions<Task, Error, { id: string } & UpdateTaskPayload>) {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: UpdateTaskPayload) => api.tasks.update(id, data),
-    onSuccess: () => {
+    mutationFn: ({ id, ...data }: { id: string } & UpdateTaskPayload) => api.tasks.update(id, data),
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: cacheKeys.tasks.all });
       queryClient.invalidateQueries({ queryKey: cacheKeys.tasks.detail(id) });
       toast.success('Task updated successfully');
