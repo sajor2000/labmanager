@@ -39,15 +39,39 @@ export function UserSelector({ onUserSelect, selectedUser }: UserSelectorProps) 
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('/api/users');
+      setLoading(true);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      
+      const response = await fetch('/api/users', {
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         const userData = await response.json();
-        setUsers(userData);
+        // Validate data structure
+        if (Array.isArray(userData)) {
+          setUsers(userData);
+        } else {
+          console.error('Invalid user data format received');
+          setUsers([]);
+        }
       } else {
-        console.error('Failed to load users');
+        console.error(`Failed to load users: ${response.status} ${response.statusText}`);
+        setUsers([]);
       }
     } catch (error) {
-      console.error('Error loading users:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('Request timed out loading users');
+      } else {
+        console.error('Error loading users:', error);
+      }
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -69,17 +93,46 @@ export function UserSelector({ onUserSelect, selectedUser }: UserSelectorProps) 
       .join(' ');
   };
 
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <Card className="mb-6 bg-blue-50 border-blue-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center space-x-2 text-blue-900">
+              <Users className="h-5 w-5" />
+              <span>Select User Experience</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-blue-800 mb-2">
+                  Choose User
+                </label>
+                <div className="w-full h-10 bg-gray-200 rounded-md animate-pulse flex items-center px-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                    <span className="text-sm text-gray-500">Loading users...</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-blue-800 mb-2">
+                  Current Selection
+                </label>
+                <div className="w-full h-10 bg-gray-100 rounded-md flex items-center px-3">
+                  <span className="text-sm text-gray-400">Waiting for selection...</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+  };
+
   if (loading) {
-    return (
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
-            <span className="text-sm text-gray-600">Loading users...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return renderContent();
   }
 
   return (

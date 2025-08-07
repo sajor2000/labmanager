@@ -4,6 +4,68 @@ import { z } from 'zod';
 import type { Prisma, ProjectStatus } from '@prisma/client';
 import { handleApiError } from '@/lib/utils/api-error-handler';
 
+// Cache configuration
+const CACHE_TTL = 300; // 5 minutes cache for GET requests
+
+// Optimized select for common queries to avoid N+1 problems
+const projectSelectOptimized = {
+  id: true,
+  name: true,
+  description: true,
+  oraNumber: true,
+  status: true,
+  priority: true,
+  projectType: true,
+  studyType: true,
+  bucketId: true,
+  labId: true,
+  dueDate: true,
+  notes: true,
+  createdAt: true,
+  updatedAt: true,
+  createdById: true,
+  lab: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  bucket: {
+    select: {
+      id: true,
+      name: true,
+      color: true,
+    },
+  },
+  createdBy: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      initials: true,
+    },
+  },
+  members: {
+    select: {
+      id: true,
+      role: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          initials: true,
+        },
+      },
+    },
+  },
+  _count: {
+    select: {
+      tasks: true,
+    },
+  },
+};
+
 // Validation schema for creating a project
 const CreateProjectSchema = z.object({
   name: z.string().min(1),
@@ -49,28 +111,17 @@ export async function GET(request: NextRequest) {
 
     const projects = await prisma.project.findMany({
       where,
-      include: {
-        lab: true,
-        bucket: true,
-        createdBy: true,
-        members: {
-          include: {
-            user: true,
-          },
-        },
-        tasks: {
-          select: {
-            id: true,
-            status: true,
-          },
-        },
-      },
+      select: projectSelectOptimized,
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    return NextResponse.json(projects);
+    // Set cache headers for performance
+    const response = NextResponse.json(projects);
+    response.headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=600`);
+    response.headers.set('CDN-Cache-Control', `public, s-maxage=${CACHE_TTL}`);
+    return response;
   } catch (error) {
     return handleApiError(error);
   }
@@ -99,16 +150,7 @@ export async function POST(request: NextRequest) {
           })),
         } : undefined,
       },
-      include: {
-        lab: true,
-        bucket: true,
-        createdBy: true,
-        members: {
-          include: {
-            user: true,
-          },
-        },
-      },
+      select: projectSelectOptimized,
     });
 
     return NextResponse.json(project, { status: 201 });
@@ -147,16 +189,7 @@ export async function PUT(request: NextRequest) {
           },
         }),
       },
-      include: {
-        lab: true,
-        bucket: true,
-        createdBy: true,
-        members: {
-          include: {
-            user: true,
-          },
-        },
-      },
+      select: projectSelectOptimized,
     });
 
     return NextResponse.json(project);

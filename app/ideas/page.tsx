@@ -8,6 +8,7 @@ import { IdeaCreationForm } from '@/components/ideas/idea-creation-form';
 import { IdeaFilters } from '@/components/ideas/idea-filters';
 import { IdeaDetailModal } from '@/components/ideas/idea-detail-modal';
 import { showToast } from '@/components/ui/toast';
+import { api } from '@/lib/utils/enhanced-api-client';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useLab } from '@/lib/contexts/lab-context';
 import type { IdeaWithFullRelations } from '@/types/ideas';
@@ -45,10 +46,13 @@ export default function IdeasPage() {
     if (!currentLab) return;
     
     try {
-      const response = await fetch(`/api/ideas?labId=${currentLab.id}`);
-      if (!response.ok) throw new Error('Failed to fetch ideas');
-      const data = await response.json();
-      setIdeas(data);
+      const result = await api.getIdeas(currentLab.id);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      setIdeas(result.data || []);
     } catch (error) {
       console.error('Error fetching ideas:', error);
       showToast({

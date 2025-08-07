@@ -35,9 +35,25 @@ export function TaskBoard() {
     const fetchTasks = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/tasks');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        
+        const response = await fetch('/api/tasks', {
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        clearTimeout(timeoutId);
+        
         if (response.ok) {
           const backendTasks = await response.json();
+          
+          // Validate response structure
+          if (!Array.isArray(backendTasks)) {
+            throw new Error('Invalid response format: expected array');
+          }
           
           // Transform backend tasks to frontend Task format with assignee details
           const transformedTasks: Task[] = backendTasks.map((t: any) => ({
@@ -61,13 +77,33 @@ export function TaskBoard() {
           }));
           
           setTasks(transformedTasks);
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
       } catch (error) {
+        let errorMessage = 'Please try refreshing the page';
+        let title = 'Failed to load tasks';
+        
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            title = 'Connection timeout';
+            errorMessage = 'The request took too long. Please check your connection and try again.';
+          } else if (error.message.includes('fetch')) {
+            title = 'Connection error';
+            errorMessage = 'Unable to connect to server. Please check your internet connection.';
+          } else {
+            errorMessage = error.message;
+          }
+        }
+        
         showToast({
           type: 'error',
-          title: 'Failed to load tasks',
-          message: error instanceof Error ? error.message : 'Please try refreshing the page',
+          title,
+          message: errorMessage,
         });
+        
+        // Set empty tasks to prevent flickering
+        setTasks([]);
       } finally {
         setLoading(false);
       }

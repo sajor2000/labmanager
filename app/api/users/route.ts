@@ -5,10 +5,23 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   try {
     const users = await prisma.user.findMany({
+      where: {
+        isActive: true, // Only return active users
+      },
       include: {
         labs: {
+          where: {
+            isActive: true, // Only include active lab memberships
+          },
           include: {
-            lab: true,
+            lab: {
+              select: {
+                id: true,
+                name: true,
+                shortName: true,
+                isActive: true,
+              },
+            },
           },
         },
       },
@@ -27,11 +40,14 @@ export async function GET() {
         id: membership.lab.id,
         name: membership.lab.name,
         shortName: membership.lab.shortName,
-        isAdmin: membership.role === 'LAB_ADMINISTRATOR' || membership.role === 'PRINCIPAL_INVESTIGATOR',
+        isAdmin: membership.isAdmin,
       })),
     }));
 
-    return NextResponse.json(formattedUsers);
+    // Add cache headers for better performance
+    const response = NextResponse.json(formattedUsers);
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    return response;
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json(

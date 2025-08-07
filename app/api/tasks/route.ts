@@ -101,7 +101,10 @@ export async function GET(request: NextRequest) {
       ],
     });
 
-    return NextResponse.json(tasks);
+    // Add cache headers and optimize response
+    const response = NextResponse.json(tasks);
+    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
+    return response;
   } catch (error) {
     console.error('Error fetching tasks:', error);
     return NextResponse.json(

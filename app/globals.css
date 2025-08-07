@@ -523,6 +523,24 @@
   }
 }
 
+@keyframes progress-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* Animation utility classes */
+.animate-progress-slide {
+  animation: progress-slide 1.5s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-in-out;
+}
+
 /* Utility Classes for Modern UI */
 .text-balance {
   text-wrap: balance;

@@ -4,12 +4,24 @@ import { useEffect, useState } from 'react';
 import { useLab } from '@/lib/contexts/lab-context';
 import { StudiesPageEnhanced } from '@/components/studies/studies-page-enhanced';
 import { showToast } from '@/components/ui/toast';
+import { api } from '@/lib/utils/enhanced-api-client';
+import type { Project, Bucket, User } from '@/types';
+
+// Enhanced project type with title mapping for backward compatibility
+interface ProjectWithTitle extends Project {
+  title: string;
+}
+
+// Enhanced bucket type with title mapping for backward compatibility  
+interface BucketWithTitle extends Bucket {
+  title: string;
+}
 
 export default function StudiesPageClient() {
   const { currentLab, isLoading: labLoading } = useLab();
-  const [studies, setStudies] = useState<any[]>([]);
-  const [buckets, setBuckets] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [studies, setStudies] = useState<ProjectWithTitle[]>([]);
+  const [buckets, setBuckets] = useState<BucketWithTitle[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,30 +33,30 @@ export default function StudiesPageClient() {
       setError(null);
       
       try {
-        // Fetch studies, buckets, and users in parallel
-        const [studiesRes, bucketsRes, usersRes] = await Promise.all([
-          fetch(`/api/projects?labId=${currentLab.id}`),
-          fetch(`/api/buckets?labId=${currentLab.id}`),
-          fetch('/api/users'),
+        // Fetch studies, buckets, and users in parallel using enhanced API client
+        const [studiesResult, bucketsResult, usersResult] = await Promise.all([
+          api.getProjects(currentLab.id),
+          api.getBuckets(currentLab.id),
+          api.getUsers(),
         ]);
 
-        if (!studiesRes.ok || !bucketsRes.ok || !usersRes.ok) {
-          throw new Error('Failed to fetch data');
+        // Check for errors
+        if (studiesResult.error || bucketsResult.error || usersResult.error) {
+          throw new Error(studiesResult.error || bucketsResult.error || usersResult.error || 'Failed to fetch data');
         }
 
-        const [studiesData, bucketsData, usersData] = await Promise.all([
-          studiesRes.json(),
-          bucketsRes.json(),
-          usersRes.json(),
-        ]);
+        // Extract data with null checks
+        const studiesData = studiesResult.data || [];
+        const bucketsData = bucketsResult.data || [];
+        const usersData = usersResult.data || [];
 
         // Map the data to include title field for backward compatibility
-        const studiesWithTitle = studiesData.map((project: any) => ({
+        const studiesWithTitle: ProjectWithTitle[] = studiesData.map((project: Project) => ({
           ...project,
           title: project.name, // Map name to title for UI components
         }));
         
-        const bucketsWithTitle = bucketsData.map((bucket: any) => ({
+        const bucketsWithTitle: BucketWithTitle[] = bucketsData.map((bucket: Bucket) => ({
           ...bucket,
           title: bucket.name, // Map name to title for UI components
         }));

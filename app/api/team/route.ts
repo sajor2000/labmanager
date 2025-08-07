@@ -3,6 +3,63 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 
+// Cache configuration
+const CACHE_TTL = 180; // 3 minutes cache for team data (changes frequently)
+
+// Optimized select for team members with metrics
+const teamMemberSelectOptimized = {
+  id: true,
+  email: true,
+  name: true,
+  firstName: true,
+  lastName: true,
+  role: true,
+  avatar: true,
+  avatarUrl: true,
+  initials: true,
+  capacity: true,
+  expertise: true,
+  createdAt: true,
+  updatedAt: true,
+  labs: {
+    select: {
+      labId: true,
+      isAdmin: true,
+      lab: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
+  projectMembers: {
+    select: {
+      id: true,
+      role: true,
+      project: {
+        select: {
+          id: true,
+          name: true,
+          status: true,
+        },
+      },
+    },
+  },
+  assignedTasks: {
+    select: {
+      id: true,
+      task: {
+        select: {
+          id: true,
+          status: true,
+          dueDate: true,
+        },
+      },
+    },
+  },
+};
+
 // Validation schema for creating a team member
 const CreateTeamMemberSchema = z.object({
   email: z.string().email(),
@@ -36,43 +93,10 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // Use optimized select to reduce data transfer and improve performance
     const users = await prisma.user.findMany({
       where,
-      include: {
-        labs: {
-          include: {
-            lab: true,
-          },
-        },
-        projectMembers: {
-          include: {
-            project: {
-              select: {
-                id: true,
-                name: true,
-                status: true,
-              },
-            },
-          },
-        },
-        assignedTasks: {
-          select: {
-            task: {
-              select: {
-                id: true,
-                status: true,
-                dueDate: true,
-              },
-            },
-          },
-        },
-        createdTasks: {
-          select: {
-            id: true,
-            status: true,
-          },
-        },
-      },
+      select: teamMemberSelectOptimized,
       orderBy: {
         name: 'asc',
       },
@@ -129,7 +153,11 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json(membersWithStats);
+    // Set cache headers for performance
+    const response = NextResponse.json(membersWithStats);
+    response.headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=300`);
+    response.headers.set('CDN-Cache-Control', `public, s-maxage=${CACHE_TTL}`);
+    return response;
   } catch (error) {
     console.error('Error fetching team members:', error);
     return NextResponse.json(

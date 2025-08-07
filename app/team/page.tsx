@@ -6,28 +6,31 @@ import { TeamMemberCard } from '@/components/team/team-member-card';
 import { TeamWorkloadView } from '@/components/team/team-workload-view';
 import { TeamMemberDialog } from '@/components/team/team-member-dialog';
 import { showToast } from '@/components/ui/toast';
+import { api } from '@/lib/utils/enhanced-api-client';
 import { useLab } from '@/lib/contexts/lab-context';
 import type { User as PrismaUser } from '@prisma/client';
+import type { User } from '@/types';
 
-// Extended user type for team page
-type TeamMember = PrismaUser & {
-  labIds?: string[]; // Optional for compatibility with components
-};
+// Enhanced team member interface with workload metrics
+interface TeamMemberWithMetrics extends User {
+  taskCount: number;
+  completedTasks: number;
+  activeProjects: number;
+  workload: number;
+  upcomingDeadlines: number;
+  // For form compatibility
+  firstName?: string;
+  lastName?: string;
+}
 
 export default function TeamPage() {
   const { currentLab, isLoading: labLoading } = useLab();
-  const [members, setMembers] = useState<Array<TeamMember & {
-    taskCount: number;
-    completedTasks: number;
-    activeProjects: number;
-    workload: number;
-    upcomingDeadlines: number;
-  }>>([]);
+  const [members, setMembers] = useState<TeamMemberWithMetrics[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'workload'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<TeamMemberWithMetrics | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Filter members based on search
@@ -71,12 +74,10 @@ export default function TeamPage() {
     if (!confirmDelete) return;
     
     try {
-      const response = await fetch(`/api/users/${memberId}`, {
-        method: 'DELETE',
-      });
+      const result = await api.deleteUser(memberId);
       
-      if (!response.ok) {
-        throw new Error('Failed to delete member');
+      if (result.error) {
+        throw new Error(result.error);
       }
       
       showToast({
@@ -107,12 +108,13 @@ export default function TeamPage() {
     
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/team?labId=${currentLab.id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch team members');
+      const result = await api.getTeamMembers(currentLab.id);
+      
+      if (result.error) {
+        throw new Error(result.error);
       }
-      const data = await response.json();
-      setMembers(data);
+      
+      setMembers(result.data || []);
     } catch (error) {
       console.error('Failed to fetch team members:', error);
       showToast({

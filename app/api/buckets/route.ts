@@ -3,6 +3,32 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 
+// Cache configuration
+const CACHE_TTL = 300; // 5 minutes cache for buckets
+
+// Optimized select for buckets with minimal project data
+const bucketSelectOptimized = {
+  id: true,
+  name: true,
+  description: true,
+  color: true,
+  labId: true,
+  position: true,
+  createdAt: true,
+  updatedAt: true,
+  lab: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  _count: {
+    select: {
+      projects: true,
+    },
+  },
+};
+
 // Validation schema for creating a bucket
 const CreateBucketSchema = z.object({
   title: z.string().min(1),
@@ -23,30 +49,23 @@ export async function GET(request: NextRequest) {
 
     const buckets = await prisma.bucket.findMany({
       where,
-      include: {
-        lab: true,
-        projects: {
-          include: {
-            createdBy: true,
-            members: {
-              include: {
-                user: true,
-              },
-            },
-          },
-        },
-        _count: {
-          select: {
-            projects: true,
-          },
-        },
-      },
+      select: bucketSelectOptimized,
       orderBy: {
         position: 'asc',
       },
     });
 
-    return NextResponse.json(buckets);
+    // Map name to title for backward compatibility
+    const bucketsWithTitle = buckets.map(bucket => ({
+      ...bucket,
+      title: bucket.name,
+    }));
+
+    // Set cache headers for performance
+    const response = NextResponse.json(bucketsWithTitle);
+    response.headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=600`);
+    response.headers.set('CDN-Cache-Control', `public, s-maxage=${CACHE_TTL}`);
+    return response;
   } catch (error) {
     console.error('Error fetching buckets:', error);
     return NextResponse.json(
@@ -81,15 +100,7 @@ export async function POST(request: NextRequest) {
         ...rest,
         position,
       },
-      include: {
-        lab: true,
-        projects: true,
-        _count: {
-          select: {
-            projects: true,
-          },
-        },
-      },
+      select: bucketSelectOptimized,
     });
 
     return NextResponse.json(bucket, { status: 201 });
