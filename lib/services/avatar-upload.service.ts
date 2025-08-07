@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma'
-import sharp from 'sharp'
 import path from 'path'
 import fs from 'fs'
 import { promisify } from 'util'
@@ -70,7 +69,10 @@ export class AvatarUploadService {
   static async processImage(
     imageBuffer: Buffer,
     options: AvatarUploadOptions = {}
-  ): Promise<{ buffer: Buffer; info: sharp.OutputInfo }> {
+  ): Promise<{ buffer: Buffer; info: any }> {
+    // Dynamic import to avoid build-time issues on Vercel
+    const sharp = (await import('sharp')).default
+    
     const opts = { ...this.DEFAULT_OPTIONS, ...options }
 
     let pipeline = sharp(imageBuffer)
