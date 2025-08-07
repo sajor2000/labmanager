@@ -7,12 +7,12 @@ generator client {
   // Using default output location (node_modules/.prisma/client)
 }
 
-// Define database connection via the `DATABASE_URL` env var
+// Define database connection via the `PRISMA_DATABASE_URL` env var for Prisma Accelerate
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // Enable connection pooling for Prisma Accelerate (optional for local dev)
-  // directUrl = env("DATABASE_URL_UNPOOLED")
+  url      = env("PRISMA_DATABASE_URL")
+  // Direct connection for migrations
+  directUrl = env("DATABASE_URL")
 }
 
 // User model for authentication and team management

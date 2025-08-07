@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 
 const globalForPrisma = globalThis as unknown as {
@@ -13,10 +13,11 @@ const createPrismaClient = () => {
   }
 
   // Get the database URL from environment
-  const databaseUrl = process.env.DATABASE_URL;
+  // Use PRISMA_DATABASE_URL for Prisma Accelerate or fallback to DATABASE_URL
+  const databaseUrl = process.env.PRISMA_DATABASE_URL || process.env.DATABASE_URL;
   
   if (!databaseUrl) {
-    console.warn('No DATABASE_URL found - using default Prisma client');
+    console.warn('No PRISMA_DATABASE_URL or DATABASE_URL found - using default Prisma client');
     return new PrismaClient();
   }
 
@@ -31,10 +32,10 @@ const createPrismaClient = () => {
   }
   
   // Configure client options
-  const clientOptions = {
+  const clientOptions: Prisma.PrismaClientOptions = {
     log: process.env.NODE_ENV === 'development' 
-      ? ['query', 'error', 'warn'] as const
-      : ['error'] as const,
+      ? ['query', 'error', 'warn'] as Prisma.LogLevel[]
+      : ['error'] as Prisma.LogLevel[],
   };
 
   // For Prisma Accelerate URLs, don't override datasources
