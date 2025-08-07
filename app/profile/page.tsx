@@ -13,6 +13,11 @@ export default function ProfilePage() {
   const { user, loading } = useCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [stats, setStats] = useState({
+    activeProjects: 0,
+    completedTasks: 0,
+    teamMembers: 0,
+  });
   
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -46,6 +51,54 @@ export default function ProfilePage() {
       setIsSaving(false);
     }
   };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    // Validate file size
+    if (file.size > 5 * 1024 * 1024) {
+      showToast({
+        type: 'error',
+        title: 'File too large',
+        message: 'Please select an image smaller than 5MB',
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+    formData.append('storage', 'file'); // Use file storage
+
+    try {
+      const response = await fetch(`/api/users/${user.id}/avatar`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to upload avatar');
+      }
+
+      const result = await response.json();
+      
+      showToast({
+        type: 'success',
+        title: 'Avatar uploaded',
+        message: 'Your profile picture has been updated',
+      });
+
+      // Refresh the page to show new avatar
+      window.location.reload();
+    } catch (error) {
+      showToast({
+        type: 'error',
+        title: 'Upload failed',
+        message: error instanceof Error ? error.message : 'Failed to upload avatar',
+      });
+    }
+  };
   
   if (loading) {
     return (
@@ -71,22 +124,47 @@ export default function ProfilePage() {
           {/* Avatar Section */}
           <div className="flex items-center space-x-6">
             <div className="relative">
-              <div className={`w-24 h-24 rounded-full ${user?.avatar || 'bg-blue-500'} flex items-center justify-center`}>
-                <span className="text-3xl font-bold text-white">
-                  {user?.initials || 'GU'}
-                </span>
-              </div>
-              <button className="absolute bottom-0 right-0 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+              {user?.avatarUrl ? (
+                <img 
+                  src={user.avatarUrl} 
+                  alt={user.name}
+                  className="w-24 h-24 rounded-full object-cover"
+                />
+              ) : (
+                <div className={`w-24 h-24 rounded-full ${user?.avatar || 'bg-blue-500'} flex items-center justify-center`}>
+                  {user?.initials && (
+                    <span className="text-3xl font-bold text-white">
+                      {user.initials}
+                    </span>
+                  )}
+                </div>
+              )}
+              <button 
+                className="absolute bottom-0 right-0 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                onClick={() => document.getElementById('avatar-upload')?.click()}
+                type="button"
+              >
                 <Camera className="h-4 w-4 text-gray-600 dark:text-gray-400" />
               </button>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {user?.name || 'Guest User'}
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {user?.role?.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ') || 'Guest'}
-              </p>
+              {user?.name && (
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {user.name}
+                </h2>
+              )}
+              {user?.role && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {user.role.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')}
+                </p>
+              )}
             </div>
           </div>
           
@@ -210,7 +288,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Active Projects</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">12</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeProjects}</p>
                 </div>
                 <Building className="h-8 w-8 text-gray-400" />
               </div>
@@ -219,7 +297,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Completed Tasks</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">48</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completedTasks}</p>
                 </div>
                 <Shield className="h-8 w-8 text-gray-400" />
               </div>
@@ -228,7 +306,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Team Members</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">8</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.teamMembers}</p>
                 </div>
                 <User className="h-8 w-8 text-gray-400" />
               </div>

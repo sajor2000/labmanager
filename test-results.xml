@@ -1,0 +1,54 @@
+<testsuites id="" name="" tests="7" failures="0" skipped="0" errors="0" time="6.793929000000004">
+<testsuite name="simple-ui-test.spec.ts" timestamp="2025-08-06T18:57:18.727Z" hostname="Desktop Chrome" tests="7" failures="0" skipped="0" time="23.54" errors="0">
+<testcase name="Basic UI Tests › should load the homepage" classname="simple-ui-test.spec.ts" time="1.851">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/simple-ui-test-Basic-UI-Tests-should-load-the-homepage-Desktop-Chrome/trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Basic UI Tests › should have responsive layout" classname="simple-ui-test.spec.ts" time="2.736">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/simple-ui-test-Basic-UI-Tests-should-have-responsive-layout-Desktop-Chrome/trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Basic UI Tests › should handle navigation" classname="simple-ui-test.spec.ts" time="4.466">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/simple-ui-test-Basic-UI-Tests-should-handle-navigation-Desktop-Chrome/trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Basic UI Tests › should render key UI components" classname="simple-ui-test.spec.ts" time="4.383">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/simple-ui-test-Basic-UI-Te-003fd-ld-render-key-UI-components-Desktop-Chrome/trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Basic UI Tests › should measure basic performance metrics" classname="simple-ui-test.spec.ts" time="4.493">
+<system-out>
+<![CDATA[Performance metrics: { domContentLoaded: [33m0[39m, loadComplete: [33m0[39m }
+
+[[ATTACHMENT|test-results/simple-ui-test-Basic-UI-Te-5a6e6-e-basic-performance-metrics-Desktop-Chrome/trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Basic UI Tests › should have proper color contrast" classname="simple-ui-test.spec.ts" time="3.182">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/simple-ui-test-Basic-UI-Te-650e2--have-proper-color-contrast-Desktop-Chrome/trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Basic UI Tests › should handle dark mode toggle if available" classname="simple-ui-test.spec.ts" time="2.429">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/simple-ui-test-Basic-UI-Te-502ec-rk-mode-toggle-if-available-Desktop-Chrome/trace.zip]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

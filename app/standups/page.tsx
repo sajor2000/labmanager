@@ -13,6 +13,7 @@ import { AnalysisResults } from '@/components/standup/analysis-results';
 import { TranscriptDisplay } from '@/components/standup/transcript-display';
 import { TranscriptArchive } from '@/components/standup/transcript-archive';
 import { SendEmailModal } from '@/components/standup/send-email-modal';
+import { useCurrentUser } from '@/hooks/use-current-user';
 import {
   createStandupAction,
   getStandupsByLabAction,
@@ -23,6 +24,7 @@ import {
 import type { StandupWithRelations } from '@/lib/services/standup.service';
 
 export default function StandupsPage() {
+  const { user } = useCurrentUser();
   const [isRecording, setIsRecording] = useState(false);
   const [currentStandupId, setCurrentStandupId] = useState<string | null>(null);
   const [selectedStandup, setSelectedStandup] = useState<StandupWithRelations | null>(null);
@@ -33,13 +35,8 @@ export default function StandupsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showEmailModal, setShowEmailModal] = useState(false);
 
-  // TODO: Get current lab from context/session
-  const currentLabId = 'rhedas'; // Hardcoded for now
-  // TODO: Get current user from context/session
-  const currentUser = {
-    name: 'Jane Cooper',
-    email: 'jane.cooper@rush.edu',
-  }; // Hardcoded for now
+  // TODO: Get current lab from user context
+  const currentLabId = 'default-lab'; // TODO: Get from user's selected lab
 
   // Load standups on mount
   useEffect(() => {
@@ -333,12 +330,12 @@ export default function StandupsPage() {
       )}
 
       {/* Email Modal */}
-      {selectedStandup && (
+      {selectedStandup && user && (
         <SendEmailModal
           isOpen={showEmailModal}
           onClose={() => setShowEmailModal(false)}
           standup={selectedStandup}
-          currentUser={currentUser}
+          currentUser={{ name: user.name, email: user.email }}
         />
       )}
     </div>

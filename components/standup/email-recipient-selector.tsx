@@ -131,7 +131,7 @@ export function EmailRecipientSelector({
                 setInputError('');
               }}
               onKeyPress={handleKeyPress}
-              placeholder="email@example.com"
+              placeholder="Enter email address"
               className={cn(inputError && 'border-red-500')}
             />
             {inputError && (

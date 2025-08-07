@@ -12,160 +12,18 @@ type TeamMember = PrismaUser & {
   labIds?: string[]; // Optional for compatibility with components
 };
 
-// Mock data - will be replaced with actual API calls
-const mockMembers: Array<TeamMember & {
-  taskCount: number;
-  completedTasks: number;
-  activeProjects: number;
-  workload: number;
-  upcomingDeadlines: number;
-}> = [
-  {
-    id: '1',
-    email: 'pi@lab.edu',
-    name: 'Dr. Sarah Johnson',
-    firstName: 'Sarah',
-    lastName: 'Johnson',
-    role: 'PRINCIPAL_INVESTIGATOR',
-    avatar: 'bg-purple-500',
-    avatarUrl: null,
-    avatarImage: null,
-    initials: 'SJ',
-    capacity: 40,
-    expertise: ['Clinical Research', 'Health Equity', 'Data Science', 'NIH Grants'],
-    isActive: true,
-    metadata: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    taskCount: 12,
-    completedTasks: 45,
-    activeProjects: 5,
-    workload: 75,
-    upcomingDeadlines: 3,
-  },
-  {
-    id: '2',
-    email: 'postdoc@lab.edu',
-    name: 'Dr. Michael Chen',
-    firstName: 'Michael',
-    lastName: 'Chen',
-    role: 'RESEARCH_MEMBER',
-    avatar: 'bg-blue-500',
-    avatarUrl: null,
-    avatarImage: null,
-    initials: 'MC',
-    capacity: 40,
-    expertise: ['Statistical Analysis', 'R Programming', 'Machine Learning'],
-    isActive: true,
-    metadata: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    taskCount: 8,
-    completedTasks: 32,
-    activeProjects: 3,
-    workload: 60,
-    upcomingDeadlines: 2,
-  },
-  {
-    id: '3',
-    email: 'gradstudent@lab.edu',
-    name: 'Emily Rodriguez',
-    firstName: 'Emily',
-    lastName: 'Rodriguez',
-    role: 'RESEARCH_MEMBER',
-    avatar: 'bg-green-500',
-    avatarUrl: null,
-    avatarImage: null,
-    initials: 'ER',
-    capacity: 20,
-    expertise: ['Literature Review', 'Qualitative Research', 'SPSS'],
-    isActive: true,
-    metadata: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    taskCount: 15,
-    completedTasks: 28,
-    activeProjects: 4,
-    workload: 85,
-    upcomingDeadlines: 5,
-  },
-  {
-    id: '4',
-    email: 'admin@lab.edu',
-    name: 'Jennifer Park',
-    firstName: 'Jennifer',
-    lastName: 'Park',
-    role: 'LAB_ADMINISTRATOR',
-    avatar: 'bg-orange-500',
-    avatarUrl: null,
-    avatarImage: null,
-    initials: 'JP',
-    capacity: 40,
-    expertise: ['Project Management', 'Budget Management', 'IRB Coordination'],
-    isActive: true,
-    metadata: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    taskCount: 6,
-    completedTasks: 52,
-    activeProjects: 8,
-    workload: 45,
-    upcomingDeadlines: 1,
-  },
-  {
-    id: '5',
-    email: 'collaborator@external.edu',
-    name: 'Dr. Robert Williams',
-    firstName: 'Robert',
-    lastName: 'Williams',
-    role: 'EXTERNAL_COLLABORATOR',
-    avatar: 'bg-gray-500',
-    avatarUrl: null,
-    avatarImage: null,
-    initials: 'RW',
-    capacity: 10,
-    expertise: ['Epidemiology', 'Public Health', 'Grant Writing'],
-    isActive: true,
-    metadata: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    taskCount: 3,
-    completedTasks: 12,
-    activeProjects: 2,
-    workload: 30,
-    upcomingDeadlines: 0,
-  },
-  {
-    id: '6',
-    email: 'ra@lab.edu',
-    name: 'Alex Thompson',
-    firstName: 'Alex',
-    lastName: 'Thompson',
-    role: 'RESEARCH_MEMBER',
-    avatar: 'bg-indigo-500',
-    avatarUrl: null,
-    avatarImage: null,
-    initials: 'AT',
-    capacity: 30,
-    expertise: ['Data Collection', 'REDCap', 'Python'],
-    isActive: true,
-    metadata: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    taskCount: 10,
-    completedTasks: 35,
-    activeProjects: 3,
-    workload: 55,
-    upcomingDeadlines: 2,
-  },
-];
-
 export default function TeamPage() {
-  const [members, setMembers] = useState(mockMembers);
+  const [members, setMembers] = useState<Array<TeamMember & {
+    taskCount: number;
+    completedTasks: number;
+    activeProjects: number;
+    workload: number;
+    upcomingDeadlines: number;
+  }>>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'workload'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Filter members based on search
   const filteredMembers = members.filter(member => 
@@ -179,10 +37,12 @@ export default function TeamPage() {
     const fetchMembers = async () => {
       try {
         setIsLoading(true);
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/team');
-        // const data = await response.json();
-        // setMembers(data);
+        const response = await fetch('/api/team');
+        if (!response.ok) {
+          throw new Error('Failed to fetch team members');
+        }
+        const data = await response.json();
+        setMembers(data);
       } catch (error) {
         console.error('Failed to fetch team members:', error);
         showToast({
@@ -195,7 +55,7 @@ export default function TeamPage() {
       }
     };
     
-    // fetchMembers();
+    fetchMembers();
   }, []);
   
   const handleAddMember = () => {

@@ -30,6 +30,8 @@ export async function GET() {
       name: user.name,
       role: user.role,
       initials: user.initials,
+      avatar: user.avatar,
+      avatarUrl: user.avatarUrl,
       labs: user.labs.map((labMember: UserWithLabs['labs'][0]) => ({
         labId: labMember.labId,
         role: labMember.isAdmin ? 'ADMIN' : 'MEMBER',

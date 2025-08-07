@@ -28,41 +28,30 @@ export default function TestAvatarsPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      // This is a mock fetch - in a real app you'd fetch from your API
-      // For now, let's use some of our seeded users
-      const mockUsers: User[] = [
-        {
-          id: 'user-1',
-          name: 'Kevin Buell',
-          email: 'Kevin_Buell@rush.edu',
-          initials: 'KB'
-        },
-        {
-          id: 'user-2', 
-          name: 'Juan Rojas',
-          email: 'juan_rojas@rush.edu',
-          initials: 'JR'
-        },
-        {
-          id: 'user-3',
-          name: 'Hoda Masteri Farahani',
-          email: 'Hoda_MasteriFarahani@rush.edu',
-          initials: 'HM'
-        },
-        {
-          id: 'user-4',
-          name: 'Jason Stanghelle',
-          email: 'Jason_Stanghelle@rush.edu', 
-          initials: 'JS'
-        }
-      ]
+      // Fetch real users from the API
+      const response = await fetch('/api/users')
+      if (!response.ok) {
+        throw new Error('Failed to fetch users')
+      }
+      const data = await response.json()
       
-      setUsers(mockUsers)
-      if (mockUsers.length > 0) {
-        setSelectedUserId(mockUsers[0].id)
+      // Transform the data to match our User interface
+      const transformedUsers: User[] = data.map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        initials: user.initials || user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+        avatarUrl: user.avatarUrl
+      }))
+      
+      setUsers(transformedUsers)
+      if (transformedUsers.length > 0) {
+        setSelectedUserId(transformedUsers[0].id)
       }
     } catch (error) {
-      // Failed to fetch users
+      console.error('Failed to fetch users:', error)
+      // Fallback to empty array
+      setUsers([])
     } finally {
       setLoading(false)
     }

@@ -21,55 +21,8 @@ interface Notification {
   actionLabel?: string;
 }
 
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'task',
-    title: 'New task assigned',
-    message: 'You have been assigned to "Review IRB Protocol" by Dr. Sarah Johnson',
-    read: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    actionUrl: '/tasks',
-    actionLabel: 'View Task',
-  },
-  {
-    id: '2',
-    type: 'deadline',
-    title: 'Deadline approaching',
-    message: 'Grant proposal submission due in 2 days',
-    read: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    actionUrl: '/deadlines',
-    actionLabel: 'View Details',
-  },
-  {
-    id: '3',
-    type: 'success',
-    title: 'Study approved',
-    message: 'Your study "COVID-19 Vaccine Efficacy" has been approved by the IRB',
-    read: true,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-  },
-  {
-    id: '4',
-    type: 'team',
-    title: 'New team member',
-    message: 'Dr. Michael Chen has joined the "NIH R01 Grant" project',
-    read: true,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-  },
-  {
-    id: '5',
-    type: 'info',
-    title: 'System update',
-    message: 'LabManage will undergo maintenance on Saturday from 2-4 AM EST',
-    read: true,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-  },
-];
-
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   
   const filteredNotifications = notifications.filter(n => 

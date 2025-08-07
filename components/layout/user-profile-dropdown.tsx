@@ -84,17 +84,11 @@ export function UserProfileDropdown({ className, showFullProfile = true }: UserP
     });
   };
   
-  // Default user if not loaded
-  const displayUser = user || {
-    name: 'Guest User',
-    email: 'guest@example.com',
-    role: 'GUEST',
-    initials: 'GU',
-    avatar: 'bg-gray-500',
-    avatarUrl: null,
-  };
+  if (!user) {
+    return null; // Don't show dropdown if no user
+  }
   
-  const roleLabel = displayUser.role
+  const roleLabel = user.role
     .split('_')
     .map(word => word.charAt(0) + word.slice(1).toLowerCase())
     .join(' ');
@@ -121,16 +115,16 @@ export function UserProfileDropdown({ className, showFullProfile = true }: UserP
           className
         )}>
           <Avatar className="h-10 w-10">
-            <AvatarImage src={displayUser.avatarUrl || undefined} alt={displayUser.name} />
-            <AvatarFallback className={cn('text-white font-medium', displayUser.avatar || 'bg-gradient-to-br from-purple-500 to-pink-500')}>
-              {displayUser.initials}
+            <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
+            <AvatarFallback className={cn('text-white font-medium', user.avatar || 'bg-gradient-to-br from-purple-500 to-pink-500')}>
+              {user.initials}
             </AvatarFallback>
           </Avatar>
           {showFullProfile && (
             <>
               <div className="flex-1 text-left">
                 <p className="text-sm font-medium text-white">
-                  {displayUser.name.split(' ').slice(-1)[0]} {/* Show last name only in sidebar */}
+                  {user.name.split(' ').slice(-1)[0]} {/* Show last name only in sidebar */}
                 </p>
                 <p className="text-xs text-gray-400">
                   {roleLabel.includes('Principal') ? 'PI' : 
@@ -150,15 +144,15 @@ export function UserProfileDropdown({ className, showFullProfile = true }: UserP
         <DropdownMenuLabel>
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={displayUser.avatarUrl || undefined} alt={displayUser.name} />
-              <AvatarFallback className={cn('text-white font-medium', displayUser.avatar || 'bg-gradient-to-br from-purple-500 to-pink-500')}>
-                {displayUser.initials}
+              <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
+              <AvatarFallback className={cn('text-white font-medium', user.avatar || 'bg-gradient-to-br from-purple-500 to-pink-500')}>
+                {user.initials}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <p className="text-sm font-medium">{displayUser.name}</p>
+              <p className="text-sm font-medium">{user.name}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {displayUser.email}
+                {user.email}
               </p>
             </div>
           </div>

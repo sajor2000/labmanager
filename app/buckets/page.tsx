@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Bucket } from '@/components/buckets/bucket-card';
 import { BucketHeader } from '@/components/buckets/bucket-header';
 import { BucketCreationForm, type BucketFormData } from '@/components/buckets/bucket-creation-form';
@@ -12,112 +12,14 @@ import { BucketImportModal } from '@/components/buckets/bucket-import-modal';
 import { BucketFilterPanel, type BucketFilters } from '@/components/buckets/bucket-filter-panel';
 import { showToast } from '@/components/ui/toast';
 
-// Mock data - replace with API calls
-const mockBuckets: Bucket[] = [
-  {
-    id: '1',
-    name: 'NIH-Funded Projects',
-    description: 'Research projects funded by National Institutes of Health',
-    color: '#3B82F6',
-    icon: 'trending',
-    position: 0,
-    projectCount: 12,
-    completedProjects: 3,
-    activeMembers: 8,
-    progress: 25,
-    isActive: true,
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-02-20'),
-    hasActiveRules: true,
-    rulesCount: 2,
-  },
-  {
-    id: '2',
-    name: 'Pilot Studies',
-    description: 'Small-scale preliminary research projects',
-    color: '#10B981',
-    icon: 'folder',
-    position: 1,
-    projectCount: 8,
-    completedProjects: 5,
-    activeMembers: 4,
-    progress: 62,
-    isActive: true,
-    createdAt: new Date('2024-01-20'),
-    updatedAt: new Date('2024-02-18'),
-  },
-  {
-    id: '3',
-    name: 'Industry Partnerships',
-    description: 'Corporate-sponsored research collaborations',
-    color: '#F59E0B',
-    icon: 'trending',
-    position: 2,
-    projectCount: 5,
-    completedProjects: 1,
-    activeMembers: 6,
-    progress: 20,
-    isActive: true,
-    createdAt: new Date('2024-02-01'),
-    updatedAt: new Date('2024-02-19'),
-  },
-  {
-    id: '4',
-    name: 'Clinical Trials',
-    description: 'Human subject research studies',
-    color: '#EF4444',
-    icon: 'archive',
-    position: 3,
-    projectCount: 3,
-    completedProjects: 0,
-    activeMembers: 10,
-    progress: 15,
-    isActive: true,
-    createdAt: new Date('2024-02-10'),
-    updatedAt: new Date('2024-02-15'),
-  },
-  {
-    id: '5',
-    name: 'Manuscripts',
-    description: 'Papers in various stages of preparation',
-    color: '#EC4899',
-    icon: 'archive',
-    position: 4,
-    projectCount: 15,
-    completedProjects: 8,
-    activeMembers: 12,
-    progress: 53,
-    isActive: true,
-    createdAt: new Date('2023-12-01'),
-    updatedAt: new Date('2024-02-21'),
-    hasActiveRules: true,
-    rulesCount: 3,
-  },
-  {
-    id: '6',
-    name: 'Archived Projects',
-    description: 'Completed or discontinued projects',
-    color: '#6B7280',
-    icon: 'archive',
-    position: 5,
-    projectCount: 20,
-    completedProjects: 20,
-    activeMembers: 0,
-    progress: 100,
-    isActive: false,
-    createdAt: new Date('2023-06-01'),
-    updatedAt: new Date('2024-01-01'),
-  },
-];
-
 export default function BucketsPage() {
-  const [buckets, setBuckets] = useState(mockBuckets);
+  const [buckets, setBuckets] = useState<Bucket[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'analytics'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [showCreationForm, setShowCreationForm] = useState(false);
   const [editingBucket, setEditingBucket] = useState<Bucket | null>(null);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedBuckets, setSelectedBuckets] = useState<Set<string>>(new Set());
   const [showRulesModal, setShowRulesModal] = useState(false);
@@ -135,6 +37,30 @@ export default function BucketsPage() {
     colors: [],
     icons: [],
   });
+
+  // Fetch buckets on mount
+  useEffect(() => {
+    const fetchBuckets = async () => {
+      try {
+        const response = await fetch('/api/buckets');
+        if (response.ok) {
+          const data = await response.json();
+          setBuckets(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch buckets:', error);
+        showToast({
+          type: 'error',
+          title: 'Failed to load buckets',
+          message: 'Please try refreshing the page',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBuckets();
+  }, []);
   
   // Filter buckets
   const filteredBuckets = buckets.filter(bucket => {

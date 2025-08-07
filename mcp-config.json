@@ -1,0 +1,375 @@
+{
+  "name": "LabManage UI/UX Test Automation",
+  "version": "1.0.0",
+  "description": "MCP configuration for automated UI/UX testing with Playwright",
+  "servers": {
+    "playwright-server": {
+      "command": "node",
+      "args": ["./mcp/playwright-server.js"],
+      "env": {
+        "PLAYWRIGHT_BASE_URL": "${PLAYWRIGHT_BASE_URL:-http://localhost:3000}",
+        "PERCY_TOKEN": "${PERCY_TOKEN}",
+        "LIGHTHOUSE_CI_TOKEN": "${LIGHTHOUSE_CI_TOKEN}"
+      }
+    },
+    "test-orchestrator": {
+      "command": "node",
+      "args": ["./mcp/test-orchestrator.js"],
+      "env": {
+        "TEST_PARALLEL_WORKERS": "4",
+        "TEST_RETRY_COUNT": "2",
+        "TEST_TIMEOUT": "30000"
+      }
+    },
+    "visual-regression": {
+      "command": "node",
+      "args": ["./mcp/visual-regression-server.js"],
+      "env": {
+        "PERCY_PROJECT": "labmanage-ui",
+        "VISUAL_DIFF_THRESHOLD": "0.01"
+      }
+    },
+    "accessibility-monitor": {
+      "command": "node",
+      "args": ["./mcp/accessibility-monitor.js"],
+      "env": {
+        "AXE_CORE_VERSION": "latest",
+        "WCAG_LEVEL": "AA"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "runUITests",
+      "description": "Execute UI/UX tests with specified configuration",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "testType": {
+            "type": "string",
+            "enum": ["navigation", "visual", "accessibility", "performance", "responsive", "all"],
+            "description": "Type of tests to run"
+          },
+          "browsers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["chrome", "firefox", "safari", "edge", "mobile-chrome", "mobile-safari"]
+            },
+            "description": "Browsers to test against"
+          },
+          "viewport": {
+            "type": "object",
+            "properties": {
+              "width": { "type": "number" },
+              "height": { "type": "number" }
+            },
+            "description": "Custom viewport size"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "headless": { "type": "boolean", "default": true },
+              "screenshots": { "type": "boolean", "default": true },
+              "videos": { "type": "boolean", "default": false },
+              "trace": { "type": "boolean", "default": false },
+              "parallel": { "type": "boolean", "default": true }
+            }
+          }
+        },
+        "required": ["testType"]
+      }
+    },
+    {
+      "name": "captureVisualBaseline",
+      "description": "Capture visual baselines for regression testing",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pages": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Page URLs to capture"
+          },
+          "components": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Component selectors to capture"
+          },
+          "themes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["light", "dark", "both"]
+            },
+            "default": ["both"]
+          },
+          "viewports": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["mobile", "tablet", "desktop", "ultra-wide", "all"]
+            },
+            "default": ["all"]
+          }
+        },
+        "required": ["pages"]
+      }
+    },
+    {
+      "name": "checkAccessibility",
+      "description": "Run accessibility checks on specified pages",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Page URL to check"
+          },
+          "wcagLevel": {
+            "type": "string",
+            "enum": ["A", "AA", "AAA"],
+            "default": "AA"
+          },
+          "rules": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Specific WCAG rules to check"
+          },
+          "exclude": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Elements to exclude from checking"
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "measurePerformance",
+      "description": "Measure performance metrics for UI components",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Page URL to measure"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["FCP", "LCP", "TTI", "TBT", "CLS", "FID"]
+            },
+            "description": "Performance metrics to capture"
+          },
+          "iterations": {
+            "type": "number",
+            "default": 3,
+            "description": "Number of test iterations"
+          },
+          "throttling": {
+            "type": "object",
+            "properties": {
+              "cpu": { "type": "number", "default": 1 },
+              "network": {
+                "type": "string",
+                "enum": ["offline", "slow-2g", "2g", "slow-3g", "3g", "fast-3g", "4g", "wifi"]
+              }
+            }
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "testResponsiveDesign",
+      "description": "Test responsive design across different viewports",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Page URL to test"
+          },
+          "breakpoints": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "width": { "type": "number" },
+                "height": { "type": "number" }
+              }
+            },
+            "description": "Custom breakpoints to test"
+          },
+          "orientation": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["portrait", "landscape", "both"]
+            },
+            "default": ["both"]
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["layout", "overflow", "readability", "touch-targets", "navigation"]
+            },
+            "default": ["layout", "overflow", "navigation"]
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "generateTestReport",
+      "description": "Generate comprehensive test report",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": ["html", "json", "junit", "markdown", "pdf"],
+            "default": "html"
+          },
+          "includeScreenshots": {
+            "type": "boolean",
+            "default": true
+          },
+          "includeVideos": {
+            "type": "boolean",
+            "default": false
+          },
+          "includeMetrics": {
+            "type": "boolean",
+            "default": true
+          },
+          "outputPath": {
+            "type": "string",
+            "default": "./test-reports"
+          }
+        }
+      }
+    },
+    {
+      "name": "compareVisualDiffs",
+      "description": "Compare visual differences between builds",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "baseline": {
+            "type": "string",
+            "description": "Baseline build ID or branch"
+          },
+          "current": {
+            "type": "string",
+            "description": "Current build ID or branch"
+          },
+          "threshold": {
+            "type": "number",
+            "default": 0.01,
+            "description": "Difference threshold (0-1)"
+          },
+          "highlightDifferences": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": ["baseline", "current"]
+      }
+    },
+    {
+      "name": "monitorRealUserMetrics",
+      "description": "Monitor real user metrics (RUM)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "enable": {
+            "type": "boolean",
+            "description": "Enable/disable RUM monitoring"
+          },
+          "sampleRate": {
+            "type": "number",
+            "default": 0.1,
+            "description": "Sampling rate (0-1)"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["navigation", "clicks", "scrolling", "errors", "performance"]
+            },
+            "default": ["navigation", "performance"]
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "Telemetry endpoint URL"
+          }
+        },
+        "required": ["enable"]
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "name": "ui-test-suite",
+      "description": "Run complete UI/UX test suite",
+      "arguments": []
+    },
+    {
+      "name": "visual-regression",
+      "description": "Check for visual regressions",
+      "arguments": [
+        {
+          "name": "branch",
+          "description": "Branch to compare against",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "accessibility-audit",
+      "description": "Perform full accessibility audit",
+      "arguments": []
+    },
+    {
+      "name": "performance-benchmark",
+      "description": "Run performance benchmarks",
+      "arguments": []
+    },
+    {
+      "name": "responsive-check",
+      "description": "Check responsive design",
+      "arguments": []
+    }
+  ],
+  "resources": [
+    {
+      "uri": "test://results/latest",
+      "name": "Latest Test Results",
+      "description": "Most recent test execution results",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "test://reports/visual",
+      "name": "Visual Regression Reports",
+      "description": "Visual regression test reports",
+      "mimeType": "text/html"
+    },
+    {
+      "uri": "test://metrics/performance",
+      "name": "Performance Metrics",
+      "description": "UI performance metrics",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "test://coverage/accessibility",
+      "name": "Accessibility Coverage",
+      "description": "WCAG compliance coverage",
+      "mimeType": "application/json"
+    }
+  ]
+}

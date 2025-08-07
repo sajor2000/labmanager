@@ -43,23 +43,58 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Study status colors from CLAUDE.md
-        status: {
-          planning: "#6366F1",
-          "irb-submission": "#F59E0B",
-          "irb-approved": "#10B981",
-          "data-collection": "#3B82F6",
-          analysis: "#10B981",
-          manuscript: "#8B5CF6",
-          "under-review": "#F59E0B",
-          published: "#059669",
-          "on-hold": "#6B7280",
-          cancelled: "#EF4444",
+        // Rush University Brand Colors
+        rush: {
+          green: {
+            DEFAULT: "#2C5234",
+            light: "#4A6741",
+            dark: "#1C3A28",
+          },
+          gold: {
+            DEFAULT: "#CFB991",
+            light: "#E5D4A1",
+            dark: "#B8A878",
+          },
+          blue: {
+            DEFAULT: "#1A5F7A",
+            light: "#3498DB",
+            dark: "#0F3A4D",
+          },
         },
-        // Bucket colors
-        bucket: {
-          abbott: "#00BCD4",
-          "wisconsin-r01": "#E91E63",
+        // Slack Dark Mode Colors
+        slack: {
+          bg: {
+            main: "#1A1D21",
+            sidebar: "#222529",
+            message: "#232528",
+            hover: "#2D3136",
+            active: "#3A3D41",
+          },
+          text: {
+            primary: "#D1D2D3",
+            secondary: "#ABABAD",
+          },
+          border: "#2C2D30",
+        },
+        // Study status colors - Professional Medical Theme
+        status: {
+          planning: "hsl(var(--status-planning))",
+          "irb-submission": "hsl(var(--status-irb-submission))",
+          "irb-approved": "hsl(var(--status-irb-approved))",
+          "data-collection": "hsl(var(--status-data-collection))",
+          analysis: "hsl(var(--status-analysis))",
+          manuscript: "hsl(var(--status-manuscript))",
+          "under-review": "hsl(var(--status-under-review))",
+          published: "hsl(var(--status-published))",
+          "on-hold": "hsl(var(--status-on-hold))",
+          cancelled: "hsl(var(--status-cancelled))",
+        },
+        // Priority colors
+        priority: {
+          low: "hsl(var(--priority-low))",
+          medium: "hsl(var(--priority-medium))",
+          high: "hsl(var(--priority-high))",
+          critical: "hsl(var(--priority-critical))",
         },
       },
       borderRadius: {
@@ -76,10 +111,25 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "slide-in": {
+          from: { transform: "translateX(-100%)", opacity: "0" },
+          to: { transform: "translateX(0)", opacity: "1" },
+        },
+        "scale-in": {
+          from: { transform: "scale(0.9)", opacity: "0" },
+          to: { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.3s ease-out",
+        "slide-in": "slide-in 0.3s ease-out",
+        "scale-in": "scale-in 0.3s ease-out",
       },
     },
   },

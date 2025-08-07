@@ -34,21 +34,21 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full w-64 flex-col bg-gray-900 dark:bg-gray-950">
-      {/* Logo Section */}
-      <div className="flex h-16 items-center justify-start px-6 border-b border-gray-800">
+    <div className="sidebar-rush flex h-full w-64 flex-col">
+      {/* Logo Section - Rush University Theme */}
+      <div className="flex h-16 items-center justify-start px-6 border-b">
         <div className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rush-green dark:bg-rush-green-light">
             <FlaskConical className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-white">Rush Labs</h1>
-            <p className="text-xs text-gray-400">Research Management</p>
+            <h1 className="text-lg font-semibold text-foreground">LabManage</h1>
+            <p className="text-xs text-muted-foreground">Research Hub</p>
           </div>
         </div>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation - Rush/Slack Theme */}
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
           const isActive = pathname === item.href || 
@@ -58,31 +58,30 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                isActive
-                  ? "bg-gray-800 text-white"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                "sidebar-item group flex items-center relative",
+                isActive && "sidebar-item-active"
               )}
             >
+              {/* Active indicator - left border */}
+              {isActive && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary dark:bg-rush-green-light rounded-l-md" />
+              )}
               <item.icon
                 className={cn(
                   "mr-3 h-5 w-5 flex-shrink-0",
                   isActive
-                    ? "text-white"
-                    : "text-gray-400 group-hover:text-white"
+                    ? "text-primary-foreground dark:text-foreground"
+                    : "text-muted-foreground group-hover:text-foreground"
                 )}
               />
               {item.name}
-              {isActive && (
-                <div className="ml-auto h-2 w-2 rounded-full bg-blue-500" />
-              )}
             </Link>
           );
         })}
       </nav>
 
       {/* User Profile Section */}
-      <div className="border-t border-gray-800 p-4">
+      <div className="border-t border-border p-4">
         <UserProfileDropdown showFullProfile={true} />
       </div>
     </div>

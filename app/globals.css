@@ -4,48 +4,148 @@
 
 @layer base {
   :root {
+    /* Rush University Light Theme Colors */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 147 23% 19%; /* Rush green #2C5234 */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 147 23% 19%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --popover-foreground: 147 23% 19%;
+    --primary: 147 23% 19%; /* Rush green #2C5234 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 42 26% 69%; /* Rush gold #CFB991 */
+    --secondary-foreground: 147 23% 19%;
+    --muted: 40 6% 97%; /* Light gray #F8F7F5 */
+    --muted-foreground: 0 0% 45%;
+    --accent: 198 68% 28%; /* Rush blue #1A5F7A */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 147 23% 19%;
     --radius: 0.5rem;
+    
+    /* Chart Colors - Rush Theme */
+    --chart-1: 147 23% 19%;
+    --chart-2: 42 26% 69%;
+    --chart-3: 198 68% 28%;
+    --chart-4: 147 23% 35%;
+    --chart-5: 42 26% 80%;
+    
+    /* Status Colors - Rush Professional */
+    --status-planning: 198 68% 28%;
+    --status-irb-submission: 38 70% 50%;
+    --status-irb-approved: 147 23% 19%;
+    --status-data-collection: 198 50% 40%;
+    --status-analysis: 147 23% 35%;
+    --status-manuscript: 42 26% 69%;
+    --status-under-review: 38 60% 55%;
+    --status-published: 147 40% 35%;
+    --status-on-hold: 0 0% 63%;
+    --status-cancelled: 0 72% 51%;
+    
+    /* Priority Colors */
+    --priority-low: 210 20% 70%;
+    --priority-medium: 199 95% 53%;
+    --priority-high: 38 95% 55%;
+    --priority-critical: 0 84% 60%;
+    
+    /* Semantic Colors */
+    --success: 142 71% 45%;
+    --warning: 38 95% 55%;
+    --error: 0 84% 60%;
+    --info: 199 95% 53%;
+    
+    /* Custom Rush Theme Variables */
+    --rush-green: 147 23% 19%;
+    --rush-gold: 42 26% 69%;
+    --rush-blue: 198 68% 28%;
+    --sidebar-bg: 40 6% 97%;
+    --hover-bg: 147 10% 95%;
+    --active-bg: 147 23% 90%;
+    
+    /* Gradient Mesh for Light Mode */
+    --gradient-mesh: radial-gradient(at 40% 20%, hsla(147, 23%, 30%, 0.1) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsla(42, 26%, 69%, 0.1) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsla(198, 68%, 28%, 0.1) 0px, transparent 50%);
+    
+    /* Shadows - Soft & Modern */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.15);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    --shadow-glow: 0 0 30px rgb(99 102 241 / 0.3);
+    --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.06);
+    
+    /* Animations */
+    --animation-fast: 150ms;
+    --animation-base: 250ms;
+    --animation-slow: 350ms;
+    --animation-slower: 500ms;
+    
+    /* Glass Morphism */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Slack-Style Dark Theme with Rush Accents */
+    --background: 220 10% 11%; /* #1A1D21 */
+    --foreground: 210 2% 82%; /* #D1D2D3 */
+    --card: 220 6% 14%; /* #232528 */
+    --card-foreground: 210 2% 82%;
+    --popover: 220 6% 14%;
+    --popover-foreground: 210 2% 82%;
+    --primary: 107 15% 35%; /* Lighter Rush green #4A6741 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 46 40% 77%; /* Lighter Rush gold #E5D4A1 */
+    --secondary-foreground: 220 10% 11%;
+    --muted: 220 8% 17%; /* #2C2D30 */
+    --muted-foreground: 210 2% 67%; /* #ABABAD */
+    --accent: 207 74% 54%; /* Bright blue #3498DB */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 8% 17%; /* #2C2D30 */
+    --input: 220 8% 17%;
+    --ring: 107 15% 35%;
+    
+    /* Chart Colors Dark - Rush Theme */
+    --chart-1: 107 15% 35%;
+    --chart-2: 46 40% 77%;
+    --chart-3: 207 74% 54%;
+    --chart-4: 107 15% 45%;
+    --chart-5: 46 40% 85%;
+    
+    /* Status Colors Dark - Muted for Slack style */
+    --status-planning: 207 50% 50%;
+    --status-irb-submission: 38 40% 60%;
+    --status-irb-approved: 107 15% 45%;
+    --status-data-collection: 207 40% 55%;
+    --status-analysis: 107 20% 50%;
+    --status-manuscript: 46 30% 70%;
+    --status-under-review: 38 35% 65%;
+    --status-published: 107 30% 55%;
+    --status-on-hold: 0 0% 50%;
+    --status-cancelled: 0 50% 50%;
+    
+    /* Custom Slack Dark Theme Variables */
+    --sidebar-bg: 220 7% 14%; /* #222529 */
+    --hover-bg: 220 7% 19%; /* #2D3136 */
+    --active-bg: 220 6% 24%; /* #3A3D41 */
+    
+    /* Glass Morphism Dark */
+    --glass-bg: rgba(35, 37, 40, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    
+    /* Gradient Mesh for Dark Mode */
+    --gradient-mesh: radial-gradient(at 40% 20%, hsla(107, 15%, 35%, 0.05) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsla(46, 40%, 77%, 0.05) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsla(207, 74%, 54%, 0.05) 0px, transparent 50%);
   }
 }
 
@@ -53,7 +153,407 @@
   * {
     @apply border-border;
   }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    position: relative;
+  }
+  
+  /* Beautiful gradient mesh background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gradient-mesh);
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  /* Smooth Scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Selection Colors */
+  ::selection {
+    @apply bg-primary/20 text-primary;
+  }
+  
+  /* Focus Styles */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background rounded-md;
+  }
+}
+
+@layer components {
+  /* Glass Morphism Card */
+  .glass {
+    @apply backdrop-blur-md bg-white/80 dark:bg-card/80 border border-border/50;
+    @apply shadow-lg dark:shadow-2xl;
+  }
+  
+  .glass-subtle {
+    @apply backdrop-blur-sm bg-white/60 dark:bg-card/60 border border-border/30;
+  }
+  
+  /* Rush/Slack Card Styles */
+  .card-modern {
+    @apply glass rounded-lg p-6;
+    @apply hover:shadow-xl dark:hover:shadow-2xl;
+    @apply transition-all duration-300 ease-out;
+    @apply hover:translate-y-[-2px];
+  }
+  
+  /* Sidebar Styles */
+  .sidebar-rush {
+    @apply bg-[hsl(var(--sidebar-bg))] dark:bg-[hsl(var(--sidebar-bg))];
+    @apply border-r border-border;
+  }
+  
+  .sidebar-item {
+    @apply px-3 py-2 rounded-lg;
+    @apply text-foreground/70 dark:text-foreground/60;
+    @apply hover:bg-[hsl(var(--hover-bg))] dark:hover:bg-[hsl(var(--hover-bg))];
+    @apply hover:text-foreground dark:hover:text-foreground;
+    @apply transition-all duration-200;
+  }
+  
+  .sidebar-item-active {
+    @apply bg-primary text-primary-foreground;
+    @apply dark:bg-[hsl(var(--active-bg))] dark:text-foreground;
+  }
+  
+  /* Button Styles */
+  .btn-rush-primary {
+    @apply bg-primary text-primary-foreground;
+    @apply hover:bg-primary/90;
+    @apply dark:bg-primary dark:text-primary-foreground;
+    @apply dark:hover:bg-primary/80;
+    @apply transition-all duration-200;
+  }
+  
+  .btn-rush-secondary {
+    @apply bg-secondary text-secondary-foreground;
+    @apply hover:bg-secondary/90;
+    @apply dark:bg-secondary/20 dark:text-secondary;
+    @apply dark:hover:bg-secondary/30;
+    @apply transition-all duration-200;
+  }
+  
+  /* Gradient Text - Rush Style */
+  .gradient-text-rush {
+    background: linear-gradient(135deg, hsl(var(--rush-green)), hsl(var(--rush-gold)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Progress Bar Gradients */
+  .progress-gradient {
+    background: linear-gradient(90deg, 
+      hsl(var(--rush-green)) 0%, 
+      hsl(var(--rush-gold)) 100%);
+  }
+  
+  .progress-gradient-dark {
+    background: linear-gradient(90deg, 
+      hsl(var(--primary)) 0%, 
+      hsl(var(--secondary)) 100%);
+  }
+  
+  /* Input Styles */
+  .input-rush {
+    @apply bg-background dark:bg-[hsl(var(--hover-bg))];
+    @apply border border-input dark:border-border;
+    @apply focus:border-primary dark:focus:border-primary/50;
+    @apply placeholder:text-muted-foreground;
+    @apply transition-colors duration-200;
+  }
+  
+  /* Status Badge Styles - Professional Medical */
+  .status-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-md text-xs font-medium;
+    @apply border bg-opacity-10 dark:bg-opacity-20;
+    @apply transition-all duration-200;
+  }
+  
+  /* Skeleton Loading */
+  .skeleton {
+    @apply relative overflow-hidden bg-muted rounded-lg;
+  }
+  
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    animation: skeleton-loading 2s infinite;
+  }
+  
+  /* Pulse Dot for Live Indicators */
+  .pulse-dot {
+    @apply relative inline-flex h-3 w-3;
+  }
+  
+  .pulse-dot::before {
+    content: '';
+    @apply absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75;
+  }
+  
+  .pulse-dot::after {
+    content: '';
+    @apply absolute inline-flex h-3 w-3 rounded-full bg-primary;
+  }
+  
+  /* Table Styles - Rush Professional */
+  .table-rush {
+    @apply w-full text-sm;
+  }
+  
+  .table-rush thead {
+    @apply bg-muted dark:bg-[hsl(var(--hover-bg))];
+    @apply border-b border-border;
+  }
+  
+  .table-rush tbody tr {
+    @apply border-b border-border/50;
+    @apply hover:bg-muted/50 dark:hover:bg-[hsl(var(--hover-bg))]/50;
+    @apply transition-colors duration-150;
+  }
+  
+  /* Focus Styles - Rush Theme */
+  .focus-rush {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary;
+    @apply dark:focus:ring-primary/50;
+    @apply focus:ring-offset-2 dark:focus:ring-offset-background;
+  }
+  
+  /* Animated Border */
+  .animated-border {
+    @apply relative rounded-lg;
+    background: linear-gradient(var(--card), var(--card)) padding-box,
+                linear-gradient(45deg, var(--primary), var(--accent), var(--primary)) border-box;
+    border: 2px solid transparent;
+    background-size: 200% 200%;
+    animation: gradient-border 3s ease infinite;
+  }
+  
+  /* Interactive List Items */
+  .list-item-interactive {
+    @apply relative px-4 py-3 rounded-lg transition-all duration-200
+           hover:bg-primary/5 hover:pl-6 cursor-pointer;
+  }
+  
+  .list-item-interactive::before {
+    content: '';
+    @apply absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-primary
+           rounded-full transition-all duration-200;
+  }
+  
+  .list-item-interactive:hover::before {
+    @apply h-8;
+  }
+  
+  /* Drag and Drop Styles */
+  .draggable {
+    @apply cursor-move transition-all duration-200;
+  }
+  
+  .draggable.dragging {
+    @apply opacity-50 rotate-2 scale-105;
+    cursor: grabbing !important;
+  }
+  
+  .drop-zone {
+    @apply relative border-2 border-dashed border-muted-foreground/20 rounded-xl 
+           transition-all duration-200 min-h-[100px];
+  }
+  
+  .drop-zone.drag-over {
+    @apply border-primary bg-primary/5 scale-[1.02];
+  }
+  
+  .drop-zone.drag-over::before {
+    content: '';
+    @apply absolute inset-0 bg-primary/10 rounded-xl animate-pulse;
+  }
+}
+
+@layer utilities {
+  /* Animation Utilities */
+  .animate-in {
+    animation: animate-in var(--animation-base) ease-out;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-slide-up {
+    animation: slide-up var(--animation-base) ease-out;
+  }
+  
+  .animate-slide-down {
+    animation: slide-down var(--animation-base) ease-out;
+  }
+  
+  .animate-fade-in {
+    animation: fade-in var(--animation-slow) ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scale-in var(--animation-base) cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* Keyframe Animations */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes skeleton-loading {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes gradient-border {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes animate-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes slide-up {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full transition-colors;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/40;
+}
+
+/* Smooth Page Transitions */
+.page-transition {
+  animation: page-enter 0.3s ease-out;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Utility Classes for Modern UI */
+.text-balance {
+  text-wrap: balance;
+}
+
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Responsive Typography */
+.text-responsive {
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.heading-responsive {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+/* Print Styles */
+@media print {
+  body::before {
+    display: none;
+  }
+  
+  .no-print {
+    display: none !important;
   }
 }

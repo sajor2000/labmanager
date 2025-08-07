@@ -1,7 +1,7 @@
 import { getStudies } from '@/app/actions/project-actions-v2';
 import { getBuckets } from '@/app/actions/bucket-actions';
 import { prisma } from '@/lib/prisma';
-import { StudiesDataTable } from '@/components/studies/studies-data-table';
+import { StudiesPageEnhanced } from '@/components/studies/studies-page-enhanced';
 
 export default async function StudiesPage() {
   // Fetch all data needed for the page
@@ -48,12 +48,10 @@ export default async function StudiesPage() {
     : [];
 
   return (
-    <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <StudiesDataTable 
-        studies={studiesWithTitle}
-        buckets={bucketsWithTitle}
-        users={users}
-      />
-    </div>
+    <StudiesPageEnhanced 
+      studies={studiesWithTitle}
+      buckets={bucketsWithTitle}
+      users={users}
+    />
   );
 }

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 interface TeamMemberCardProps {
   member: User & {
@@ -53,12 +53,13 @@ export function TeamMemberCard({ member, onEdit, onViewDetails }: TeamMemberCard
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={member.avatar} alt={member.name} />
-              <AvatarFallback className={cn('text-white font-medium', member.avatar || 'bg-blue-500')}>
-                {member.initials}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              userId={member.id}
+              name={member.name}
+              initials={member.initials}
+              avatarUrl={member.avatarUrl}
+              size="lg"
+            />
             <div>
               <h3 className="font-medium text-gray-900 dark:text-white">
                 {member.name}
