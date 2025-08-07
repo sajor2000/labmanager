@@ -20,12 +20,57 @@ export async function GET() {
         name: true,
         shortName: true,
         description: true,
+        logo: true,
+        icon: true,
+        color: true,
         isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        members: {
+          select: {
+            id: true,
+            isAdmin: true,
+            joinedAt: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                avatar: true,
+                initials: true,
+              }
+            }
+          },
+          where: {
+            isActive: true
+          },
+          orderBy: {
+            joinedAt: 'desc'
+          }
+        },
+        projects: {
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            priority: true,
+          },
+          where: {
+            isActive: true
+          },
+          take: 5,
+          orderBy: {
+            updatedAt: 'desc'
+          }
+        },
         _count: {
           select: {
             projects: true,
             members: true,
             buckets: true,
+            ideas: true,
+            standups: true,
           }
         }
       },

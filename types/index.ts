@@ -2,6 +2,16 @@
 
 import { LucideIcon } from "lucide-react";
 
+// Export all domain types
+export * from './lab';
+export * from './study';
+export * from './task';
+export * from './team';
+export * from './idea';
+export * from './standup';
+export * from './bucket';
+export * from './deadline';
+
 // User types
 export type UserRole = 
   | "Principal Investigator"

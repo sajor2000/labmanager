@@ -4,9 +4,12 @@ import { z } from 'zod';
 
 // Validation schema for updating a lab
 const UpdateLabSchema = z.object({
-  name: z.string().min(1, 'Lab name is required'),
-  shortName: z.string().min(1, 'Short name is required').max(10, 'Short name must be 10 characters or less'),
+  name: z.string().min(1, 'Lab name is required').optional(),
+  shortName: z.string().min(1, 'Short name is required').max(10, 'Short name must be 10 characters or less').optional(),
   description: z.string().optional(),
+  logo: z.string().optional(),
+  icon: z.string().optional(),
+  color: z.string().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -15,16 +18,88 @@ export async function GET(
   { params }: { params: { labId: string } }
 ) {
   try {
+    // TODO: Add auth when NextAuth is configured
+    const mockUserId = 'default-user-id';
+
     const lab = await prisma.lab.findUnique({
       where: { id: params.labId },
-      select: {
-        id: true,
-        name: true,
-        shortName: true,
-        description: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                avatar: true,
+                initials: true,
+              }
+            }
+          },
+          where: {
+            isActive: true
+          },
+          orderBy: {
+            joinedAt: 'desc'
+          }
+        },
+        projects: {
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            priority: true,
+            dueDate: true,
+            _count: {
+              select: {
+                tasks: true,
+              }
+            }
+          },
+          where: {
+            isActive: true
+          },
+          orderBy: {
+            updatedAt: 'desc'
+          }
+        },
+        buckets: {
+          where: {
+            isActive: true
+          },
+          orderBy: {
+            name: 'asc'
+          }
+        },
+        ideas: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            votes: true,
+            createdAt: true,
+          },
+          where: {
+            isActive: true
+          },
+          take: 10,
+          orderBy: {
+            createdAt: 'desc'
+          }
+        },
+        standups: {
+          select: {
+            id: true,
+            date: true,
+            participants: true,
+            actionItems: true,
+          },
+          take: 10,
+          orderBy: {
+            date: 'desc'
+          }
+        },
         _count: {
           select: {
             projects: true,
@@ -44,6 +119,12 @@ export async function GET(
       );
     }
     
+    // TODO: Add member check when auth is configured
+    // const isMember = lab.members.some(member => member.userId === mockUserId);
+    // if (!isMember) {
+    //   return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    // }
+    
     return NextResponse.json(lab);
   } catch (error) {
     console.error('Error fetching lab:', error);
@@ -59,6 +140,12 @@ export async function PUT(
   { params }: { params: { labId: string } }
 ) {
   try {
+    // TODO: Add auth when NextAuth is configured
+    const mockUserId = 'default-user-id';
+
+    // TODO: Add auth when NextAuth is configured
+    // For now, skip auth checks
+
     const body = await request.json();
     
     // Validate the request body
@@ -77,7 +164,7 @@ export async function PUT(
     }
     
     // Check if shortName is being changed and if it's already taken
-    if (validatedData.shortName !== existingLab.shortName) {
+    if (validatedData.shortName && validatedData.shortName !== existingLab.shortName) {
       const labWithSameShortName = await prisma.lab.findUnique({
         where: { shortName: validatedData.shortName }
       });
@@ -94,16 +181,22 @@ export async function PUT(
     const updatedLab = await prisma.lab.update({
       where: { id: params.labId },
       data: {
-        name: validatedData.name,
-        shortName: validatedData.shortName,
-        description: validatedData.description || null,
-        isActive: validatedData.isActive !== undefined ? validatedData.isActive : existingLab.isActive,
+        ...(validatedData.name && { name: validatedData.name }),
+        ...(validatedData.shortName && { shortName: validatedData.shortName }),
+        ...(validatedData.description !== undefined && { description: validatedData.description }),
+        ...(validatedData.logo !== undefined && { logo: validatedData.logo }),
+        ...(validatedData.icon !== undefined && { icon: validatedData.icon }),
+        ...(validatedData.color !== undefined && { color: validatedData.color }),
+        ...(validatedData.isActive !== undefined && { isActive: validatedData.isActive }),
       },
       select: {
         id: true,
         name: true,
         shortName: true,
         description: true,
+        logo: true,
+        icon: true,
+        color: true,
         isActive: true,
         _count: {
           select: {
@@ -137,6 +230,11 @@ export async function DELETE(
   { params }: { params: { labId: string } }
 ) {
   try {
+    // TODO: Add auth when NextAuth is configured
+    const mockUserId = 'default-user-id';
+
+    // TODO: Add auth when NextAuth is configured
+    // For now, skip auth checks
     // Check if the lab exists
     const existingLab = await prisma.lab.findUnique({
       where: { id: params.labId },

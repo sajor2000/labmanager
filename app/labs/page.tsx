@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
   DialogContent,
@@ -15,87 +17,137 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { showToast } from '@/components/ui/toast';
+import { toast } from 'sonner';
 import { 
-  Building, 
-  Users, 
-  Folder, 
-  Flask,
-  Edit,
   Plus,
   Loader2,
   Building2,
-  Microscope,
-  Dna,
-  Heart,
-  Brain,
-  Pill,
-  Activity,
-  TestTube
+  AlertCircle,
+  Search,
+  Filter
 } from 'lucide-react';
+import { useLabs, useCreateLab, useUpdateLab, useDeleteLab } from '@/hooks/use-labs';
+import type { Lab, LabFormData } from '@/types/lab';
+import { LabCard } from '@/components/labs/lab-card-virtualized';
+import { LabsPageSkeleton, StatisticsCardsSkeleton } from '@/components/labs/lab-skeleton';
+import { FixedSizeGrid as Grid } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 
-interface Lab {
-  id: string;
-  name: string;
-  shortName: string;
-  description: string | null;
-  isActive: boolean;
-  _count: {
-    projects: number;
-    members: number;
-    buckets: number;
-  };
-}
+// Constants
+const INITIAL_FORM_DATA: LabFormData = {
+  name: '',
+  shortName: '',
+  description: '',
+};
 
-interface LabFormData {
-  name: string;
-  shortName: string;
-  description: string;
-}
+// Statistics component
+const StatisticsCards = ({ labs }: { labs: Lab[] }) => {
+  const statistics = useMemo(() => ({
+    totalLabs: labs.length,
+    totalMembers: labs.reduce((acc, lab) => acc + lab._count.members, 0),
+    totalProjects: labs.reduce((acc, lab) => acc + lab._count.projects, 0),
+    totalIdeas: labs.reduce((acc, lab) => acc + lab._count.ideas, 0),
+  }), [labs]);
 
-// Lab icon options
-const labIcons = [
-  { icon: Flask, color: 'bg-blue-500' },
-  { icon: Microscope, color: 'bg-purple-500' },
-  { icon: Dna, color: 'bg-green-500' },
-  { icon: Heart, color: 'bg-red-500' },
-  { icon: Brain, color: 'bg-pink-500' },
-  { icon: Pill, color: 'bg-orange-500' },
-  { icon: Activity, color: 'bg-teal-500' },
-  { icon: TestTube, color: 'bg-indigo-500' },
-];
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Total Labs</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{statistics.totalLabs}</div>
+          <p className="text-xs text-muted-foreground">Active research labs</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{statistics.totalMembers}</div>
+          <p className="text-xs text-muted-foreground">Across all labs</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Active Studies</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{statistics.totalProjects}</div>
+          <p className="text-xs text-muted-foreground">Total projects</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Research Ideas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{statistics.totalIdeas}</div>
+          <p className="text-xs text-muted-foreground">In ideation</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 export default function LabsPage() {
-  const [labs, setLabs] = useState<Lab[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedLabIndex, setSelectedLabIndex] = useState<number>(-1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const [editingLab, setEditingLab] = useState<Lab | null>(null);
   const [isCreateMode, setIsCreateMode] = useState(false);
-  const [formData, setFormData] = useState<LabFormData>({
-    name: '',
-    shortName: '',
-    description: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<LabFormData>(INITIAL_FORM_DATA);
 
+  // React Query hooks
+  const { data: labs = [], isLoading, error, refetch } = useLabs();
+  const createLabMutation = useCreateLab();
+  const updateLabMutation = useUpdateLab(editingLab?.id || '');
+  const deleteLabMutation = useDeleteLab();
+
+  // Filter labs based on search
+  const filteredLabs = useMemo(() => {
+    if (!searchQuery) return labs;
+    const query = searchQuery.toLowerCase();
+    return labs.filter(lab => 
+      lab.name.toLowerCase().includes(query) ||
+      lab.shortName.toLowerCase().includes(query) ||
+      lab.description?.toLowerCase().includes(query)
+    );
+  }, [labs, searchQuery]);
+
+  // Keyboard navigation
   useEffect(() => {
-    fetchLabs();
-  }, []);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '/' && e.ctrlKey) {
+        e.preventDefault();
+        document.getElementById('search-labs')?.focus();
+      }
+      if (e.key === 'n' && e.ctrlKey) {
+        e.preventDefault();
+        handleCreate();
+      }
+      if (e.key === 'Escape') {
+        setSelectedLabIndex(-1);
+      }
+      if (e.key === 'ArrowDown' && selectedLabIndex < filteredLabs.length - 1) {
+        setSelectedLabIndex(prev => prev + 1);
+      }
+      if (e.key === 'ArrowUp' && selectedLabIndex > 0) {
+        setSelectedLabIndex(prev => prev - 1);
+      }
+      if (e.key === 'Enter' && selectedLabIndex >= 0 && filteredLabs[selectedLabIndex]) {
+        router.push(`/labs/${filteredLabs[selectedLabIndex].id}`);
+      }
+    };
 
-  const fetchLabs = async () => {
-    try {
-      const response = await fetch('/api/labs');
-      if (!response.ok) throw new Error('Failed to fetch labs');
-      const data = await response.json();
-      setLabs(data);
-    } catch (error) {
-      console.error('Error fetching labs:', error);
-      showToast.error('Failed to load labs');
-    } finally {
-      setLoading(false);
-    }
-  };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedLabIndex, filteredLabs, router]);
 
-  const handleEdit = (lab: Lab) => {
+  const handleEdit = useCallback((lab: Lab) => {
     setEditingLab(lab);
     setFormData({
       name: lab.name,
@@ -103,67 +155,68 @@ export default function LabsPage() {
       description: lab.description || '',
     });
     setIsCreateMode(false);
-  };
+  }, []);
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
     setEditingLab(null);
-    setFormData({
-      name: '',
-      shortName: '',
-      description: '',
-    });
+    setFormData(INITIAL_FORM_DATA);
     setIsCreateMode(true);
-  };
+  }, []);
 
-  const handleSubmit = async () => {
-    if (!formData.name || !formData.shortName) {
-      showToast.error('Please fill in all required fields');
+  const handleSubmit = useCallback(async () => {
+    if (!formData.name.trim() || !formData.shortName.trim()) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      const url = isCreateMode ? '/api/labs' : `/api/labs/${editingLab?.id}`;
-      const method = isCreateMode ? 'POST' : 'PUT';
-      
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to save lab');
+      if (isCreateMode) {
+        await createLabMutation.mutateAsync(formData);
+      } else if (editingLab) {
+        await updateLabMutation.mutateAsync(formData);
       }
-
-      showToast.success(isCreateMode ? 'Lab created successfully' : 'Lab updated successfully');
-      fetchLabs();
       handleClose();
     } catch (error) {
-      console.error('Error saving lab:', error);
-      showToast.error(error instanceof Error ? error.message : 'Failed to save lab');
-    } finally {
-      setIsSubmitting(false);
+      // Error handling is done in the mutation hooks
     }
-  };
+  }, [formData, isCreateMode, editingLab, createLabMutation, updateLabMutation]);
 
-  const handleClose = () => {
+  const handleDelete = useCallback(async (labId: string) => {
+    if (!confirm('Are you sure you want to delete this lab? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await deleteLabMutation.mutateAsync(labId);
+    } catch (error) {
+      // Error handling is done in the mutation hook
+    }
+  }, [deleteLabMutation]);
+
+  const handleClose = useCallback(() => {
     setEditingLab(null);
     setIsCreateMode(false);
-    setFormData({ name: '', shortName: '', description: '' });
-  };
+    setFormData(INITIAL_FORM_DATA);
+  }, []);
 
-  const getLabIcon = (index: number) => {
-    const iconData = labIcons[index % labIcons.length];
-    const Icon = iconData.icon;
-    return { Icon, color: iconData.color };
-  };
+  // Loading state with skeleton
+  if (isLoading) {
+    return <LabsPageSkeleton />;
+  }
 
-  if (loading) {
+  // Error state
+  if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load labs. Please try again.
+            <Button onClick={() => refetch()} variant="outline" size="sm" className="ml-4">
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -183,7 +236,32 @@ export default function LabsPage() {
         </Button>
       </div>
 
-      {labs.length === 0 ? (
+      {/* Search and Filter Bar */}
+      <div className="mb-4 flex gap-2">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="search-labs"
+            type="search"
+            placeholder="Search labs... (Ctrl+/)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <Filter className="h-4 w-4 mr-2" />
+          Filters
+        </Button>
+      </div>
+
+      {/* Statistics Cards */}
+      <StatisticsCards labs={filteredLabs} />
+
+      {filteredLabs.length === 0 ? (
         <Card className="p-12">
           <div className="text-center">
             <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -199,70 +277,15 @@ export default function LabsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {labs.map((lab, index) => {
-            const { Icon, color } = getLabIcon(index);
-            return (
-              <Card 
-                key={lab.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer relative group"
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className={`p-3 rounded-lg ${color} text-white`}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(lab)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <CardTitle className="mt-4">{lab.name}</CardTitle>
-                  <CardDescription className="flex items-center gap-2">
-                    <Badge variant="outline">{lab.shortName}</Badge>
-                    {lab.isActive ? (
-                      <Badge variant="default" className="bg-green-500">Active</Badge>
-                    ) : (
-                      <Badge variant="secondary">Inactive</Badge>
-                    )}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {lab.description && (
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {lab.description}
-                    </p>
-                  )}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Users className="h-4 w-4" />
-                        <span>Members</span>
-                      </div>
-                      <span className="font-semibold">{lab._count.members}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Flask className="h-4 w-4" />
-                        <span>Projects</span>
-                      </div>
-                      <span className="font-semibold">{lab._count.projects}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Folder className="h-4 w-4" />
-                        <span>Buckets</span>
-                      </div>
-                      <span className="font-semibold">{lab._count.buckets}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {filteredLabs.map((lab, index) => (
+            <LabCard
+              key={lab.id}
+              lab={lab}
+              index={index}
+              onEdit={handleEdit}
+              isSelected={selectedLabIndex === index}
+            />
+          ))}
         </div>
       )}
 
@@ -290,7 +313,7 @@ export default function LabsPage() {
                 placeholder="e.g., Health Equity Research Lab"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isSubmitting}
+                disabled={createLabMutation.isPending || updateLabMutation.isPending}
               />
             </div>
             <div className="grid gap-2">
@@ -302,7 +325,7 @@ export default function LabsPage() {
                 placeholder="e.g., HERL, LAB001"
                 value={formData.shortName}
                 onChange={(e) => setFormData({ ...formData, shortName: e.target.value.toUpperCase() })}
-                disabled={isSubmitting}
+                disabled={createLabMutation.isPending || updateLabMutation.isPending}
                 maxLength={10}
               />
               <p className="text-xs text-muted-foreground">
@@ -316,7 +339,7 @@ export default function LabsPage() {
                 placeholder="Describe the lab's research focus and goals..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isSubmitting}
+                disabled={createLabMutation.isPending || updateLabMutation.isPending}
                 rows={4}
               />
             </div>
@@ -333,7 +356,8 @@ export default function LabsPage() {
               onClick={handleSubmit}
               disabled={isSubmitting}
             >
-              {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {(createLabMutation.isPending || updateLabMutation.isPending) && 
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {isCreateMode ? 'Create Lab' : 'Save Changes'}
             </Button>
           </DialogFooter>

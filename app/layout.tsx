@@ -8,6 +8,8 @@ import { ErrorBoundary } from "@/components/providers/error-boundary";
 import { ToastContainer } from "@/components/ui/toast";
 import { UserProvider } from "@/lib/contexts/user-context";
 import { LabProvider } from "@/lib/contexts/lab-context";
+import { QueryProvider } from "@/lib/providers/query-provider";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,22 +32,25 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <UserProvider>
-              <LabProvider>
-                <ErrorBoundary>
-                  <div className="flex h-screen overflow-hidden">
-                    <Sidebar />
-                    <div className="flex flex-1 flex-col">
-                      <TopNav />
-                      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-                        {children}
-                      </main>
+            <QueryProvider>
+              <UserProvider>
+                <LabProvider>
+                  <ErrorBoundary>
+                    <div className="flex h-screen overflow-hidden">
+                      <Sidebar />
+                      <div className="flex flex-1 flex-col">
+                        <TopNav />
+                        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+                          {children}
+                        </main>
+                      </div>
                     </div>
-                  </div>
-                  <ToastContainer />
-                </ErrorBoundary>
-              </LabProvider>
-            </UserProvider>
+                    <ToastContainer />
+                    <Toaster position="bottom-right" />
+                  </ErrorBoundary>
+                </LabProvider>
+              </UserProvider>
+            </QueryProvider>
           </ThemeProvider>
       </body>
     </html>

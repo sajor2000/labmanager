@@ -7,6 +7,7 @@ import { useStudyStore } from "@/lib/store/study-store";
 import { z } from "zod";
 import type { Bucket } from "@/types";
 import { showToast } from "@/components/ui/toast";
+import { useLab } from "@/lib/contexts/lab-context";
 
 interface BucketCreationFormProps {
   isOpen: boolean;
@@ -28,11 +29,12 @@ const PRESET_COLORS = [
 
 export function BucketCreationForm({ isOpen, onClose }: BucketCreationFormProps) {
   const { addBucket } = useStudyStore();
+  const { currentLab } = useLab();
   const [formData, setFormData] = useState<BucketCreationInput>({
     title: "",
     description: "",
     color: "#00BCD4",
-    labId: "rhedas",
+    labId: currentLab?.id || "",
   });
   const [errors, setErrors] = useState<z.ZodFormattedError<BucketCreationInput> | null>(null);
 

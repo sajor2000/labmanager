@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { X, AlertCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, AlertCircle, ChevronDown, Search } from "lucide-react";
 import { StudyCreationSchema, type StudyCreationInput } from "@/lib/validations/study";
 import { z } from "zod";
 import { showToast } from "@/components/ui/toast";
+import type { ProjectTypeCategory } from "@/lib/constants/project-types";
+import { 
+  getProjectStatusOptions, 
+  getPriorityOptions, 
+  getFundingSourceOptions 
+} from "@/lib/constants/project-constants";
 
 interface StudyCreationFormProps {
   isOpen: boolean;
@@ -13,28 +19,27 @@ interface StudyCreationFormProps {
   defaultBucketId?: string;
 }
 
+interface Bucket {
+  id: string;
+  name: string;
+  color?: string;
+}
+
 export function StudyCreationForm({ isOpen, onClose, onSubmit, defaultBucketId }: StudyCreationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Map bucket IDs to titles for the form
-  const getBucketTitle = (bucketId?: string) => {
-    if (!bucketId) return "";
-    const bucketMap: Record<string, string> = {
-      'rhedas-core': 'RHEDAS - Core Research',
-      'rhedas-community': 'RHEDAS - Community Projects',
-      'riccc-trials': 'RICCC - Critical Care Trials',
-      'riccc-data': 'RICCC - Data Science',
-      'nih-r01': 'NIH R01 Grant',
-    };
-    return bucketMap[bucketId] || "";
-  };
+  const [projectTypeCategories, setProjectTypeCategories] = useState<ProjectTypeCategory[]>([]);
+  const [projectTypeDropdownOpen, setProjectTypeDropdownOpen] = useState(false);
+  const [projectTypeSearch, setProjectTypeSearch] = useState("");
+  const [buckets, setBuckets] = useState<Bucket[]>([]);
+  const [loadingBuckets, setLoadingBuckets] = useState(false);
+  const projectTypeDropdownRef = useRef<HTMLDivElement>(null);
   
   const [formData, setFormData] = useState<StudyCreationInput>({
     studyName: "",
     oraNumber: "",
     status: "PLANNING",
     priority: "MEDIUM",
-    bucket: getBucketTitle(defaultBucketId),
+    bucket: defaultBucketId || "",
     fundingSource: "",
     studyType: "",
     dueDate: "",
@@ -42,6 +47,61 @@ export function StudyCreationForm({ isOpen, onClose, onSubmit, defaultBucketId }
     notes: "",
   });
   const [errors, setErrors] = useState<z.ZodFormattedError<StudyCreationInput> | null>(null);
+
+  // Fetch project types from API
+  useEffect(() => {
+    const fetchProjectTypes = async () => {
+      try {
+        const response = await fetch('/api/project-types');
+        const result = await response.json();
+        if (result.success) {
+          setProjectTypeCategories(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch project types:', error);
+      }
+    };
+    
+    if (isOpen) {
+      fetchProjectTypes();
+    }
+  }, [isOpen]);
+
+  // Fetch buckets from API
+  useEffect(() => {
+    const fetchBuckets = async () => {
+      setLoadingBuckets(true);
+      try {
+        const response = await fetch('/api/buckets');
+        if (response.ok) {
+          const data = await response.json();
+          setBuckets(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch buckets:', error);
+      } finally {
+        setLoadingBuckets(false);
+      }
+    };
+    
+    if (isOpen) {
+      fetchBuckets();
+    }
+  }, [isOpen]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (projectTypeDropdownRef.current && !projectTypeDropdownRef.current.contains(event.target as Node)) {
+        setProjectTypeDropdownOpen(false);
+      }
+    };
+
+    if (projectTypeDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [projectTypeDropdownOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,16 +229,11 @@ export function StudyCreationForm({ isOpen, onClose, onSubmit, defaultBucketId }
                 onChange={handleChange}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
-                <option value="PLANNING">Planning</option>
-                <option value="IRB_SUBMISSION">IRB Submission</option>
-                <option value="IRB_APPROVED">IRB Approved</option>
-                <option value="DATA_COLLECTION">Data Collection</option>
-                <option value="ANALYSIS">Analysis</option>
-                <option value="MANUSCRIPT">Manuscript</option>
-                <option value="UNDER_REVIEW">Under Review</option>
-                <option value="PUBLISHED">Published</option>
-                <option value="ON_HOLD">On Hold</option>
-                <option value="CANCELLED">Cancelled</option>
+                {getProjectStatusOptions().map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -191,10 +246,11 @@ export function StudyCreationForm({ isOpen, onClose, onSubmit, defaultBucketId }
                 onChange={handleChange}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
-                <option value="LOW">Low</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HIGH">High</option>
-                <option value="CRITICAL">Critical</option>
+                {getPriorityOptions().map((priority) => (
+                  <option key={priority.value} value={priority.value}>
+                    {priority.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -203,21 +259,23 @@ export function StudyCreationForm({ isOpen, onClose, onSubmit, defaultBucketId }
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Bucket
+                Bucket *
               </label>
               <select
                 name="bucket"
                 value={formData.bucket}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                disabled={loadingBuckets}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <option value="">Select bucket</option>
-                <option>RHEDAS - Core Research</option>
-                <option>RHEDAS - Community Projects</option>
-                <option>RICCC - Critical Care Trials</option>
-                <option>RICCC - Data Science</option>
-                <option>NIH R01 Grant</option>
-                <option>Rush Internal Funding</option>
+                <option value="">
+                  {loadingBuckets ? "Loading buckets..." : "Select bucket"}
+                </option>
+                {buckets.map((bucket) => (
+                  <option key={bucket.id} value={bucket.id}>
+                    {bucket.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -231,30 +289,101 @@ export function StudyCreationForm({ isOpen, onClose, onSubmit, defaultBucketId }
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
                 <option value="">Select funding source</option>
-                <option value="NIH">NIH</option>
-                <option value="NSF">NSF</option>
-                <option value="INDUSTRY_SPONSORED">Industry Sponsored</option>
-                <option value="INTERNAL">Internal</option>
-                <option value="FOUNDATION">Foundation</option>
-                <option value="OTHER">Other</option>
+                {getFundingSourceOptions().map((source) => (
+                  <option key={source.value} value={source.value} title={source.description}>
+                    {source.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
           {/* Row 4 */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="relative" ref={projectTypeDropdownRef}>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Study Type
+                Project Type *
               </label>
-              <input
-                type="text"
-                name="studyType"
-                value={formData.studyType}
-                onChange={handleChange}
-                placeholder="e.g., Retrospective, Prospective..."
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-              />
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setProjectTypeDropdownOpen(!projectTypeDropdownOpen)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-left flex items-center justify-between focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <span className={formData.studyType ? "text-gray-900 dark:text-white" : "text-gray-500"}>
+                    {formData.studyType ? 
+                      projectTypeCategories.flatMap(c => c.types).find(t => t.value === formData.studyType)?.label || formData.studyType
+                      : "Select project type..."}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${projectTypeDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+                
+                {projectTypeDropdownOpen && (
+                  <div className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                    <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          value={projectTypeSearch}
+                          onChange={(e) => setProjectTypeSearch(e.target.value)}
+                          placeholder="Search project types..."
+                          className="w-full rounded-md border border-gray-300 pl-9 pr-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto p-2">
+                      {projectTypeCategories.map((category) => {
+                        const filteredTypes = category.types.filter(type => 
+                          type.label.toLowerCase().includes(projectTypeSearch.toLowerCase()) ||
+                          type.description?.toLowerCase().includes(projectTypeSearch.toLowerCase())
+                        );
+                        
+                        if (filteredTypes.length === 0) return null;
+                        
+                        return (
+                          <div key={category.name} className="mb-2">
+                            <div className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                              {category.name}
+                            </div>
+                            {filteredTypes.map((type) => (
+                              <button
+                                key={type.value}
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, studyType: type.value }));
+                                  setProjectTypeDropdownOpen(false);
+                                  setProjectTypeSearch("");
+                                }}
+                                className="w-full text-left px-2 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md flex items-start space-x-2"
+                              >
+                                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: type.color }} />
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 dark:text-white">{type.label}</div>
+                                  {type.description && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">{type.description}</div>
+                                  )}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })}
+                      {projectTypeCategories.every(category => 
+                        category.types.every(type => 
+                          !type.label.toLowerCase().includes(projectTypeSearch.toLowerCase()) &&
+                          !type.description?.toLowerCase().includes(projectTypeSearch.toLowerCase())
+                        )
+                      ) && (
+                        <div className="px-2 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+                          No project types found
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
