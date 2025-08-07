@@ -72,6 +72,8 @@ export interface CreateStudyPayload {
   labId: string;
   dueDate?: string;
   notes?: string;
+  assignees?: string[]; // Array of user IDs
+  description?: string;
 }
 
 export interface UpdateStudyPayload extends Partial<CreateStudyPayload> {

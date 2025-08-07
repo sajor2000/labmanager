@@ -35,8 +35,8 @@ export function CreateStudyDialog({
   const [formData, setFormData] = useState<Partial<CreateStudyPayload>>({
     name: '',
     description: '',
-    status: 'planning',
-    priority: 'medium',
+    status: 'Planning',
+    priority: 'Medium',
     oraNumber: '',
     studyType: '',
     fundingSource: '',
@@ -63,8 +63,8 @@ export function CreateStudyDialog({
       setFormData({
         name: '',
         description: '',
-        status: 'planning',
-        priority: 'medium',
+        status: 'Planning',
+        priority: 'Medium',
         oraNumber: '',
         studyType: '',
         fundingSource: '',
@@ -121,16 +121,16 @@ export function CreateStudyDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="planning">Planning</SelectItem>
-                  <SelectItem value="irb-submission">IRB Submission</SelectItem>
-                  <SelectItem value="irb-approved">IRB Approved</SelectItem>
-                  <SelectItem value="data-collection">Data Collection</SelectItem>
-                  <SelectItem value="analysis">Analysis</SelectItem>
-                  <SelectItem value="manuscript">Manuscript</SelectItem>
-                  <SelectItem value="under-review">Under Review</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="on-hold">On Hold</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="Planning">Planning</SelectItem>
+                  <SelectItem value="IRB Submission">IRB Submission</SelectItem>
+                  <SelectItem value="IRB Approved">IRB Approved</SelectItem>
+                  <SelectItem value="Data Collection">Data Collection</SelectItem>
+                  <SelectItem value="Analysis">Analysis</SelectItem>
+                  <SelectItem value="Manuscript">Manuscript</SelectItem>
+                  <SelectItem value="Under Review">Under Review</SelectItem>
+                  <SelectItem value="Published">Published</SelectItem>
+                  <SelectItem value="On Hold">On Hold</SelectItem>
+                  <SelectItem value="Cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -145,10 +145,10 @@ export function CreateStudyDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Critical">Critical</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -184,12 +184,12 @@ export function CreateStudyDialog({
                   <SelectValue placeholder="Select funding source" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="nih">NIH</SelectItem>
-                  <SelectItem value="nsf">NSF</SelectItem>
-                  <SelectItem value="industry">Industry Sponsored</SelectItem>
-                  <SelectItem value="internal">Internal</SelectItem>
-                  <SelectItem value="foundation">Foundation</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="NIH">NIH</SelectItem>
+                  <SelectItem value="NSF">NSF</SelectItem>
+                  <SelectItem value="Industry Sponsored">Industry Sponsored</SelectItem>
+                  <SelectItem value="Internal">Internal</SelectItem>
+                  <SelectItem value="Foundation">Foundation</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

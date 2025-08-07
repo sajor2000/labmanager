@@ -54,8 +54,19 @@ class ApiClient extends BaseApiClient {
     getById: (id: string) => 
       this.get<Study>(`/api/studies/${id}`),
     
-    create: (data: CreateStudyPayload) => 
-      this.post<Study>('/api/projects', data),
+    create: (data: CreateStudyPayload) => {
+      // Transform status and priority to uppercase for API
+      const transformedData = {
+        ...data,
+        status: data.status?.toUpperCase().replace(/ /g, '_'),
+        priority: data.priority?.toUpperCase(),
+        fundingSource: data.fundingSource?.toUpperCase().replace(/ /g, '_'),
+        projectType: data.studyType || 'Research Study', // Map studyType to projectType
+        memberIds: data.assignees || [], // Map assignees to memberIds
+        createdById: 'user_placeholder', // TODO: Get from auth context
+      };
+      return this.post<Study>('/api/projects', transformedData);
+    },
     
     update: (id: string, data: UpdateStudyPayload) => 
       this.put<Study>(`/api/studies/${id}`, data),
