@@ -16,6 +16,8 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  avatarUrl?: string | null;
+  avatarImage?: Buffer | null;
   initials: string;
   labIds: string[];
   expertise?: string[];
