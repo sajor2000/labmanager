@@ -250,28 +250,24 @@ export function PersonalizedDashboard({ selectedUser }: PersonalizedDashboardPro
           title="Assigned Tasks"
           value={dashboardData.metrics.assignedTasks}
           description="Tasks requiring your attention"
-          trend={{ value: 0, isPositive: true }}
           icon={<CheckSquare className="h-5 w-5" />}
         />
         <MetricCard
           title="Completed Tasks"
           value={dashboardData.metrics.completedTasks}
           description="Tasks completed this month"
-          trend={{ value: 0, isPositive: true }}
           icon={<Activity className="h-5 w-5" />}
         />
         <MetricCard
           title="Active Projects"
           value={dashboardData.metrics.activeProjects}
           description="Projects you're involved in"
-          trend={{ value: 0, isPositive: true }}
           icon={<BookOpen className="h-5 w-5" />}
         />
         <MetricCard
           title="Upcoming Deadlines"
           value={dashboardData.metrics.upcomingDeadlines}
           description="Deadlines in the next 7 days"
-          trend={{ value: 0, isPositive: false }}
           icon={<AlertCircle className="h-5 w-5" />}
         />
       </div>
