@@ -1,6 +1,6 @@
-# Vercel Deployment Guide for LabManage Research Hub
+# Vercel Deployment Guide for LabSync Research Platform
 
-This guide walks you through deploying the LabManage Research Hub to Vercel with Prisma Postgres.
+This guide walks you through deploying the LabSync Research Platform to Vercel with Prisma Postgres.
 
 ## Prerequisites
 

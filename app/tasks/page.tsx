@@ -4,7 +4,7 @@ import { TaskBoardHeader } from '@/components/tasks/task-board-header';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const metadata = {
-  title: 'Task Board | LabManage',
+  title: 'Task Board | LabSync',
   description: 'Manage and track all research tasks across projects',
 };
 

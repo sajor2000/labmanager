@@ -178,7 +178,7 @@ export async function GET(request: NextRequest) {
         }
 
         emailContent += `Visit your dashboard to manage these deadlines: ${process.env.NEXT_PUBLIC_APP_URL}\n\n`;
-        emailContent += `Best regards,\nLabManage Research Hub`;
+        emailContent += `Best regards,\nLabSync Research Platform`;
 
         await sendEmail({
           to: email,

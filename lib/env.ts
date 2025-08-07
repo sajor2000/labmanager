@@ -49,7 +49,7 @@ const envSchema = z.object({
   
   // Application
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
-  NEXT_PUBLIC_APP_NAME: z.string().default('LabManage Research Hub'),
+  NEXT_PUBLIC_APP_NAME: z.string().default('LabSync Research Platform'),
 });
 
 // Type for validated environment variables

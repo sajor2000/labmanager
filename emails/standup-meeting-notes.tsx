@@ -76,7 +76,7 @@ export const StandupMeetingNotesEmail = ({
       description: 'Move forward with proposed study design for Project Alpha',
     },
   ],
-  transcriptUrl = 'https://labmanage.com/standups/123',
+  transcriptUrl = 'https://labsync.com/standups/123',
   senderName = 'Jane Cooper',
 }: StandupMeetingNotesEmailProps) => {
   const previewText = `Standup meeting notes from ${labName} - ${meetingDate}`;
@@ -274,7 +274,7 @@ export const StandupMeetingNotesEmail = ({
                 </Link>
                 {' • '}
                 <Link
-                  href="https://labmanage.com/unsubscribe"
+                  href="https://labsync.com/unsubscribe"
                   className="text-blue-600 no-underline"
                 >
                   Unsubscribe

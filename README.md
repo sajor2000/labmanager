@@ -1,4 +1,4 @@
-# LabManage Research Hub
+# LabSync
 
 A world-class research management platform for Rush University Medical Center's research labs, featuring a sophisticated dual-theme system and real-time collaboration tools.
 

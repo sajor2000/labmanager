@@ -100,7 +100,7 @@ export class EmailService {
           id: decision.id,
           description: decision.description,
         })),
-        transcriptUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://labmanage.com'}/standups/${standup.id}`,
+        transcriptUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://labsync.com'}/standups/${standup.id}`,
         senderName: validatedInput.senderName,
       };
 
@@ -111,7 +111,7 @@ export class EmailService {
 
       // Send email
       const { data, error } = await resend.emails.send({
-        from: process.env.EMAIL_FROM || 'meetings@labmanage.com',
+        from: process.env.EMAIL_FROM || 'meetings@labsync.com',
         to: validatedInput.recipients.map(r => r.email),
         subject,
         react: StandupMeetingNotesEmail(emailData),

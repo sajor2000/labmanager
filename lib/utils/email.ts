@@ -27,7 +27,7 @@ function getResendClient(): Resend {
  */
 export async function sendEmail(options: EmailOptions): Promise<void> {
   try {
-    const fromEmail = options.from || process.env.EMAIL_FROM || 'noreply@labmanage.app';
+    const fromEmail = options.from || process.env.EMAIL_FROM || 'noreply@labsync.app';
     
     if (!fromEmail) {
       throw new Error('EMAIL_FROM environment variable or from parameter is required');
@@ -102,7 +102,7 @@ Please review these deadlines and take any necessary action.
 Visit your dashboard: ${process.env.NEXT_PUBLIC_APP_URL || 'https://your-app.vercel.app'}
 
 Best regards,
-LabManage Research Hub Team
+LabSync Team
   `.trim();
 
   const html = `
@@ -143,7 +143,7 @@ LabManage Research Hub Team
     
     <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">
       Best regards,<br>
-      LabManage Research Hub Team
+      LabSync Team
     </p>
   </div>
 </body>

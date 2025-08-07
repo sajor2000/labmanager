@@ -1,7 +1,7 @@
 # Database Setup Guide
 
 ## Overview
-The LabManage Research Hub uses PostgreSQL as its database. This guide provides instructions for setting up the database locally and in production.
+The LabSync Research Platform uses PostgreSQL as its database. This guide provides instructions for setting up the database locally and in production.
 
 ## Local Development Setup
 

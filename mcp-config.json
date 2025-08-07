@@ -1,5 +1,5 @@
 {
-  "name": "LabManage UI/UX Test Automation",
+  "name": "LabSync UI/UX Test Automation",
   "version": "1.0.0",
   "description": "MCP configuration for automated UI/UX testing with Playwright",
   "servers": {

@@ -29,7 +29,14 @@ export async function GET(request: NextRequest) {
     
     const where: Prisma.TaskWhereInput = {};
     if (projectId) where.projectId = projectId;
-    if (status) where.status = status as Prisma.TaskWhereInput['status'];
+    if (status) {
+      // Handle status filtering for PersonalizedDashboard's 'pending' status
+      if (status === 'pending') {
+        where.status = { in: ['TODO', 'IN_PROGRESS'] };
+      } else {
+        where.status = status as Prisma.TaskWhereInput['status'];
+      }
+    }
     if (assigneeId) {
       where.assignees = {
         some: {

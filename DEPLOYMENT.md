@@ -1,4 +1,4 @@
-# Vercel Deployment Guide for LabManage Research Hub
+# Vercel Deployment Guide for LabSync
 
 ## 🚨 CRITICAL SECURITY NOTICE
 

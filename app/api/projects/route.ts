@@ -27,15 +27,25 @@ const CreateProjectSchema = z.object({
 // GET /api/projects - Get all projects with optional filters
 export async function GET(request: NextRequest) {
   try {
+
     const searchParams = request.nextUrl.searchParams;
     const labId = searchParams.get('labId');
     const bucketId = searchParams.get('bucketId');
     const status = searchParams.get('status');
+    const member = searchParams.get('member'); // For PersonalizedDashboard filtering
     
     const where: Prisma.ProjectWhereInput = {};
     if (labId) where.labId = labId;
     if (bucketId) where.bucketId = bucketId;
     if (status) where.status = status as ProjectStatus;
+    
+    // Filter by user membership for PersonalizedDashboard
+    if (member) {
+      where.OR = [
+        { createdById: member },
+        { members: { some: { userId: member } } },
+      ];
+    }
 
     const projects = await prisma.project.findMany({
       where,

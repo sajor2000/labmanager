@@ -88,7 +88,7 @@ export default function SettingsPage() {
                 Appearance
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Customize how LabManage looks on your device
+                Customize how LabSync looks on your device
               </p>
             </div>
             

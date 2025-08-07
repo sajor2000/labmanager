@@ -6,17 +6,9 @@ export async function GET() {
   try {
     const users = await prisma.user.findMany({
       include: {
-        labs: {
+        labMemberships: {
           include: {
             lab: true,
-          },
-        },
-        _count: {
-          select: {
-            createdProjects: true,
-            projectMembers: true,
-            createdTasks: true,
-            assignedTasks: true,
           },
         },
       },
@@ -25,7 +17,21 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(users);
+    // Format users for the selector
+    const formattedUsers = users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      labs: user.labMemberships.map(membership => ({
+        id: membership.lab.id,
+        name: membership.lab.name,
+        shortName: membership.lab.shortName,
+        isAdmin: membership.role === 'LAB_ADMINISTRATOR' || membership.role === 'PRINCIPAL_INVESTIGATOR',
+      })),
+    }));
+
+    return NextResponse.json(formattedUsers);
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json(

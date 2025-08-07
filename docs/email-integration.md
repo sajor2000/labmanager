@@ -2,7 +2,7 @@
 
 ## Overview
 
-The LabManage Research Hub includes a powerful email integration feature that allows users to send standup meeting notes to team members with a single click. The integration uses Resend for reliable email delivery and React Email for beautiful, responsive email templates.
+The LabSync Research Platform includes a powerful email integration feature that allows users to send standup meeting notes to team members with a single click. The integration uses Resend for reliable email delivery and React Email for beautiful, responsive email templates.
 
 ## Features
 
@@ -130,7 +130,7 @@ The email template is built using React Email components and can be customized i
 <Text className="text-center text-[12px] text-gray-500">
   This email was sent by {senderName} from {labName}
   <br />
-  Powered by LabManage Research Hub
+  Powered by LabSync Research Platform
 </Text>
 ```
 

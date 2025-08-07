@@ -1,5 +1,5 @@
 /**
- * Color System for LabManage - Rush University Medical Center Theme
+ * Color System for LabSync - Rush University Medical Center Theme
  * Light Mode: Rush University brand colors (green, gold, blue)
  * Dark Mode: Slack-style muted dark theme with Rush accents
  */

@@ -6,15 +6,15 @@ A modern research management platform combining Monday.com's visual workflows wi
 ## Core Navigation & Layout
 
 ### Sidebar Navigation Structure
-Based on the LabManage Research Hub interface:
+Based on the LabSync Research Platform interface:
 
 ```typescript
 interface SidebarNavigation {
   // Top Section - Branding
   logo: {
     icon: 'Flask/Beaker icon';
-    title: 'LabManage';
-    subtitle: 'Research Hub';
+    title: 'LabSync';
+    subtitle: 'Research Platform';
   };
   
   // Primary Navigation Items (as shown in screenshots)

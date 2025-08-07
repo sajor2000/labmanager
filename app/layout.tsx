@@ -4,17 +4,16 @@ import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopNav } from "@/components/layout/top-nav";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { ErrorBoundary } from "@/components/error-boundary";
+import { ErrorBoundary } from "@/components/providers/error-boundary";
 import { ToastContainer } from "@/components/ui/toast";
 import { UserProvider } from "@/lib/contexts/user-context";
 import { LabProvider } from "@/lib/contexts/lab-context";
-import { RouteGuard } from "@/components/auth/route-guard";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Rush Labs Research Management",
-  description: "Research management platform for RHEDAS & RICCC at Rush University Medical Center",
+  title: "LabSync - Research Platform",
+  description: "Modern research management platform for RHEDAS & RICCC at Rush University Medical Center",
 };
 
 export default function RootLayout({
@@ -25,16 +24,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <UserProvider>
-            <LabProvider>
-              <ErrorBoundary>
-                <RouteGuard>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <UserProvider>
+              <LabProvider>
+                <ErrorBoundary>
                   <div className="flex h-screen overflow-hidden">
                     <Sidebar />
                     <div className="flex flex-1 flex-col">
@@ -44,12 +42,11 @@ export default function RootLayout({
                       </main>
                     </div>
                   </div>
-                </RouteGuard>
-                <ToastContainer />
-              </ErrorBoundary>
-            </LabProvider>
-          </UserProvider>
-        </ThemeProvider>
+                  <ToastContainer />
+                </ErrorBoundary>
+              </LabProvider>
+            </UserProvider>
+          </ThemeProvider>
       </body>
     </html>
   );

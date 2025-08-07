@@ -1,6 +1,6 @@
-# Contributing to LabManage Research Hub
+# Contributing to LabSync Research Platform
 
-Thank you for your interest in contributing to the LabManage Research Hub! We welcome contributions from the community.
+Thank you for your interest in contributing to the LabSync Research Platform! We welcome contributions from the community.
 
 ## Getting Started
 

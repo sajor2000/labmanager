@@ -1,4 +1,4 @@
-// Core type definitions for LabManage Research Hub
+// Core type definitions for LabSync
 
 import { LucideIcon } from "lucide-react";
 

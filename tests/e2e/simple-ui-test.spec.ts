@@ -5,7 +5,7 @@ test.describe('Basic UI Tests', () => {
     await page.goto('/');
     
     // Check if page loads
-    await expect(page).toHaveTitle(/LabManage|Lab|Research/i);
+    await expect(page).toHaveTitle(/LabSync|Lab|Research/i);
     
     // Check for main content areas
     const mainContent = page.locator('main, [role="main"], #__next');
