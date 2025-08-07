@@ -1,41 +1,50 @@
-# Rush Labs Research Management Platform
+# LabManage Research Hub
 
-A modern research management platform for Rush University Medical Center's research labs, specifically designed for:
+A world-class research management platform for Rush University Medical Center's research labs, featuring a sophisticated dual-theme system and real-time collaboration tools.
+
+Built specifically for:
 - **RHEDAS**: Rush Health Equity Data Analytics Studio
 - **RICCC**: Rush Interdisciplinary Consortium for Critical Care Trials and Data Science
 
-This platform combines Monday.com's visual workflows with Airtable's flexible data management tailored for health equity research and critical care trials.
+This platform combines Monday.com's visual workflows with Airtable's flexible data management, enhanced with Rush University branding and Slack-style dark mode.
 
 ## Features
 
 ### ✅ Completed
-- **Dashboard Overview** - Comprehensive metrics and activity tracking
-- **Navigation System** - 10 core features accessible via sidebar
-- **Study Management** - Create and organize research studies
-- **Kanban Board** - Drag-and-drop study organization by buckets
-- **Dark Mode** - Full theme support
-- **Responsive Layout** - Adaptive design for different screen sizes
+- **Dual-Theme System** - Rush University light mode & Slack-style dark mode
+- **Dashboard Overview** - Animated metrics with Framer Motion
+- **Navigation System** - 10 core features with active states
+- **Study Management** - Full CRUD with status tracking
+- **Kanban Board** - Drag-and-drop with color-coded buckets
+- **Team Management** - Real-time backend integration
+- **Avatar System** - Upload, display, and optimize profile images
+- **Ideas Board** - Interactive voting and collaboration
+- **AI Standups** - Meeting transcription and action extraction
+- **Responsive Layout** - Mobile-optimized with touch gestures
+- **E2E Testing** - Playwright test suite
 
 ### 🚧 In Progress
-- Task Management System
-- Ideas Board with voting
-- Team Member Management
 - Deadlines & Calendar View
-- AI-powered Standups
-- Real-time Collaboration
+- Real-time WebSocket updates
+- Advanced analytics dashboard
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui
+- **Framework**: Next.js 15.4.5 with App Router
+- **Language**: TypeScript 5
+- **Database**: PostgreSQL with Prisma ORM
+- **Styling**: Tailwind CSS with CSS Variables
+- **UI Components**: shadcn/ui + Custom components
 - **State Management**: Zustand
-- **Data Fetching**: React Query
+- **Data Fetching**: React Query + SWR
 - **Drag & Drop**: @dnd-kit
 - **Icons**: Lucide React
 - **Animations**: Framer Motion
 - **Forms**: React Hook Form + Zod
+- **Image Processing**: Sharp
+- **AI Integration**: OpenAI GPT-4
+- **Testing**: Playwright + Vitest
+- **Deployment**: Vercel + Prisma Accelerate
 
 ## Getting Started
 
@@ -47,8 +56,8 @@ This platform combines Monday.com's visual workflows with Airtable's flexible da
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/labmanage-research-hub.git
-cd labmanage-research-hub
+git clone https://github.com/sajor2000/labmanager.git
+cd labmanager
 ```
 
 2. Install dependencies:
@@ -56,12 +65,25 @@ cd labmanage-research-hub
 npm install
 ```
 
-3. Run the development server:
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+# Edit .env.local with your database and API keys
+```
+
+4. Set up the database:
+```bash
+npx prisma generate
+npx prisma migrate dev
+npx prisma db seed
+```
+
+5. Run the development server:
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ### Build for Production
 
@@ -119,9 +141,19 @@ npm start
 - **Team Members** - Team management
 - **Standups** - AI meeting capture
 
-## Color System
+## Theme System
 
-The platform uses a comprehensive color system for status tracking:
+### Rush University Theme (Light Mode)
+- **Primary**: Rush Green (#2C5234)
+- **Secondary**: Rush Gold (#CFB991)
+- **Accent**: Rush Blue (#1A5F7A)
+
+### Slack-Style Dark Mode
+- **Background**: Dark Gray (#1A1D21)
+- **Sidebar**: Darker Gray (#222529)
+- **Cards**: Elevated Gray (#2C2F33)
+
+### Status Colors
 
 - **Planning**: Indigo (#6366F1)
 - **IRB Submission**: Amber (#F59E0B)
