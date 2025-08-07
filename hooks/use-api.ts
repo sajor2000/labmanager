@@ -167,6 +167,23 @@ export function useUpdateTask(id: string, options?: UseMutationOptions<Task, Err
   });
 }
 
+
+export function useDeleteTask(options?: UseMutationOptions<{ success: boolean }, Error, string>) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: api.tasks.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cacheKeys.tasks.all });
+      toast.success('Task deleted successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete task');
+    },
+    ...options,
+  });
+}
+
 export function useCompleteTask(options?: UseMutationOptions<Task, Error, string>) {
   const queryClient = useQueryClient();
   
@@ -222,6 +239,38 @@ export function useCreateIdea(options?: UseMutationOptions<Idea, Error, CreateId
   });
 }
 
+export function useUpdateIdea(options?: UseMutationOptions<Idea, Error, { id: string } & UpdateIdeaPayload>) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string } & UpdateIdeaPayload) => api.ideas.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cacheKeys.ideas.all });
+      toast.success('Idea updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update idea');
+    },
+    ...options,
+  });
+}
+
+export function useDeleteIdea(options?: UseMutationOptions<{ success: boolean }, Error, string>) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: api.ideas.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cacheKeys.ideas.all });
+      toast.success('Idea deleted successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete idea');
+    },
+    ...options,
+  });
+}
+
 export function useVoteIdea(options?: UseMutationOptions<void, Error, VotePayload>) {
   const queryClient = useQueryClient();
   
@@ -233,6 +282,22 @@ export function useVoteIdea(options?: UseMutationOptions<void, Error, VotePayloa
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to vote');
+    },
+    ...options,
+  });
+}
+
+export function useCommentIdea(options?: UseMutationOptions<void, Error, { ideaId: string; content: string }>) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ ideaId, content }) => api.ideas.comment(ideaId, content),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cacheKeys.ideas.all });
+      toast.success('Comment added');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to add comment');
     },
     ...options,
   });
@@ -441,6 +506,48 @@ export function useCreateTeamMember(options?: UseMutationOptions<TeamMember, Err
     onError: (error) => {
       toast.error(error.message || 'Failed to add team member');
     },
+    ...options,
+  });
+}
+
+export function useUpdateTeamMember(options?: UseMutationOptions<TeamMember, Error, { id: string } & UpdateTeamMemberPayload>) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string } & UpdateTeamMemberPayload) => api.team.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cacheKeys.team.all });
+      toast.success('Team member updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update team member');
+    },
+    ...options,
+  });
+}
+
+export function useDeleteTeamMember(options?: UseMutationOptions<{ success: boolean }, Error, string>) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: api.team.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cacheKeys.team.all });
+      toast.success('Team member removed successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to remove team member');
+    },
+    ...options,
+  });
+}
+
+export function useTeamMetrics(labId?: string, options?: UseQueryOptions<any>) {
+  return useQuery({
+    queryKey: [...cacheKeys.team.all, 'metrics', labId],
+    queryFn: () => api.team.getMetrics(labId),
+    staleTime: STALE_TIMES.medium,
+    enabled: !!labId,
     ...options,
   });
 }
