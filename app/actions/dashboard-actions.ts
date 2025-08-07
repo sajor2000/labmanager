@@ -4,112 +4,183 @@ import { prisma } from '@/lib/prisma';
 
 export async function getDashboardMetrics(labId?: string) {
   try {
-    // Fetch all metrics in parallel
-    const [
-      labsCount,
-      totalProjects,
-      activeProjects,
-      bucketsCount,
-      totalTasks,
-      completedTasks,
-      recentProjects,
-      recentActivities
-    ] = await Promise.all([
-      // Count total labs
-      prisma.lab.count(),
-      
-      // Count total projects
-      prisma.project.count({
-        where: labId ? { labId } : undefined
+    // Build optimized queries with single database calls using aggregations
+    const whereConditions = labId ? { labId } : {};
+    const taskWhereConditions = labId ? { project: { labId } } : {};
+
+    // Single query to get all metrics and basic data
+    const [metricsResult, recentProjects, labs] = await Promise.all([
+      // Combined aggregation query for better performance
+      prisma.$transaction(async (tx) => {
+        const [
+          labsCount,
+          projectStats,
+          bucketStats,
+          taskStats,
+          teamStats,
+          ideaStats
+        ] = await Promise.all([
+          tx.lab.count(),
+          
+          tx.project.aggregate({
+            where: whereConditions,
+            _count: {
+              id: true,
+            },
+          }).then(async (total) => {
+            const active = await tx.project.count({
+              where: {
+                ...whereConditions,
+                status: {
+                  notIn: ['CANCELLED', 'ON_HOLD', 'PUBLISHED']
+                }
+              }
+            });
+            return { total: total._count.id, active };
+          }),
+          
+          tx.bucket.count({
+            where: whereConditions
+          }),
+          
+          tx.task.aggregate({
+            where: taskWhereConditions,
+            _count: {
+              id: true,
+            },
+          }).then(async (total) => {
+            const completed = await tx.task.count({
+              where: {
+                ...taskWhereConditions,
+                status: 'COMPLETED'
+              }
+            });
+            return { total: total._count.id, completed };
+          }),
+          
+          // Team members count
+          labId ? 
+            tx.labMember.count({
+              where: {
+                labId,
+                isActive: true
+              }
+            }) :
+            tx.user.count({
+              where: {
+                isActive: true
+              }
+            }),
+          
+          // Ideas count for current month
+          tx.idea.aggregate({
+            where: {
+              ...whereConditions,
+              createdAt: {
+                gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) // First day of current month
+              }
+            },
+            _count: {
+              id: true
+            }
+          })
+        ]);
+
+        return {
+          labsCount,
+          projectStats,
+          bucketStats,
+          taskStats,
+          teamStats,
+          ideaStats
+        };
       }),
       
-      // Count active projects (not cancelled or on hold)
-      prisma.project.count({
-        where: {
-          ...(labId ? { labId } : {}),
-          status: {
-            notIn: ['CANCELLED', 'ON_HOLD', 'PUBLISHED']
-          }
-        }
-      }),
-      
-      // Count buckets
-      prisma.bucket.count({
-        where: labId ? { labId } : undefined
-      }),
-      
-      // Count total tasks
-      prisma.task.count({
-        where: labId ? {
-          project: { labId }
-        } : undefined
-      }),
-      
-      // Count completed tasks
-      prisma.task.count({
-        where: {
-          ...(labId ? { project: { labId } } : {}),
-          status: 'COMPLETED'
-        }
-      }),
-      
-      // Get recent projects
+      // Get recent projects with optimized includes
       prisma.project.findMany({
-        where: labId ? { labId } : undefined,
+        where: whereConditions,
         take: 5,
         orderBy: { createdAt: 'desc' },
-        include: {
-          bucket: true,
-          createdBy: true,
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          priority: true,
+          dueDate: true,
+          createdAt: true,
+          updatedAt: true,
+          bucket: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+            }
+          },
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              initials: true,
+            }
+          },
           _count: {
             select: {
-              tasks: true
+              tasks: true,
+              members: true,
             }
           }
         }
       }),
       
-      // Get recent activities (simplified - you could expand this)
-      prisma.project.findMany({
-        where: labId ? { labId } : undefined,
-        take: 10,
-        orderBy: { updatedAt: 'desc' },
+      // Get lab names in single query
+      prisma.lab.findMany({
         select: {
-          id: true,
-          name: true,
-          updatedAt: true,
-          status: true
-        }
+          shortName: true
+        },
+        take: 10, // Limit to prevent excessive data
       })
     ]);
 
-    // Get lab names for display
-    const labs = await prisma.lab.findMany({
-      select: {
-        shortName: true
-      }
-    });
     const labNames = labs.map(l => l.shortName).join(' & ');
+
+    // Transform recent projects for compatibility
+    const transformedProjects = recentProjects.map(p => ({
+      ...p,
+      title: p.name,  // Map 'name' to 'title' for component compatibility
+      bucket: p.bucket ? {
+        ...p.bucket,
+        title: p.bucket.name  // Map bucket 'name' to 'title'
+      } : undefined
+    }));
+
+    // Generate recent activities from project updates (more efficient than separate query)
+    const recentActivities = recentProjects
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+      .slice(0, 8)
+      .map(project => ({
+        id: project.id,
+        title: project.name,
+        name: project.name,
+        time: getRelativeTime(project.updatedAt),
+        action: getActivityAction(project.status)
+      }));
 
     return {
       success: true,
       data: {
         metrics: {
-          totalLabs: labsCount,
+          totalLabs: metricsResult.labsCount,
           labNames,
-          totalProjects: totalProjects,
-          activeProjects: activeProjects,
-          bucketsCount,
-          totalTasks,
-          completedTasks
+          totalProjects: metricsResult.projectStats.total,
+          activeProjects: metricsResult.projectStats.active,
+          bucketsCount: metricsResult.bucketStats,
+          totalTasks: metricsResult.taskStats.total,
+          completedTasks: metricsResult.taskStats.completed,
+          teamMembers: metricsResult.teamStats,
+          ideasThisMonth: metricsResult.ideaStats._count.id
         },
-        recentProjects,
-        recentActivities: recentActivities.map(activity => ({
-          id: activity.id,
-          title: activity.name,
-          time: getRelativeTime(activity.updatedAt),
-          action: getActivityAction(activity.status)
-        }))
+        recentProjects: transformedProjects,
+        recentActivities
       }
     };
   } catch {

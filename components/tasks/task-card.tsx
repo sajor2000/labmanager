@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreVertical, Calendar, User, AlertCircle, CheckCircle, Clock, FileText } from 'lucide-react';
+import { MoreVertical, Calendar, User, AlertCircle, CheckCircle, Clock, FileText, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Task } from '@/types';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
+import { TaskEditDialog } from '@/components/tasks/task-edit-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,13 +14,28 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { UserAvatar } from '@/components/ui/user-avatar';
 import { useTaskStore } from '@/lib/store/task-store';
 import { showToast } from '@/components/ui/toast';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { format } from 'date-fns';
 
 interface TaskCardProps {
-  task: Task;
+  task: Task & {
+    assignees?: {
+      user: {
+        id: string;
+        name: string;
+        email: string;
+        initials: string;
+        avatarUrl?: string | null;
+        role?: string;
+      };
+    }[];
+    estimatedHours?: number | null;
+    startDate?: Date | string | null;
+  };
   isDragging?: boolean;
 }
 
@@ -40,6 +56,7 @@ const statusIcons = {
 
 export function TaskCard({ task, isDragging = false }: TaskCardProps) {
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const { updateTaskStatus, deleteTask } = useTaskStore();
   const { confirm, ConfirmationDialog } = useConfirmationDialog();
   
@@ -53,6 +70,21 @@ export function TaskCard({ task, isDragging = false }: TaskCardProps) {
   
   const isOverdue = daysUntilDue !== null && daysUntilDue < 0;
   const isDueSoon = daysUntilDue !== null && daysUntilDue <= 3 && daysUntilDue >= 0;
+  
+  // Calculate ETA based on estimated hours and start date
+  const calculateETA = () => {
+    if (task.startDate && task.estimatedHours) {
+      const startDate = new Date(task.startDate);
+      const workingHoursPerDay = 8;
+      const daysToAdd = Math.ceil(task.estimatedHours / workingHoursPerDay);
+      const eta = new Date(startDate);
+      eta.setDate(eta.getDate() + daysToAdd);
+      return eta;
+    }
+    return null;
+  };
+  
+  const eta = calculateETA();
 
   const handleQuickStatusChange = async (newStatus: Task['status']) => {
     try {
@@ -115,6 +147,12 @@ export function TaskCard({ task, isDragging = false }: TaskCardProps) {
                 <FileText className="h-4 w-4 mr-2" />
                 View Details
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                setShowEditDialog(true);
+              }}>
+                Edit Task
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={(e) => {
@@ -155,20 +193,59 @@ export function TaskCard({ task, isDragging = false }: TaskCardProps) {
           </p>
         )}
 
-        {/* Priority Badge */}
-        <div className="flex items-center gap-2 mb-3">
-          <Badge 
-            variant="outline" 
-            className={cn("border-0 text-white", priority.color)}
-          >
-            {priority.label}
-          </Badge>
-          {task.studyId && (
-            <Badge variant="outline" className="text-xs">
-              Project linked
+        {/* Priority Badge and ETA */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant="outline" 
+              className={cn("border-0 text-white", priority.color)}
+            >
+              {priority.label}
             </Badge>
+            {task.studyId && (
+              <Badge variant="outline" className="text-xs">
+                Project linked
+              </Badge>
+            )}
+          </div>
+          
+          {/* ETA Display */}
+          {eta && task.status !== 'COMPLETED' && (
+            <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+              <Timer className="h-3 w-3" />
+              <span>ETA: {format(eta, 'MMM d')}</span>
+            </div>
           )}
         </div>
+        
+        {/* Assignees Avatars */}
+        {task.assignees && task.assignees.length > 0 && (
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex -space-x-2">
+              {task.assignees.slice(0, 3).map((assignee) => (
+                <UserAvatar
+                  key={assignee.user.id}
+                  userId={assignee.user.id}
+                  name={assignee.user.name}
+                  initials={assignee.user.initials}
+                  avatarUrl={assignee.user.avatarUrl}
+                  size="xs"
+                  className="ring-2 ring-white dark:ring-gray-800"
+                />
+              ))}
+              {task.assignees.length > 3 && (
+                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 text-xs font-medium ring-2 ring-white dark:ring-gray-800">
+                  +{task.assignees.length - 3}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 text-xs text-gray-500 dark:text-gray-400">
+              {task.assignees.length === 1 
+                ? task.assignees[0].user.name
+                : `${task.assignees.length} assigned`}
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex items-center justify-between text-xs">
@@ -191,11 +268,11 @@ export function TaskCard({ task, isDragging = false }: TaskCardProps) {
             </div>
           )}
 
-          {/* Assignees */}
-          {task.assigneeIds && task.assigneeIds.length > 0 && (
+          {/* Estimated Hours */}
+          {task.estimatedHours && (
             <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-              <User className="h-3 w-3" />
-              <span>{task.assigneeIds.length}</span>
+              <Clock className="h-3 w-3" />
+              <span>{task.estimatedHours}h estimated</span>
             </div>
           )}
         </div>
@@ -207,6 +284,20 @@ export function TaskCard({ task, isDragging = false }: TaskCardProps) {
           task={task}
           isOpen={showDetailModal}
           onClose={() => setShowDetailModal(false)}
+        />
+      )}
+
+      {/* Task Edit Dialog */}
+      {showEditDialog && (
+        <TaskEditDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          task={task}
+          projectId={task.projectId || task.studyId}
+          onSuccess={() => {
+            setShowEditDialog(false);
+            // The task store will be updated automatically by the dialog
+          }}
         />
       )}
 

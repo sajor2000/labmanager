@@ -5,50 +5,73 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Determine which database URL to use based on environment
-let connectionUrl = '';
-
-// In production, prefer PRISMA_DATABASE_URL for Accelerate
-if (process.env.NODE_ENV === 'production' && process.env.PRISMA_DATABASE_URL) {
-  connectionUrl = process.env.PRISMA_DATABASE_URL;
-} else if (process.env.DATABASE_URL) {
-  // In development or if no Accelerate URL, use direct connection
-  connectionUrl = process.env.DATABASE_URL;
-} else if (process.env.POSTGRES_URL) {
-  // Fallback to POSTGRES_URL if available
-  connectionUrl = process.env.POSTGRES_URL;
-} else {
-  throw new Error('No database connection URL found. Please set DATABASE_URL or PRISMA_DATABASE_URL');
-}
-
-// Check if we're using Prisma Accelerate
-const isPrismaAccelerate = connectionUrl.startsWith('prisma://') || 
-                          connectionUrl.startsWith('prisma+postgres://');
-
 const createPrismaClient = () => {
-  // Log connection info in development
+  // During build time, return a stub client that won't attempt connections
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    console.log('Build phase detected - using stub Prisma client');
+    return new PrismaClient();
+  }
+
+  // Get the database URL from environment
+  const databaseUrl = process.env.DATABASE_URL;
+  
+  if (!databaseUrl) {
+    console.warn('No DATABASE_URL found - using default Prisma client');
+    return new PrismaClient();
+  }
+
+  // Check if we're using Prisma Accelerate
+  const isPrismaAccelerate = databaseUrl.startsWith('prisma://') || 
+                            databaseUrl.startsWith('prisma+postgres://');
+
+  // Log connection info in development only
   if (process.env.NODE_ENV === 'development') {
-    console.log('Prisma connection URL type:', isPrismaAccelerate ? 'Accelerate' : 'Direct');
-    console.log('URL prefix:', connectionUrl.substring(0, 20) + '...');
+    console.log('🔗 Prisma connection:', isPrismaAccelerate ? 'Accelerate' : 'Direct');
+    console.log('🔗 URL prefix:', databaseUrl.substring(0, 25) + '...');
   }
   
-  const client = new PrismaClient({
+  // Configure client options
+  const clientOptions = {
+    log: process.env.NODE_ENV === 'development' 
+      ? ['query', 'error', 'warn'] as const
+      : ['error'] as const,
+  };
+
+  // For Prisma Accelerate URLs, don't override datasources
+  if (isPrismaAccelerate) {
+    const client = new PrismaClient(clientOptions);
+    // Use Accelerate extension for connection pooling and edge caching
+    return client.$extends(withAccelerate()) as unknown as PrismaClient;
+  }
+  
+  // For direct PostgreSQL connections, override datasource
+  return new PrismaClient({
+    ...clientOptions,
     datasources: {
       db: {
-        url: connectionUrl
+        url: databaseUrl
       }
     },
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  })
-  
-  if (isPrismaAccelerate) {
-    // Use Prisma Accelerate extension for connection pooling
-    return client.$extends(withAccelerate()) as unknown as PrismaClient
-  }
-  
-  return client
+  });
 }
 
+// Create singleton instance
 export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// Store in global for development hot reloading
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma
+}
+
+// Helper to check connection health
+export const checkDatabaseConnection = async () => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return { healthy: true, message: 'Database connection successful' };
+  } catch (error) {
+    return { 
+      healthy: false, 
+      message: `Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+    };
+  }
+}

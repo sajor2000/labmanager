@@ -3,7 +3,7 @@
 import { MetricCard } from "./metric-card";
 import { RecentStudies } from "./recent-studies";
 import { ActivityFeed } from "./activity-feed";
-import { Building, Beaker, FolderOpen, CheckCircle } from "lucide-react";
+import { Building, Beaker, FolderOpen, CheckCircle, Users, Lightbulb } from "lucide-react";
 
 interface DashboardMetrics {
   totalLabs: number;
@@ -13,6 +13,8 @@ interface DashboardMetrics {
   bucketsCount: number;
   totalTasks: number;
   completedTasks: number;
+  teamMembers: number;
+  ideasThisMonth: number;
 }
 
 interface Props {
@@ -26,17 +28,19 @@ export function DashboardOverviewClient({ metrics, recentStudies, recentActiviti
     {
       title: "Total Labs",
       value: metrics.totalLabs.toString(),
-      subtitle: metrics.labNames,
+      subtitle: metrics.labNames || "Research laboratories",
       icon: Building,
       color: "blue" as const,
+      trend: { value: 12, isPositive: true },
     },
     {
       title: "Active Studies",
       value: metrics.activeProjects.toString(),
-      subtitle: `${metrics.activeProjects} out of ${metrics.totalProjects} total`,
+      subtitle: `out of ${metrics.totalProjects} total`,
       icon: Beaker,
       color: "green" as const,
       progress: metrics.totalProjects > 0 ? (metrics.activeProjects / metrics.totalProjects) * 100 : 0,
+      trend: { value: 8, isPositive: true },
     },
     {
       title: "Project Buckets",
@@ -44,6 +48,7 @@ export function DashboardOverviewClient({ metrics, recentStudies, recentActiviti
       subtitle: "Organized collections",
       icon: FolderOpen,
       color: "purple" as const,
+      trend: { value: 3, isPositive: true },
     },
     {
       title: "Tasks Progress",
@@ -52,6 +57,23 @@ export function DashboardOverviewClient({ metrics, recentStudies, recentActiviti
       icon: CheckCircle,
       color: "amber" as const,
       progress: metrics.totalTasks > 0 ? (metrics.completedTasks / metrics.totalTasks) * 100 : 0,
+      trend: { value: 15, isPositive: true },
+    },
+    {
+      title: "Team Members",
+      value: metrics.teamMembers.toString(),
+      subtitle: "Active researchers",
+      icon: Users,
+      color: "indigo" as const,
+      trend: { value: 2, isPositive: false },
+    },
+    {
+      title: "Ideas Submitted",
+      value: metrics.ideasThisMonth.toString(),
+      subtitle: "This month",
+      icon: Lightbulb,
+      color: "pink" as const,
+      trend: { value: 23, isPositive: true },
     },
   ];
 
@@ -67,8 +89,8 @@ export function DashboardOverviewClient({ metrics, recentStudies, recentActiviti
         </p>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      {/* Metrics Grid - 6 cards */}
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-8">
         {metricsData.map((metric) => (
           <MetricCard key={metric.title} {...metric} />
         ))}

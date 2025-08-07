@@ -170,7 +170,7 @@ Return the analysis in the following JSON format:
 }`;
 
       const completion = await getOpenAIClient().chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: process.env.OPENAI_API_MODEL_2 || 'gpt-4o',
         messages: [
           {
             role: 'system',
@@ -212,7 +212,7 @@ Return the analysis in the following JSON format:
   static async generateSummary(transcript: string): Promise<string> {
     try {
       const completion = await getOpenAIClient().chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: process.env.OPENAI_API_MODEL || 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -240,7 +240,7 @@ Return the analysis in the following JSON format:
   static async extractSpeakers(transcript: string): Promise<string[]> {
     try {
       const completion = await getOpenAIClient().chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: process.env.OPENAI_API_MODEL || 'gpt-4o-mini',
         messages: [
           {
             role: 'system',

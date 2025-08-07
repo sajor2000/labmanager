@@ -1,11 +1,20 @@
 import { prisma } from '@/lib/prisma';
+import { headers } from 'next/headers';
 
-// Get current user (mock for now)
+// Get current user from temporary auth system
 export async function getCurrentUser() {
   try {
-    // For now, return a mock user or the first user
-    // In production, this would use authentication
-    const user = await prisma.user.findFirst({
+    // Get the selected user ID from headers (set by client-side)
+    const headersList = await headers();
+    const selectedUserId = headersList.get('x-selected-user-id');
+    
+    if (!selectedUserId) {
+      return null; // No user selected
+    }
+    
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: selectedUserId },
       include: {
         labs: {
           include: {
@@ -15,29 +24,26 @@ export async function getCurrentUser() {
       },
     });
     
-    if (!user) {
-      // Create a default user if none exists
-      const defaultUser = await prisma.user.create({
-        data: {
-          email: 'dr.johnson@rush.edu',
-          name: 'Dr. Johnson',
-          role: 'PRINCIPAL_INVESTIGATOR',
-          initials: 'DJ',
-        },
-        include: {
-          labs: {
-            include: {
-              lab: true,
-            },
-          },
-        },
-      });
-      return defaultUser;
-    }
-    
     return user;
   } catch (error) {
     console.error('Error fetching current user:', error);
     return null;
   }
+}
+
+// Helper function to get selected user ID from client-side storage
+export function getSelectedUserIdFromClient(): string | null {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const stored = localStorage.getItem('labmanage_selected_user');
+    if (stored) {
+      const user = JSON.parse(stored);
+      return user.id;
+    }
+  } catch (error) {
+    console.error('Error reading stored user:', error);
+  }
+  
+  return null;
 }

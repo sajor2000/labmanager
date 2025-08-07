@@ -1,45 +1,22 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+// This hook is now a bridge to our new user context system
+// It maintains compatibility with existing components
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  initials: string;
-  avatar?: string;
-  avatarUrl?: string | null;
-}
+import { useCurrentUser as useCurrentUserContext } from '@/lib/contexts/user-context';
 
+// Re-export the hook from the context for backward compatibility
 export function useCurrentUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const response = await fetch('/api/users/current');
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error('Error fetching current user:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchUser();
-  }, []);
-
-  return { user, loading };
+  const { user, isLoggedIn } = useCurrentUserContext();
+  
+  return { 
+    user, 
+    loading: false // Context handles loading internally
+  };
 }
 
 // For components that need a fallback user ID during loading
 export function getCurrentUserId(): string {
-  // This will be replaced by the actual user ID once loaded
-  // Using a more descriptive fallback than "user1"
-  return 'pending-auth';
+  const { userId } = useCurrentUserContext();
+  return userId || 'pending-auth';
 }

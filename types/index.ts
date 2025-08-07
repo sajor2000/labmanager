@@ -97,6 +97,25 @@ export interface Bucket {
   updatedAt: Date;
 }
 
+// Project type (for Kanban)
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  oraNumber?: string;
+  status: string;
+  priority?: string;
+  bucketId?: string;
+  bucket?: Bucket;
+  assigneeIds?: string[];
+  assignees?: User[];
+  dueDate?: Date | string | null;
+  notes?: string;
+  tasks?: Task[];
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
 // Task types
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "COMPLETED" | "BLOCKED" | "REVIEW";
 
@@ -107,6 +126,7 @@ export interface Task {
   status: TaskStatus;
   priority: StudyPriority;
   studyId?: string;
+  projectId?: string; // Backend uses projectId, frontend uses studyId
   assigneeIds: string[];
   dueDate?: Date;
   completedAt?: Date;

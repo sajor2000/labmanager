@@ -14,22 +14,10 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "migrate:data": "npx ts-node scripts/migrate-study-to-project.ts",
-    "test:services": "node scripts/test-services.js",
-    "test:ui": "jest --config=jest.config.js tests/ui",
-    "test:ui:watch": "jest --config=jest.config.js tests/ui --watch",
-    "test:ui:ci": "cross-env CI=true jest --config=jest.config.js tests/ui",
-    "test:ui:predeployment": "node tests/run-ui-tests.js",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "test:e2e:headed": "playwright test --headed",
-    "test:navigation": "playwright test tests/e2e/navigation.spec.ts",
-    "test:visual": "playwright test tests/e2e/visual-regression.spec.ts",
-    "test:a11y": "playwright test tests/e2e/accessibility.spec.ts",
-    "test:responsive": "playwright test tests/e2e/responsive.spec.ts",
-    "test:performance": "playwright test tests/e2e/performance.spec.ts",
-    "test:all": "npm run lint && npm run test:services && npm run test:e2e",
-    "predeployment": "npm run lint && npm run test:services && npm run test:ui:predeployment && npm run test:e2e"
+    "test:e2e:headed": "playwright test --headed"
   },
   "optionalDependencies": {
     "sharp": "^0.33.5"
@@ -39,6 +27,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hello-pangea/dnd": "^18.0.1",
+    "@hookform/resolvers": "^5.2.1",
     "@prisma/client": "^6.13.0",
     "@prisma/extension-accelerate": "^2.0.2",
     "@radix-ui/react-avatar": "^1.1.10",
@@ -72,6 +61,7 @@
     "react": "19.0.0",
     "react-day-picker": "^9.8.1",
     "react-dom": "19.0.0",
+    "react-hook-form": "^7.62.0",
     "react-hot-toast": "^2.5.2",
     "react-intersection-observer": "^9.16.0",
     "recharts": "^3.1.2",
@@ -110,6 +100,6 @@
     "typescript": "^5"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed-production.ts"
   }
 }

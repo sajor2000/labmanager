@@ -78,10 +78,10 @@ export function DashboardOverview() {
         className="mb-8"
       >
         <h1 className="text-4xl font-bold gradient-text heading-responsive">
-          Welcome back{user?.name ? `, ${user.name}` : ''}!
+          Welcome back{user?.firstName ? `, ${user.firstName}` : user?.name ? `, ${user.name.split(' ')[0]}` : ''}!
         </h1>
         <p className="mt-2 text-lg text-muted-foreground">
-          Here&apos;s an overview of your lab activities
+          Here&apos;s an overview of your {user?.labs?.[0]?.name || 'lab'} activities
         </p>
       </motion.div>
 

@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { TeamHeader } from '@/components/team/team-header';
 import { TeamMemberCard } from '@/components/team/team-member-card';
 import { TeamWorkloadView } from '@/components/team/team-workload-view';
+import { TeamMemberDialog } from '@/components/team/team-member-dialog';
 import { showToast } from '@/components/ui/toast';
+import { useLab } from '@/lib/contexts/lab-context';
 import type { User as PrismaUser } from '@prisma/client';
 
 // Extended user type for team page
@@ -13,6 +15,7 @@ type TeamMember = PrismaUser & {
 };
 
 export default function TeamPage() {
+  const { currentLab, isLoading: labLoading } = useLab();
   const [members, setMembers] = useState<Array<TeamMember & {
     taskCount: number;
     completedTasks: number;
@@ -24,6 +27,8 @@ export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Filter members based on search
   const filteredMembers = members.filter(member => 
@@ -32,48 +37,92 @@ export default function TeamPage() {
     member.expertise?.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()))
   );
   
-  // Fetch team members on mount
+  // Fetch team members when lab changes
   useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/team');
-        if (!response.ok) {
-          throw new Error('Failed to fetch team members');
-        }
-        const data = await response.json();
-        setMembers(data);
-      } catch (error) {
-        console.error('Failed to fetch team members:', error);
-        showToast({
-          type: 'error',
-          title: 'Failed to load team members',
-          message: 'Please try refreshing the page',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
+    if (!currentLab || labLoading) return;
     fetchMembers();
-  }, []);
+  }, [currentLab, labLoading]);
   
   const handleAddMember = () => {
-    // TODO: Open add member modal
-    setShowAddMemberForm(true);
-    showToast({
-      type: 'info',
-      title: 'Add Member',
-      message: 'Member creation form coming soon',
-    });
+    setSelectedMember(null);
+    setIsDialogOpen(true);
   };
   
   const handleEditMember = (memberId: string) => {
-    showToast({
-      type: 'info',
-      title: 'Edit Member',
-      message: `Editing member ${memberId}`,
-    });
+    const member = members.find(m => m.id === memberId);
+    if (member) {
+      // Parse name into firstName and lastName for the form
+      const nameParts = member.name.split(' ');
+      const memberWithParsedName = {
+        ...member,
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || ''
+      };
+      setSelectedMember(memberWithParsedName);
+      setIsDialogOpen(true);
+    }
+  };
+  
+  const handleDeleteMember = async (memberId: string) => {
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+    
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${member.name}? This action cannot be undone.`);
+    if (!confirmDelete) return;
+    
+    try {
+      const response = await fetch(`/api/users/${memberId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete member');
+      }
+      
+      showToast({
+        type: 'success',
+        title: 'Member Deleted',
+        message: `${member.name} has been removed from the team.`,
+      });
+      
+      // Refresh the members list
+      fetchMembers();
+    } catch (error) {
+      console.error('Failed to delete member:', error);
+      showToast({
+        type: 'error',
+        title: 'Delete Failed',
+        message: 'Could not delete the team member. Please try again.',
+      });
+    }
+  };
+  
+  const handleDialogSuccess = () => {
+    // Refresh the team members list
+    fetchMembers();
+  };
+  
+  const fetchMembers = async () => {
+    if (!currentLab) return;
+    
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/team?labId=${currentLab.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch team members');
+      }
+      const data = await response.json();
+      setMembers(data);
+    } catch (error) {
+      console.error('Failed to fetch team members:', error);
+      showToast({
+        type: 'error',
+        title: 'Failed to load team members',
+        message: 'Please try refreshing the page',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const handleViewDetails = (memberId: string) => {
@@ -126,6 +175,7 @@ export default function TeamPage() {
                   key={member.id}
                   member={member as any}
                   onEdit={() => handleEditMember(member.id)}
+                  onDelete={() => handleDeleteMember(member.id)}
                   onViewDetails={() => handleViewDetails(member.id)}
                 />
               ))}
@@ -238,6 +288,14 @@ export default function TeamPage() {
           </div>
         )}
       </div>
+      
+      {/* Team Member Dialog */}
+      <TeamMemberDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        member={selectedMember}
+        onSuccess={handleDialogSuccess}
+      />
     </div>
   );
 }

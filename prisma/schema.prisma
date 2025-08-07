@@ -89,13 +89,15 @@ model Lab {
   automationRules AutomationRule[]
 }
 
+/// Associates users with labs - represents lab membership and permissions
+/// Each record links a user to a specific lab with their role and permissions
 model LabMember {
   id        String   @id @default(cuid())
-  userId    String   @map("userId")
-  labId     String   @map("labId")
-  isAdmin   Boolean  @default(false) @map("isAdmin")
-  isActive  Boolean  @default(true) @map("isActive") // Soft delete support
-  joinedAt  DateTime @default(now()) @map("joinedAt")
+  userId    String   @map("userId") /// The user who is a member of the lab
+  labId     String   @map("labId") /// The lab this membership is for
+  isAdmin   Boolean  @default(false) @map("isAdmin") /// Whether user has admin privileges in this lab
+  isActive  Boolean  @default(true) @map("isActive") /// Active = current member, Inactive = former member (soft delete)
+  joinedAt  DateTime @default(now()) @map("joinedAt") /// When the user joined this lab
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

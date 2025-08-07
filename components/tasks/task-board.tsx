@@ -39,7 +39,7 @@ export function TaskBoard() {
         if (response.ok) {
           const backendTasks = await response.json();
           
-          // Transform backend tasks to frontend Task format
+          // Transform backend tasks to frontend Task format with assignee details
           const transformedTasks: Task[] = backendTasks.map((t: any) => ({
             id: t.id,
             title: t.title,
@@ -47,8 +47,14 @@ export function TaskBoard() {
             status: t.status,
             priority: t.priority,
             studyId: t.projectId, // Map projectId to studyId for frontend
+            projectId: t.projectId,
             assigneeIds: t.assignees?.map((a: any) => a.userId) || [],
+            assignees: t.assignees || [], // Keep full assignee data for display
             dueDate: t.dueDate ? new Date(t.dueDate) : undefined,
+            startDate: t.startDate ? new Date(t.startDate) : undefined,
+            estimatedHours: t.estimatedHours,
+            actualHours: t.actualHours,
+            tags: t.tags || [],
             createdAt: new Date(t.createdAt),
             updatedAt: new Date(t.updatedAt),
             createdById: t.createdById,

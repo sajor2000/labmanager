@@ -96,33 +96,33 @@ export const useTaskStore = create<TaskState>()(
         
         updateTask: async (id, updates) => {
           try {
-            // Transform studyId to projectId if present
-            const apiUpdates = { ...updates };
-            if ('studyId' in apiUpdates) {
-              (apiUpdates as any).projectId = apiUpdates.studyId;
-              delete (apiUpdates as any).studyId;
-            }
-            
-            const response = await fetch('/api/tasks', {
+            // Use the specific task endpoint for updates
+            const response = await fetch(`/api/tasks/${id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id, ...apiUpdates }),
+              body: JSON.stringify(updates),
             });
             
             if (!response.ok) throw new Error('Failed to update task');
             
             const backendTask = await response.json();
             
-            // Transform backend response to frontend Task format
-            const updatedTask: Task = {
+            // Transform backend response to frontend Task format with full assignee data
+            const updatedTask: any = {
               id: backendTask.id,
               title: backendTask.title,
               description: backendTask.description,
               status: backendTask.status,
               priority: backendTask.priority,
               studyId: backendTask.projectId, // Map projectId back to studyId
+              projectId: backendTask.projectId,
               assigneeIds: backendTask.assignees?.map((a: any) => a.userId) || [],
+              assignees: backendTask.assignees || [], // Keep full assignee data
               dueDate: backendTask.dueDate ? new Date(backendTask.dueDate) : undefined,
+              startDate: backendTask.startDate ? new Date(backendTask.startDate) : undefined,
+              estimatedHours: backendTask.estimatedHours,
+              actualHours: backendTask.actualHours,
+              tags: backendTask.tags || [],
               createdAt: new Date(backendTask.createdAt),
               updatedAt: new Date(backendTask.updatedAt),
               createdById: backendTask.createdById,
@@ -133,6 +133,12 @@ export const useTaskStore = create<TaskState>()(
                 task.id === id ? updatedTask : task
               ),
             }));
+            
+            showToast({
+              type: 'success',
+              title: 'Task updated',
+              message: 'Task has been updated successfully.',
+            });
           } catch (error) {
             showToast({
               type: 'error',

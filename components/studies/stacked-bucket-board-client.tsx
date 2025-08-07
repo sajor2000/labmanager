@@ -22,7 +22,7 @@ import type { StudyCreationInput } from "@/lib/validations/study";
 import { useStudyStore } from "@/lib/store/study-store";
 import type { Study, Bucket } from "@/types";
 import { useServerAction } from "@/hooks/use-server-action";
-import { moveStudyToBucket as moveStudyToBucketAction } from "@/app/actions/study-actions";
+import { moveStudyToBucket as moveStudyToBucketAction, createStudy as createStudyAction } from "@/app/actions/study-actions";
 
 interface Props {
   initialBuckets: any[];
@@ -38,6 +38,10 @@ export function StackedBucketBoardClient({ initialBuckets, initialStudies }: Pro
   
   const { execute: executeMoveStudy } = useServerAction(moveStudyToBucketAction, {
     successMessage: 'Study moved successfully',
+  });
+  
+  const { execute: executeCreateStudy } = useServerAction(createStudyAction, {
+    successMessage: 'Study created successfully',
   });
   
   // Initialize store with real data from database on first load
@@ -187,7 +191,7 @@ export function StackedBucketBoardClient({ initialBuckets, initialStudies }: Pro
     return null;
   }, [activeId, studies, buckets]);
 
-  const handleCreateStudy = useCallback((data: StudyCreationInput) => {
+  const handleCreateStudy = useCallback(async (data: StudyCreationInput) => {
     // Find the target bucket
     const targetBucket = selectedBucketId 
       ? buckets.find(b => b.id === selectedBucketId)
@@ -195,31 +199,74 @@ export function StackedBucketBoardClient({ initialBuckets, initialStudies }: Pro
         ? buckets.find(b => b.title === data.bucket)
         : buckets[0];
     
-    if (!targetBucket) return;
+    if (!targetBucket) {
+      console.error('No bucket found for study creation');
+      return;
+    }
     
-    const newStudy: Study = {
-      id: Date.now().toString(),
-      title: data.studyName,
-      oraNumber: data.oraNumber || undefined,
-      status: data.status,
-      priority: data.priority,
-      studyType: data.studyType || "Unspecified",
-      bucketId: targetBucket.id,
-      fundingSource: data.fundingSource as Study['fundingSource'] || undefined,
-      assigneeIds: [],
-      externalCollaborators: data.externalCollaborators || undefined,
-      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-      notes: data.notes || undefined,
-      progress: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdById: 'user1',
-      labId: targetBucket.labId
-    };
-
-    addStudy(newStudy);
+    try {
+      // Get current user and lab info
+      const userResponse = await fetch('/api/users/current');
+      const currentUser = await userResponse.json();
+      
+      if (!currentUser || !currentUser.id) {
+        throw new Error('User not authenticated');
+      }
+      
+      // Prepare data for server action
+      const studyData = {
+        title: data.studyName,
+        oraNumber: data.oraNumber || undefined,
+        status: data.status,
+        priority: data.priority,
+        studyType: data.studyType || "Unspecified",
+        bucketId: targetBucket.id,
+        labId: targetBucket.labId,
+        fundingSource: data.fundingSource as Study['fundingSource'] || undefined,
+        fundingDetails: undefined,
+        externalCollaborators: data.externalCollaborators || undefined,
+        dueDate: data.dueDate || undefined,
+        notes: data.notes || undefined,
+        createdById: currentUser.id,
+        assigneeIds: [],
+      };
+      
+      // Call server action to create study in database
+      const result = await executeCreateStudy(studyData);
+      
+      if (result?.success && result.data) {
+        // Transform the returned project to Study format for the store
+        const newStudy: Study = {
+          id: result.data.id,
+          title: result.data.name,
+          oraNumber: result.data.oraNumber || undefined,
+          status: result.data.status as Study['status'],
+          priority: result.data.priority as Study['priority'],
+          studyType: result.data.projectType || result.data.studyType || "Unspecified",
+          bucketId: result.data.bucketId,
+          fundingSource: result.data.fundingSource as Study['fundingSource'] || undefined,
+          fundingDetails: result.data.fundingDetails || undefined,
+          assigneeIds: result.data.members?.map((m: any) => m.userId) || [],
+          externalCollaborators: result.data.externalCollaborators || undefined,
+          dueDate: result.data.dueDate ? new Date(result.data.dueDate) : undefined,
+          notes: result.data.notes || undefined,
+          progress: result.data.progress || 0,
+          createdAt: new Date(result.data.createdAt),
+          updatedAt: new Date(result.data.updatedAt),
+          createdById: result.data.createdById,
+          labId: result.data.labId
+        };
+        
+        // Add to local store for immediate UI update
+        addStudy(newStudy);
+      }
+    } catch (error) {
+      console.error('Error creating study:', error);
+      // Error toast is already shown by useServerAction hook
+    }
+    
     setSelectedBucketId(null);
-  }, [selectedBucketId, buckets, addStudy]);
+  }, [selectedBucketId, buckets, addStudy, executeCreateStudy]);
   
   const handleAddStudyToBucket = useCallback((bucketId: string) => {
     setSelectedBucketId(bucketId);

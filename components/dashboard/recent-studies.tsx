@@ -6,11 +6,13 @@ import { cn } from "@/lib/utils";
 
 interface StudyData {
   id: string;
-  title: string;
+  name?: string;  // Projects use 'name' not 'title'
+  title?: string;  // Keep for backward compatibility
   status: string;
   studyType?: string;
   bucket?: {
-    title: string;
+    name?: string;  // Buckets use 'name' not 'title'
+    title?: string;  // Keep for backward compatibility
     color: string;
   };
   createdBy?: {
@@ -87,7 +89,7 @@ export function RecentStudies({ studies = [] }: Props) {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900 dark:text-white">
-                        {study.title}
+                        {study.title || study.name}
                       </h3>
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
                         <div className="flex items-center">

@@ -1,7 +1,10 @@
 import { getBuckets } from '@/app/actions/bucket-actions';
-import { getStudies } from '@/app/actions/project-actions-v2';
+import { getStudies } from '@/app/actions/study-actions';
 import { StackedBucketBoardClient } from '@/components/studies/stacked-bucket-board-client';
 import type { BucketWithRelations, ProjectWithRelations } from '@/lib/types/dto';
+
+// Force dynamic rendering to prevent pre-rendering issues
+export const dynamic = 'force-dynamic';
 
 export default async function StackedPage() {
   // Fetch real data from database

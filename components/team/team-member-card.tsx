@@ -23,6 +23,7 @@ interface TeamMemberCardProps {
     workload?: number; // percentage
   };
   onEdit?: () => void;
+  onDelete?: () => void;
   onViewDetails?: () => void;
 }
 
@@ -34,7 +35,7 @@ const roleColors: Record<string, string> = {
   'External Collaborator': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
 };
 
-export function TeamMemberCard({ member, onEdit, onViewDetails }: TeamMemberCardProps) {
+export function TeamMemberCard({ member, onEdit, onDelete, onViewDetails }: TeamMemberCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   
   const roleLabel = member.role; // Role is already properly formatted
@@ -85,6 +86,13 @@ export function TeamMemberCard({ member, onEdit, onViewDetails }: TeamMemberCard
               <DropdownMenuItem>
                 <Mail className="h-4 w-4 mr-2" />
                 Send Email
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={onDelete}
+                className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+              >
+                Delete Member
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -151,23 +159,15 @@ export function TeamMemberCard({ member, onEdit, onViewDetails }: TeamMemberCard
           </div>
         </div>
         
-        {/* Availability Status */}
-        <div className="mt-4 pt-4 border-t dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-400" />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {member.capacity} hrs/week
-              </span>
+        {/* Availability Status - Only show if over capacity */}
+        {member.workload && member.workload > 80 && (
+          <div className="mt-4 pt-4 border-t dark:border-gray-700">
+            <div className="flex items-center justify-center gap-1 text-red-600 dark:text-red-400">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-xs">Over capacity</span>
             </div>
-            {member.workload && member.workload > 80 && (
-              <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                <AlertCircle className="h-4 w-4" />
-                <span className="text-xs">Over capacity</span>
-              </div>
-            )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

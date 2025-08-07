@@ -11,10 +11,12 @@ import {
   Beaker,
   Grid3x3,
   Kanban,
+  LayoutGrid,
   Lightbulb,
   Clock,
   Users,
   Mic,
+  Calendar,
 } from "lucide-react";
 
 const navigation = [
@@ -23,8 +25,10 @@ const navigation = [
   { name: "Buckets", href: "/buckets", icon: FolderOpen },
   { name: "Studies", href: "/studies", icon: Beaker },
   { name: "Stacked by Bucket", href: "/stacked", icon: Grid3x3 },
-  { name: "Task Board", href: "/tasks", icon: Kanban },
+  { name: "Kanban Board", href: "/kanban", icon: Kanban },
+  { name: "Task Board", href: "/tasks", icon: LayoutGrid },
   { name: "Ideas Board", href: "/ideas", icon: Lightbulb },
+  { name: "Calendar", href: "/calendar", icon: Calendar },
   { name: "Deadlines", href: "/deadlines", icon: Clock },
   { name: "Team Members", href: "/team", icon: Users },
   { name: "Standups", href: "/standups", icon: Mic },

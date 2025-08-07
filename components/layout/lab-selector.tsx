@@ -1,32 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Building, Check, ChevronDown } from "lucide-react";
+import { Building, Check, ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const labs = [
-  {
-    id: "rhedas",
-    name: "Rush Health Equity Data Analytics Studio",
-    abbreviation: "RHEDAS",
-    description: "Health equity research and data analytics",
-    memberCount: 12,
-    activeStudies: 8,
-  },
-  {
-    id: "riccc",
-    name: "Rush Interdisciplinary Consortium for Critical Care Trials and Data Science",
-    abbreviation: "RICCC",
-    description: "Critical care trials and data science research",
-    memberCount: 18,
-    activeStudies: 15,
-  },
-];
+import { useLab } from "@/lib/contexts/lab-context";
 
 export function LabSelector() {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedLab, setSelectedLab] = useState(labs[0]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { currentLab, availableLabs, setCurrentLab, isLoading } = useLab();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -39,6 +21,19 @@ export function LabSelector() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center space-x-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium dark:border-gray-700 dark:bg-gray-900">
+        <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+        <span>Loading labs...</span>
+      </div>
+    );
+  }
+
+  if (!currentLab || availableLabs.length === 0) {
+    return null;
+  }
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -48,8 +43,8 @@ export function LabSelector() {
         aria-expanded={isOpen}
       >
         <Building className="h-4 w-4 text-gray-500" />
-        <span className="max-w-[200px] truncate" title={selectedLab.name}>
-          {selectedLab.abbreviation}
+        <span className="max-w-[200px] truncate" title={currentLab.name}>
+          {currentLab.shortName}
         </span>
         <ChevronDown 
           className={cn(
@@ -66,16 +61,16 @@ export function LabSelector() {
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400">SELECT LAB</p>
             </div>
             
-            {labs.map((lab) => (
+            {availableLabs.map((lab) => (
               <button
                 key={lab.id}
                 onClick={() => {
-                  setSelectedLab(lab);
+                  setCurrentLab(lab);
                   setIsOpen(false);
                 }}
                 className={cn(
                   "flex w-full items-start space-x-3 rounded-lg px-3 py-3 text-left transition-colors",
-                  selectedLab.id === lab.id
+                  currentLab.id === lab.id
                     ? "bg-blue-50 dark:bg-blue-900/20"
                     : "hover:bg-gray-50 dark:hover:bg-gray-800"
                 )}
@@ -88,23 +83,19 @@ export function LabSelector() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {lab.abbreviation}
+                        {lab.shortName}
                       </p>
                       <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">
                         {lab.name}
                       </p>
                     </div>
-                    {selectedLab.id === lab.id && (
+                    {currentLab.id === lab.id && (
                       <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     )}
                   </div>
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                    {lab.description}
+                    {lab.description || 'Research laboratory'}
                   </p>
-                  <div className="mt-2 flex space-x-4 text-xs text-gray-500 dark:text-gray-500">
-                    <span>{lab.memberCount} members</span>
-                    <span>{lab.activeStudies} active studies</span>
-                  </div>
                 </div>
               </button>
             ))}

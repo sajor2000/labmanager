@@ -11,8 +11,10 @@ import { BulkActionToolbar } from '@/components/buckets/bulk-action-toolbar';
 import { BucketImportModal } from '@/components/buckets/bucket-import-modal';
 import { BucketFilterPanel, type BucketFilters } from '@/components/buckets/bucket-filter-panel';
 import { showToast } from '@/components/ui/toast';
+import { useLab } from '@/lib/contexts/lab-context';
 
 export default function BucketsPage() {
+  const { currentLab, isLoading: labsLoading } = useLab();
   const [buckets, setBuckets] = useState<Bucket[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'analytics'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,14 +40,38 @@ export default function BucketsPage() {
     icons: [],
   });
 
-  // Fetch buckets on mount
+  // Fetch buckets when lab changes
   useEffect(() => {
+    if (!currentLab || labsLoading) return;
+    
     const fetchBuckets = async () => {
+      setIsLoading(true);
       try {
-        const response = await fetch('/api/buckets');
+        // Fetch buckets filtered by the current lab
+        const response = await fetch(`/api/buckets?labId=${currentLab.id}`);
         if (response.ok) {
           const data = await response.json();
-          setBuckets(data);
+          // Transform API response to match our Bucket type
+          const transformedBuckets: Bucket[] = data.map((bucket: any) => ({
+            id: bucket.id,
+            name: bucket.name,
+            description: bucket.description,
+            color: bucket.color,
+            icon: bucket.icon || 'folder',
+            position: bucket.position,
+            projectCount: bucket._count?.projects || 0,
+            completedProjects: 0,
+            activeMembers: 0,
+            progress: 0,
+            isActive: bucket.isActive !== false,
+            createdAt: new Date(bucket.createdAt),
+            updatedAt: new Date(bucket.updatedAt),
+            parentBucketId: undefined,
+            hasActiveRules: false,
+            rulesCount: 0,
+            labId: bucket.labId,
+          }));
+          setBuckets(transformedBuckets);
         }
       } catch (error) {
         console.error('Failed to fetch buckets:', error);
@@ -60,7 +86,17 @@ export default function BucketsPage() {
     };
 
     fetchBuckets();
-  }, []);
+    
+    // Listen for lab changes via custom event
+    const handleLabChange = () => {
+      fetchBuckets();
+    };
+    
+    window.addEventListener('labChanged', handleLabChange);
+    return () => {
+      window.removeEventListener('labChanged', handleLabChange);
+    };
+  }, [currentLab, labsLoading]);
   
   // Filter buckets
   const filteredBuckets = buckets.filter(bucket => {
@@ -160,58 +196,192 @@ export default function BucketsPage() {
   //   });
   // };
   
-  const handleCreateBucket = (formData: BucketFormData) => {
-    const newBucket: Bucket = {
-      id: Date.now().toString(),
-      name: formData.name,
-      description: formData.description,
-      color: formData.color,
-      icon: formData.icon,
-      position: buckets.length,
-      projectCount: 0,
-      completedProjects: 0,
-      activeMembers: 0,
-      progress: 0,
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      parentBucketId: parentBucketId,
-    };
-    
-    setBuckets([...buckets, newBucket]);
-    setShowCreationForm(false);
-    setParentBucketId(undefined);
+  const handleCreateBucket = async (formData: BucketFormData) => {
+    try {
+      // Use the current lab from context
+      if (!currentLab) {
+        throw new Error('No lab selected');
+      }
+      
+      const response = await fetch('/api/buckets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.name,
+          description: formData.description,
+          color: formData.color,
+          icon: formData.icon,
+          labId: currentLab.id,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create bucket');
+      }
+      
+      const createdBucket = await response.json();
+      
+      // Transform the response to match our Bucket type
+      const newBucket: Bucket = {
+        id: createdBucket.id,
+        name: createdBucket.name,
+        description: createdBucket.description,
+        color: createdBucket.color,
+        icon: createdBucket.icon || 'folder',
+        position: createdBucket.position,
+        projectCount: createdBucket._count?.projects || 0,
+        completedProjects: 0,
+        activeMembers: 0,
+        progress: 0,
+        isActive: createdBucket.isActive !== false,
+        createdAt: new Date(createdBucket.createdAt),
+        updatedAt: new Date(createdBucket.updatedAt),
+        parentBucketId: parentBucketId,
+      };
+      
+      setBuckets([...buckets, newBucket]);
+      setShowCreationForm(false);
+      setParentBucketId(undefined);
+      
+      showToast({
+        type: 'success',
+        title: 'Bucket created',
+        message: `${formData.name} has been created successfully`,
+      });
+    } catch (error: any) {
+      console.error('Failed to create bucket:', error);
+      showToast({
+        type: 'error',
+        title: 'Failed to create bucket',
+        message: error.message || 'Please try again',
+      });
+    }
   };
   
-  const handleEditBucket = (formData: BucketFormData) => {
+  const handleEditBucket = async (formData: BucketFormData) => {
     if (!editingBucket) return;
     
-    setBuckets(buckets.map(bucket => 
-      bucket.id === editingBucket.id
-        ? {
-            ...bucket,
-            name: formData.name,
-            description: formData.description,
-            color: formData.color,
-            icon: formData.icon,
-            updatedAt: new Date(),
-          }
-        : bucket
-    ));
-    
-    setEditingBucket(null);
+    try {
+      const response = await fetch('/api/buckets', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editingBucket.id,
+          title: formData.name,
+          description: formData.description,
+          color: formData.color,
+          icon: formData.icon,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update bucket');
+      }
+      
+      // Update local state only if API call succeeded
+      setBuckets(buckets.map(bucket => 
+        bucket.id === editingBucket.id
+          ? {
+              ...bucket,
+              name: formData.name,
+              description: formData.description,
+              color: formData.color,
+              icon: formData.icon,
+              updatedAt: new Date(),
+            }
+          : bucket
+      ));
+      
+      setEditingBucket(null);
+      
+      showToast({
+        type: 'success',
+        title: 'Bucket updated',
+        message: `${formData.name} has been updated successfully`,
+      });
+    } catch (error: any) {
+      console.error('Failed to update bucket:', error);
+      showToast({
+        type: 'error',
+        title: 'Failed to update bucket',
+        message: error.message || 'Please try again',
+      });
+    }
   };
   
-  const handleArchiveBucket = (bucketId: string) => {
-    setBuckets(buckets.map(bucket => 
-      bucket.id === bucketId
-        ? { ...bucket, isActive: false, updatedAt: new Date() }
-        : bucket
-    ));
+  const handleArchiveBucket = async (bucketId: string) => {
+    try {
+      const response = await fetch('/api/buckets', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: bucketId,
+          isActive: false,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to archive bucket');
+      }
+      
+      // Update local state only if API call succeeded
+      setBuckets(buckets.map(bucket => 
+        bucket.id === bucketId
+          ? { ...bucket, isActive: false, updatedAt: new Date() }
+          : bucket
+      ));
+      
+      showToast({
+        type: 'success',
+        title: 'Bucket archived',
+        message: 'The bucket has been archived',
+      });
+    } catch (error: any) {
+      console.error('Failed to archive bucket:', error);
+      showToast({
+        type: 'error',
+        title: 'Failed to archive bucket',
+        message: error.message || 'Please try again',
+      });
+    }
   };
   
-  const handleDeleteBucket = (bucketId: string) => {
-    setBuckets(buckets.filter(bucket => bucket.id !== bucketId));
+  const handleDeleteBucket = async (bucketId: string) => {
+    try {
+      const response = await fetch(`/api/buckets?id=${bucketId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete bucket');
+      }
+      
+      // Only remove from state if API call succeeded
+      setBuckets(buckets.filter(bucket => bucket.id !== bucketId));
+      
+      showToast({
+        type: 'success',
+        title: 'Bucket deleted',
+        message: 'The bucket has been permanently deleted',
+      });
+    } catch (error: any) {
+      console.error('Failed to delete bucket:', error);
+      showToast({
+        type: 'error',
+        title: 'Failed to delete bucket',
+        message: error.message || 'Please try again',
+      });
+    }
   };
   
   const handleViewProjects = (_bucketId: string) => {
@@ -256,10 +426,50 @@ export default function BucketsPage() {
     setSelectionMode(false);
   };
   
-  const handleBulkDelete = () => {
-    setBuckets(buckets.filter(bucket => !selectedBuckets.has(bucket.id)));
-    setSelectedBuckets(new Set());
-    setSelectionMode(false);
+  const handleBulkDelete = async () => {
+    try {
+      // Delete each selected bucket
+      const deletePromises = Array.from(selectedBuckets).map(bucketId =>
+        fetch(`/api/buckets?id=${bucketId}`, { method: 'DELETE' })
+      );
+      
+      const results = await Promise.allSettled(deletePromises);
+      
+      const successfulDeletes = results.filter(r => r.status === 'fulfilled' && r.value.ok);
+      const failedDeletes = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok));
+      
+      if (failedDeletes.length > 0) {
+        showToast({
+          type: 'warning',
+          title: 'Partial deletion',
+          message: `${successfulDeletes.length} buckets deleted, ${failedDeletes.length} failed`,
+        });
+      } else {
+        showToast({
+          type: 'success',
+          title: 'Buckets deleted',
+          message: `${successfulDeletes.length} buckets have been deleted`,
+        });
+      }
+      
+      // Remove successfully deleted buckets from state
+      const deletedIds = new Set(
+        results
+          .map((r, i) => r.status === 'fulfilled' && r.value.ok ? Array.from(selectedBuckets)[i] : null)
+          .filter(id => id !== null)
+      );
+      
+      setBuckets(buckets.filter(bucket => !deletedIds.has(bucket.id)));
+      setSelectedBuckets(new Set());
+      setSelectionMode(false);
+    } catch (error: any) {
+      console.error('Failed to delete buckets:', error);
+      showToast({
+        type: 'error',
+        title: 'Failed to delete buckets',
+        message: 'Please try again',
+      });
+    }
   };
   
   const handleBulkExport = () => {

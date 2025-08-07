@@ -9,10 +9,12 @@ import { IdeaFilters } from '@/components/ideas/idea-filters';
 import { IdeaDetailModal } from '@/components/ideas/idea-detail-modal';
 import { showToast } from '@/components/ui/toast';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { useLab } from '@/lib/contexts/lab-context';
 import type { IdeaWithFullRelations } from '@/types/ideas';
 
 export default function IdeasPage() {
   const { user, loading: userLoading } = useCurrentUser();
+  const { currentLab, isLoading: labLoading } = useLab();
   const [ideas, setIdeas] = useState<IdeaWithFullRelations[]>([]);
   const [filteredIdeas, setFilteredIdeas] = useState<IdeaWithFullRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,10 +30,11 @@ export default function IdeasPage() {
     sortOrder: 'desc',
   });
 
-  // Fetch ideas
+  // Fetch ideas when lab changes
   useEffect(() => {
+    if (!currentLab || labLoading) return;
     fetchIdeas();
-  }, []);
+  }, [currentLab, labLoading]);
 
   // Apply filters whenever ideas or filters change
   useEffect(() => {
@@ -39,8 +42,10 @@ export default function IdeasPage() {
   }, [ideas, filters]);
 
   const fetchIdeas = async () => {
+    if (!currentLab) return;
+    
     try {
-      const response = await fetch('/api/ideas');
+      const response = await fetch(`/api/ideas?labId=${currentLab.id}`);
       if (!response.ok) throw new Error('Failed to fetch ideas');
       const data = await response.json();
       setIdeas(data);

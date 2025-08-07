@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { showToast } from '@/components/ui/toast';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { useUser } from '@/lib/contexts/user-context';
 import { cn } from '@/lib/utils';
 
 interface UserProfileDropdownProps {
@@ -36,6 +37,7 @@ interface UserProfileDropdownProps {
 
 export function UserProfileDropdown({ className, showFullProfile = true }: UserProfileDropdownProps) {
   const { user } = useCurrentUser();
+  const { clearUser } = useUser();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -59,13 +61,17 @@ export function UserProfileDropdown({ className, showFullProfile = true }: UserP
   
   const handleSignOut = async () => {
     try {
-      // TODO: Implement actual sign out
+      // Clear the user selection
+      clearUser();
+      
       showToast({
         type: 'success',
         title: 'Signed out',
         message: 'You have been signed out successfully',
       });
-      router.push('/login');
+      
+      // Redirect to auth page
+      router.push('/auth');
     } catch (error) {
       showToast({
         type: 'error',

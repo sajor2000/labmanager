@@ -14,6 +14,7 @@ import { TranscriptDisplay } from '@/components/standup/transcript-display';
 import { TranscriptArchive } from '@/components/standup/transcript-archive';
 import { SendEmailModal } from '@/components/standup/send-email-modal';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { useLab } from '@/lib/contexts/lab-context';
 import {
   createStandupAction,
   getStandupsByLabAction,
@@ -25,6 +26,7 @@ import type { StandupWithRelations } from '@/lib/services/standup.service';
 
 export default function StandupsPage() {
   const { user } = useCurrentUser();
+  const { currentLab, isLoading: labLoading } = useLab();
   const [isRecording, setIsRecording] = useState(false);
   const [currentStandupId, setCurrentStandupId] = useState<string | null>(null);
   const [selectedStandup, setSelectedStandup] = useState<StandupWithRelations | null>(null);
@@ -35,19 +37,19 @@ export default function StandupsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showEmailModal, setShowEmailModal] = useState(false);
 
-  // TODO: Get current lab from user context
-  const currentLabId = 'default-lab'; // TODO: Get from user's selected lab
-
-  // Load standups on mount
+  // Load standups when lab changes
   useEffect(() => {
-    loadStandups();
-    loadStats();
-  }, []);
+    if (currentLab && !labLoading) {
+      loadStandups();
+      loadStats();
+    }
+  }, [currentLab, labLoading]);
 
   const loadStandups = async () => {
+    if (!currentLab) return;
     setIsLoading(true);
     try {
-      const result = await getStandupsByLabAction(currentLabId);
+      const result = await getStandupsByLabAction(currentLab.id);
       if (result.success && result.data) {
         setStandups(result.data);
       }
@@ -64,7 +66,8 @@ export default function StandupsPage() {
 
   const loadStats = async () => {
     try {
-      const result = await getStandupStatsAction(currentLabId);
+      if (!currentLab) return;
+      const result = await getStandupStatsAction(currentLab.id);
       if (result.success && result.data) {
         setStats(result.data);
       }
@@ -74,9 +77,13 @@ export default function StandupsPage() {
   };
 
   const handleStartRecording = async () => {
+    if (!currentLab) {
+      console.error('No lab selected');
+      return;
+    }
     try {
       const result = await createStandupAction({
-        labId: currentLabId,
+        labId: currentLab.id,
       });
 
       if (result.success && result.data) {
@@ -324,7 +331,7 @@ export default function StandupsPage() {
           </TabsContent>
           
           <TabsContent value="archive" className="space-y-4">
-            <TranscriptArchive labId={currentLabId} />
+            <TranscriptArchive labId={currentLab?.id || undefined} />
           </TabsContent>
         </Tabs>
       )}

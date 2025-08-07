@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LabSelector } from "./lab-selector";
 import { UserProfileDropdown } from "./user-profile-dropdown";
+import { UserSwitcher } from "@/components/auth/user-switcher";
 
 export function TopNav() {
   const { theme, setTheme } = useTheme();
@@ -47,6 +48,9 @@ export function TopNav() {
 
       {/* Lab Selector and Actions */}
       <div className="flex items-center space-x-4 ml-6">
+        {/* User Switcher (Development Only) */}
+        <UserSwitcher />
+        
         {/* Lab Selector */}
         <LabSelector />
 

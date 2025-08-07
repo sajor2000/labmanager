@@ -31,6 +31,9 @@ interface BucketHeaderProps {
   onExport?: () => void;
   onAdvancedFilter?: () => void;
   hasActiveFilters?: boolean;
+  currentLab?: string | null;
+  availableLabs?: Array<{id: string, name: string, shortName: string}>;
+  onLabChange?: (labId: string) => void;
 }
 
 export function BucketHeader({ 

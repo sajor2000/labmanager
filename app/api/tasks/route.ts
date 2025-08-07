@@ -13,6 +13,10 @@ const CreateTaskSchema = z.object({
   createdById: z.string().optional(), // Make optional and provide default
   assigneeIds: z.array(z.string()).optional(),
   dueDate: z.string().optional(),
+  startDate: z.string().optional(),
+  estimatedHours: z.number().optional(),
+  actualHours: z.number().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 // GET /api/tasks - Get all tasks with optional filters
@@ -35,15 +39,53 @@ export async function GET(request: NextRequest) {
     }
 
     const tasks = await prisma.task.findMany({
-      where,
+      where: {
+        ...where,
+        isActive: true, // Only show active tasks
+      },
       include: {
-        project: true,
-        createdBy: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+            bucket: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              }
+            }
+          }
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            initials: true,
+            avatarUrl: true,
+          }
+        },
         assignees: {
           include: {
-            user: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                initials: true,
+                avatarUrl: true,
+                role: true,
+              }
+            },
           },
         },
+        _count: {
+          select: {
+            subtasks: true,
+            comments: true,
+          }
+        }
       },
       orderBy: [
         { status: 'asc' },
@@ -71,7 +113,7 @@ export async function POST(request: NextRequest) {
     const validatedData = CreateTaskSchema.parse(body);
     
     // Extract assigneeIds for separate processing
-    const { assigneeIds, dueDate, ...taskData } = validatedData;
+    const { assigneeIds, dueDate, startDate, estimatedHours, actualHours, tags, ...taskData } = validatedData;
     
     // Provide default values for required fields
     // TODO: Replace with actual user ID from auth context
@@ -92,6 +134,10 @@ export async function POST(request: NextRequest) {
         ...taskData,
         createdById,
         dueDate: dueDate ? new Date(dueDate) : undefined,
+        startDate: startDate ? new Date(startDate) : undefined,
+        estimatedHours,
+        actualHours,
+        tags: tags || [],
         assignees: assigneeIds ? {
           create: assigneeIds.map(userId => ({
             userId,
@@ -99,13 +145,48 @@ export async function POST(request: NextRequest) {
         } : undefined,
       },
       include: {
-        project: true,
-        createdBy: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+            bucket: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              }
+            }
+          }
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            initials: true,
+            avatarUrl: true,
+          }
+        },
         assignees: {
           include: {
-            user: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                initials: true,
+                avatarUrl: true,
+                role: true,
+              }
+            },
           },
         },
+        _count: {
+          select: {
+            subtasks: true,
+            comments: true,
+          }
+        }
       },
     });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MetricCardProps {
@@ -9,8 +9,12 @@ interface MetricCardProps {
   value: string;
   subtitle: string;
   icon: LucideIcon;
-  color: "blue" | "green" | "purple" | "amber";
+  color: "blue" | "green" | "purple" | "amber" | "indigo" | "pink";
   progress?: number;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
 }
 
 const colorVariants = {
@@ -34,6 +38,16 @@ const colorVariants = {
     icon: "text-amber-600 dark:text-amber-400",
     progress: "bg-amber-500",
   },
+  indigo: {
+    bg: "bg-indigo-100 dark:bg-indigo-900/20",
+    icon: "text-indigo-600 dark:text-indigo-400",
+    progress: "bg-indigo-500",
+  },
+  pink: {
+    bg: "bg-pink-100 dark:bg-pink-900/20",
+    icon: "text-pink-600 dark:text-pink-400",
+    progress: "bg-pink-500",
+  },
 };
 
 export const MetricCard = memo(function MetricCard({
@@ -43,32 +57,52 @@ export const MetricCard = memo(function MetricCard({
   icon: Icon,
   color,
   progress,
+  trend,
 }: MetricCardProps) {
   const variant = colorVariants[color];
 
   return (
-    <div className="rounded-lg border bg-white p-6 shadow-sm dark:bg-gray-900 dark:border-gray-800">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            {title}
-          </p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-            {value}
-          </p>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {subtitle}
-          </p>
+    <div className="rounded-lg border bg-white p-4 shadow-sm dark:bg-gray-900 dark:border-gray-800">
+      <div className="flex items-start justify-between mb-2">
+        <div className={cn("rounded-lg p-2", variant.bg)}>
+          <Icon className={cn("h-5 w-5", variant.icon)} />
         </div>
-        <div className={cn("rounded-lg p-3", variant.bg)}>
-          <Icon className={cn("h-6 w-6", variant.icon)} />
-        </div>
+        {trend && (
+          <div className="flex items-center gap-1">
+            {trend.isPositive ? (
+              <TrendingUp className="h-4 w-4 text-green-500" />
+            ) : (
+              <TrendingDown className="h-4 w-4 text-red-500" />
+            )}
+            <span className={cn(
+              "text-xs font-medium",
+              trend.isPositive ? "text-green-500" : "text-red-500"
+            )}>
+              {trend.value}%
+            </span>
+          </div>
+        )}
+      </div>
+      <div>
+        <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          {title}
+        </p>
+        <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+          {value}
+        </p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {subtitle}
+        </p>
       </div>
       {progress !== undefined && (
-        <div className="mt-4">
-          <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-gray-600 dark:text-gray-400">Progress</span>
+            <span className="text-xs font-medium text-gray-900 dark:text-white">{Math.round(progress)}%</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
             <div
-              className={cn("h-2 rounded-full transition-all", variant.progress)}
+              className={cn("h-1.5 rounded-full transition-all", variant.progress)}
               style={{ width: `${progress}%` }}
             />
           </div>

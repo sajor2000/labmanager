@@ -249,7 +249,7 @@ export async function PUT(request: NextRequest) {
     const { id, assigneeIds, dueDate, reminderDays, ...updateData } = validatedData;
     
     // Prepare update data
-    const updateFields: Record<string, any> = { ...updateData };
+    const updateFields: Record<string, unknown> = { ...updateData };
     if (dueDate) updateFields.dueDate = new Date(dueDate);
     if (reminderDays) updateFields.reminderDays = reminderDays;
     

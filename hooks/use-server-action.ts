@@ -42,7 +42,7 @@ export function useServerAction<TInput, TOutput>(
         }
         
         options?.onSuccess?.(result.data);
-        return result.data;
+        return result;
       } else {
         setError(result.error);
         

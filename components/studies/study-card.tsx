@@ -1,9 +1,11 @@
 "use client";
 
-import { memo, useState } from "react";
-import { MoreVertical, GripVertical, CheckSquare } from "lucide-react";
+import { memo, useState, useRef, useEffect } from "react";
+import { MoreVertical, GripVertical, CheckSquare, Edit, Trash2, ListTodo, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TaskCreationForm } from "@/components/tasks/task-creation-form";
+import { useRouter } from "next/navigation";
+import { showToast } from "@/components/ui/toast";
 
 export interface StudyData {
   id: string;
@@ -36,6 +38,72 @@ const statusColors: Record<string, string> = {
 
 export const StudyCard = memo(function StudyCard({ study, isDragging }: StudyCardProps) {
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
+  
+  const handleEdit = () => {
+    setShowDropdown(false);
+    // Navigate to study edit page or open edit modal
+    router.push(`/studies/${study.id}/edit`);
+  };
+  
+  const handleDelete = async () => {
+    setShowDropdown(false);
+    if (!confirm('Are you sure you want to delete this study? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/studies/${study.id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete study');
+      
+      showToast({
+        type: 'success',
+        title: 'Study deleted',
+        message: 'The study has been removed successfully.',
+      });
+      
+      // Refresh the page or update the state
+      window.location.reload();
+    } catch (error) {
+      showToast({
+        type: 'error',
+        title: 'Failed to delete study',
+        message: 'Please try again later.',
+      });
+    }
+  };
+  
+  const handleViewTasks = () => {
+    setShowDropdown(false);
+    router.push(`/tasks?studyId=${study.id}`);
+  };
+  
+  const handleViewDetails = () => {
+    setShowDropdown(false);
+    router.push(`/studies/${study.id}`);
+  };
   
   return (
     <>
@@ -65,13 +133,67 @@ export const StudyCard = memo(function StudyCard({ study, isDragging }: StudyCar
         <h3 className="font-medium text-gray-900 dark:text-white pr-2 line-clamp-2">
           {study.title}
         </h3>
-        <button 
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
-          aria-label="More options"
-          aria-haspopup="true"
-        >
-          <MoreVertical className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-hidden="true" />
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDropdown(!showDropdown);
+            }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+            aria-label="More options"
+            aria-haspopup="true"
+            aria-expanded={showDropdown}
+          >
+            <MoreVertical className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-hidden="true" />
+          </button>
+          
+          {/* Dropdown Menu */}
+          {showDropdown && (
+            <div className="absolute right-0 mt-1 w-48 rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+              <div className="py-1">
+                <button
+                  onClick={handleViewDetails}
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
+                </button>
+                <button
+                  onClick={handleEdit}
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Study
+                </button>
+                <button
+                  onClick={handleViewTasks}
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <ListTodo className="h-4 w-4 mr-2" />
+                  View Tasks
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDropdown(false);
+                    setShowTaskForm(true);
+                  }}
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Add Task
+                </button>
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                <button
+                  onClick={handleDelete}
+                  className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Study
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Card Fields */}
