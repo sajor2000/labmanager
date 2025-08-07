@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface CalendarEvent {
   id: string;
@@ -28,7 +28,6 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchEvents();
@@ -53,11 +52,7 @@ export default function CalendarPage() {
       })));
     } catch (error) {
       console.error('Error fetching events:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load calendar events',
-        variant: 'destructive',
-      });
+      toast.error('Failed to load calendar events');
     } finally {
       setLoading(false);
     }
