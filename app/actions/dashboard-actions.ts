@@ -83,6 +83,9 @@ export async function getDashboardMetrics(labId?: string) {
             _count: {
               id: true
             }
+          }).then(result => {
+            console.log('[Dashboard] Ideas this month query result:', result);
+            return result;
           })
         ]);
 
@@ -165,20 +168,27 @@ export async function getDashboardMetrics(labId?: string) {
         action: getActivityAction(project.status)
       }));
 
+    const metrics = {
+      totalLabs: metricsResult.labsCount,
+      labNames,
+      totalProjects: metricsResult.projectStats.total,
+      activeProjects: metricsResult.projectStats.active,
+      bucketsCount: metricsResult.bucketStats,
+      totalTasks: metricsResult.taskStats.total,
+      completedTasks: metricsResult.taskStats.completed,
+      teamMembers: metricsResult.teamStats,
+      ideasThisMonth: metricsResult.ideaStats._count.id
+    };
+
+    console.log('[Dashboard] Final metrics being returned:', {
+      ...metrics,
+      ideasThisMonth: metrics.ideasThisMonth
+    });
+
     return {
       success: true,
       data: {
-        metrics: {
-          totalLabs: metricsResult.labsCount,
-          labNames,
-          totalProjects: metricsResult.projectStats.total,
-          activeProjects: metricsResult.projectStats.active,
-          bucketsCount: metricsResult.bucketStats,
-          totalTasks: metricsResult.taskStats.total,
-          completedTasks: metricsResult.taskStats.completed,
-          teamMembers: metricsResult.teamStats,
-          ideasThisMonth: metricsResult.ideaStats._count.id
-        },
+        metrics,
         recentProjects: transformedProjects,
         recentActivities
       }

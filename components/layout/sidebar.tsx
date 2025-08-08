@@ -57,25 +57,29 @@ export function Sidebar() {
         {navigation.map((item) => {
           const isActive = pathname === item.href || 
                           (item.href !== "/" && pathname.startsWith(item.href));
+          const Icon = item.icon;
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                "sidebar-item group flex items-center relative w-full",
-                isActive && "sidebar-item-active"
+                "px-3 py-2 rounded-lg flex items-center relative w-full transition-all duration-200",
+                "text-foreground/70 dark:text-foreground/60",
+                "hover:bg-[hsl(var(--hover-bg))] dark:hover:bg-[hsl(var(--hover-bg))]",
+                "hover:text-foreground dark:hover:text-foreground",
+                isActive && "bg-primary text-primary-foreground dark:bg-[hsl(var(--active-bg))] dark:text-foreground"
               )}
             >
               {/* Active indicator - left border */}
               {isActive && (
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary dark:bg-rush-green-light rounded-l-md" />
               )}
-              <item.icon
+              <Icon
                 className={cn(
                   "mr-3 h-5 w-5 flex-shrink-0",
                   isActive
                     ? "text-primary-foreground dark:text-foreground"
-                    : "text-muted-foreground group-hover:text-foreground"
+                    : "text-muted-foreground"
                 )}
               />
               {item.name}

@@ -36,9 +36,9 @@ export default function RootLayout({
             <UserProvider>
               <LabProvider>
                 <QueryProvider>
-                  <div className="flex h-screen overflow-hidden">
+                  <div className="flex h-screen">
                     <Sidebar />
-                    <div className="flex flex-1 flex-col">
+                    <div className="flex flex-1 flex-col overflow-hidden">
                       <TopNav />
                       <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
                         {children}
