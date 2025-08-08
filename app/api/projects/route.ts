@@ -92,12 +92,35 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const labId = searchParams.get('labId');
+    const labIds = searchParams.getAll('labId[]'); // Support array of lab IDs
     const bucketId = searchParams.get('bucketId');
     const status = searchParams.get('status');
     const member = searchParams.get('member'); // For PersonalizedDashboard filtering
+    const userLabs = searchParams.get('userLabs'); // Filter by all user's labs
     
     const where: Prisma.ProjectWhereInput = {};
-    if (labId) where.labId = labId;
+    
+    // Handle lab filtering - support single lab, multiple labs, or user's labs
+    if (labIds.length > 0) {
+      // Multiple lab IDs provided
+      where.labId = { in: labIds };
+    } else if (labId) {
+      // Single lab ID provided
+      where.labId = labId;
+    } else if (userLabs) {
+      // Get all labs for the specified user
+      const userLabMemberships = await prisma.labMember.findMany({
+        where: { 
+          userId: userLabs,
+          isActive: true 
+        },
+        select: { labId: true }
+      });
+      if (userLabMemberships.length > 0) {
+        where.labId = { in: userLabMemberships.map(m => m.labId) };
+      }
+    }
+    
     if (bucketId) where.bucketId = bucketId;
     if (status) where.status = status as ProjectStatus;
     

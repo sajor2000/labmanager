@@ -82,15 +82,52 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const labId = searchParams.get('labId');
+    const labIds = searchParams.getAll('labId[]'); // Support multiple lab IDs
+    const userLabs = searchParams.get('userLabs'); // Get all user's labs
+    const allLabs = searchParams.get('allLabs'); // Show all labs mode
     
     // Build where clause
-    const where: Prisma.UserWhereInput = {};
-    if (labId) {
+    const where: Prisma.UserWhereInput = { isActive: true };
+    
+    if (labIds.length > 0) {
+      // Multiple specific lab IDs
+      where.labs = {
+        some: {
+          labId: { in: labIds },
+          isActive: true,
+        },
+      };
+    } else if (labId) {
+      // Single lab ID
       where.labs = {
         some: {
           labId: labId,
+          isActive: true,
         },
       };
+    } else if (userLabs) {
+      // Get all labs for a specific user
+      const userLabMemberships = await prisma.labMember.findMany({
+        where: { 
+          userId: userLabs,
+          isActive: true 
+        },
+        select: { labId: true }
+      });
+      if (userLabMemberships.length > 0) {
+        where.labs = {
+          some: {
+            labId: { in: userLabMemberships.map(m => m.labId) },
+            isActive: true,
+          },
+        };
+      }
+    } else if (allLabs === 'true') {
+      // Show all labs - only filter by active users
+      // where clause already has isActive: true
+    } else {
+      // If no filter provided, return empty array
+      return NextResponse.json([]);
     }
 
     // Use optimized select to reduce data transfer and improve performance
@@ -149,7 +186,13 @@ export async function GET(request: NextRequest) {
         activeProjects: activeProjects.length,
         workload: workloadPercentage,
         upcomingDeadlines: upcomingDeadlines.length,
-        labs: user.labs.map(membership => membership.lab),
+        labs: user.labs.map(membership => ({
+          id: membership.lab.id,
+          name: membership.lab.name,
+          shortName: membership.lab.shortName || membership.lab.name.split(' ').map(w => w[0]).join(''),
+          isAdmin: membership.isAdmin,
+        })),
+        hasMultipleLabs: user.labs.length > 1,
       };
     });
 

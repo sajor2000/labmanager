@@ -6,25 +6,27 @@ async function main() {
   console.log('Starting user seeding...');
 
   try {
-    // Create labs first
+    // Create or update labs - using shortName as unique identifier
     const healthEquityLab = await prisma.lab.upsert({
-      where: { id: 'health-equity-lab' },
-      update: {},
+      where: { shortName: 'RICCC' },
+      update: {
+        description: 'Focused on reducing health disparities and improving healthcare access for underserved populations',
+      },
       create: {
-        id: 'health-equity-lab',
-        name: 'Health Equity Research Lab',
-        shortName: 'HERL',
+        name: 'Rush Institute for Community and Clinical Care (RICCC)',
+        shortName: 'RICCC',
         description: 'Focused on reducing health disparities and improving healthcare access for underserved populations',
       },
     });
 
     const digitalHealthLab = await prisma.lab.upsert({
-      where: { id: 'digital-health-lab' },
-      update: {},
+      where: { shortName: 'RHEDAS' },
+      update: {
+        description: 'Developing cutting-edge digital health solutions and AI-powered diagnostic tools',
+      },
       create: {
-        id: 'digital-health-lab',
-        name: 'Digital Health Innovation Lab',
-        shortName: 'DHIL',
+        name: 'Rush Health Equity Data Science (RHEDAS)',
+        shortName: 'RHEDAS',
         description: 'Developing cutting-edge digital health solutions and AI-powered diagnostic tools',
       },
     });
@@ -106,17 +108,17 @@ async function main() {
 
     // Create lab memberships (isAdmin determines if they have admin privileges)
     const labMemberships = [
-      // Health Equity Lab members
-      { userId: 'dr-sarah-chen', labId: 'health-equity-lab', isAdmin: true },
-      { userId: 'emily-johnson', labId: 'health-equity-lab', isAdmin: false },
-      { userId: 'james-williams', labId: 'health-equity-lab', isAdmin: false },
-      { userId: 'lisa-martinez', labId: 'health-equity-lab', isAdmin: true },
-      { userId: 'dr-robert-taylor', labId: 'health-equity-lab', isAdmin: false },
+      // RICCC members
+      { userId: 'dr-sarah-chen', labId: healthEquityLab.id, isAdmin: true },
+      { userId: 'emily-johnson', labId: healthEquityLab.id, isAdmin: false },
+      { userId: 'james-williams', labId: healthEquityLab.id, isAdmin: false },
+      { userId: 'lisa-martinez', labId: healthEquityLab.id, isAdmin: true },
+      { userId: 'dr-robert-taylor', labId: healthEquityLab.id, isAdmin: false },
       
-      // Digital Health Lab members
-      { userId: 'dr-michael-rodriguez', labId: 'digital-health-lab', isAdmin: true },
-      { userId: 'emily-johnson', labId: 'digital-health-lab', isAdmin: false },
-      { userId: 'lisa-martinez', labId: 'digital-health-lab', isAdmin: true },
+      // RHEDAS members
+      { userId: 'dr-michael-rodriguez', labId: digitalHealthLab.id, isAdmin: true },
+      { userId: 'emily-johnson', labId: digitalHealthLab.id, isAdmin: false },
+      { userId: 'lisa-martinez', labId: digitalHealthLab.id, isAdmin: true },
     ];
 
     for (const membership of labMemberships) {
@@ -136,37 +138,33 @@ async function main() {
     // Create some buckets for each lab
     const buckets = [
       {
-        id: 'health-equity-active',
         name: 'Active Studies',
-        description: 'Currently active health equity research studies',
-        labId: 'health-equity-lab',
+        description: 'Currently active research studies',
+        labId: healthEquityLab.id,
         color: '#10B981',
         icon: '🔬',
         position: 0,
       },
       {
-        id: 'health-equity-planning',
         name: 'Planning',
         description: 'Studies in planning phase',
-        labId: 'health-equity-lab',
+        labId: healthEquityLab.id,
         color: '#3B82F6',
         icon: '📋',
         position: 1,
       },
       {
-        id: 'digital-health-active',
         name: 'Active Projects',
-        description: 'Active digital health initiatives',
-        labId: 'digital-health-lab',
+        description: 'Active data science initiatives',
+        labId: digitalHealthLab.id,
         color: '#8B5CF6',
         icon: '💻',
         position: 0,
       },
       {
-        id: 'digital-health-pilot',
         name: 'Pilot Studies',
         description: 'Pilot and proof-of-concept projects',
-        labId: 'digital-health-lab',
+        labId: digitalHealthLab.id,
         color: '#F59E0B',
         icon: '🚀',
         position: 1,
@@ -174,12 +172,26 @@ async function main() {
     ];
 
     for (const bucket of buckets) {
-      await prisma.bucket.upsert({
-        where: { id: bucket.id },
-        update: bucket,
-        create: bucket,
+      // Find existing bucket by name and labId
+      const existingBucket = await prisma.bucket.findFirst({
+        where: {
+          name: bucket.name,
+          labId: bucket.labId,
+        },
       });
-      console.log(`Created bucket: ${bucket.name} for lab ${bucket.labId}`);
+
+      if (existingBucket) {
+        await prisma.bucket.update({
+          where: { id: existingBucket.id },
+          data: bucket,
+        });
+        console.log(`Updated bucket: ${bucket.name} for lab ${bucket.labId}`);
+      } else {
+        await prisma.bucket.create({
+          data: bucket,
+        });
+        console.log(`Created bucket: ${bucket.name} for lab ${bucket.labId}`);
+      }
     }
 
     console.log('\n✅ Database seeded successfully!');
