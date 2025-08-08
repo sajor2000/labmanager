@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { CommentableType } from '@prisma/client';
+import { logger } from '@/lib/utils/production-logger';
 
 // GET /api/comments - List comments for an entity
 export async function GET(request: NextRequest) {
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching comments:', error);
+    logger.error('Error fetching comments:', error);
     return NextResponse.json(
       { error: 'Failed to fetch comments' },
       { status: 500 }
@@ -276,7 +277,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(comment, { status: 201 });
   } catch (error) {
-    console.error('Error creating comment:', error);
+    logger.error('Error creating comment:', error);
     return NextResponse.json(
       { error: 'Failed to create comment' },
       { status: 500 }
