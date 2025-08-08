@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import type { Prisma, ProjectStatus } from '@prisma/client';
 import { handleApiError } from '@/lib/utils/api-error-handler';
+import { projectToStudy, projectsToStudies } from '@/lib/mappers/project-mapper';
 
 // Cache configuration
 const CACHE_TTL = 300; // 5 minutes cache for GET requests
@@ -140,8 +141,11 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Transform projects to study format for frontend compatibility
+    const studies = projectsToStudies(projects);
+
     // Set cache headers for performance
-    const response = NextResponse.json(projects);
+    const response = NextResponse.json(studies);
     response.headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=600`);
     response.headers.set('CDN-Cache-Control', `public, s-maxage=${CACHE_TTL}`);
     return response;
@@ -176,7 +180,9 @@ export async function POST(request: NextRequest) {
       select: projectSelectOptimized,
     });
 
-    return NextResponse.json(project, { status: 201 });
+    // Transform to study format for frontend compatibility
+    const study = projectToStudy(project);
+    return NextResponse.json(study, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }
@@ -215,7 +221,9 @@ export async function PUT(request: NextRequest) {
       select: projectSelectOptimized,
     });
 
-    return NextResponse.json(project);
+    // Transform to study format for frontend compatibility
+    const study = projectToStudy(project);
+    return NextResponse.json(study);
   } catch (error) {
     return handleApiError(error);
   }
