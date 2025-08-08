@@ -44,8 +44,6 @@ export function Sidebar() {
       e.preventDefault();
       router.push(href);
     }
-    // Log for debugging
-    console.log('Navigating to:', href);
   };
 
   return (

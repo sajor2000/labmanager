@@ -2,10 +2,7 @@
 
 import { PersonalizedDashboard } from './personalized-dashboard';
 import { UserSelector } from '@/components/user-selector';
-import { DashboardOverviewClient } from '@/components/dashboard/overview-client';
-import { useEffect, useState } from 'react';
-import { useLab } from '@/lib/contexts/lab-context';
-import { showToast } from '@/components/ui/toast';
+import { useState } from 'react';
 
 interface User {
   id: string;
@@ -21,11 +18,6 @@ interface User {
 }
 
 export default function OverviewPageClient() {
-  const { currentLab, isLoading: labLoading } = useLab();
-  const [metrics, setMetrics] = useState<any>(null);
-  const [recentProjects, setRecentProjects] = useState<any[]>([]);
-  const [recentActivities, setRecentActivities] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // Always show user selector and personalized dashboard - no auth required
