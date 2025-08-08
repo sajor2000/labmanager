@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useInView } from "react-intersection-observer";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 
 interface AnimatedMetricCardProps {
   title: string;
@@ -59,7 +59,7 @@ const colorVariants = {
   },
 };
 
-export function AnimatedMetricCard({
+function AnimatedMetricCardComponent({
   title,
   value,
   subtitle,
@@ -244,6 +244,9 @@ export function AnimatedMetricCard({
     </motion.div>
   );
 }
+
+// Memoize the component to prevent unnecessary re-renders
+export const AnimatedMetricCard = memo(AnimatedMetricCardComponent);
 
 // Add shimmer animation to global CSS
 const shimmerStyle = `

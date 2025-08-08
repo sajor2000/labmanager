@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { AnimatedMetricCard } from "./animated-metric-card";
 import { RecentStudies } from "./recent-studies";
 import { ActivityFeed } from "./activity-feed";
@@ -13,19 +13,15 @@ import { Button } from "@/components/ui/button";
 export function DashboardOverview() {
   const { user } = useCurrentUser();
   const { data: dashboardData, isLoading, error, refetch, isFetching } = useDashboardMetrics();
+  
+  // Prevent re-renders during background refetches
+  const isLoadingInitial = isLoading && !dashboardData;
 
-  // Log the data when it changes
-  useEffect(() => {
-    if (dashboardData?.metrics) {
-      console.log('[Component] Dashboard data received:', {
-        ideasThisMonth: dashboardData.metrics.ideasThisMonth,
-        allMetrics: dashboardData.metrics
-      });
-    }
-  }, [dashboardData]);
-
-  // Transform API data into metric cards format
-  const metrics = dashboardData?.metrics ? [
+  // Memoize metrics array to prevent unnecessary re-renders
+  const metrics = useMemo(() => {
+    if (!dashboardData?.metrics) return [];
+    
+    return [
     {
       title: "Total Labs",
       value: dashboardData.metrics.totalLabs,
@@ -80,15 +76,16 @@ export function DashboardOverview() {
       color: "purple" as const,
       trend: { value: 0, isPositive: true },
     },
-  ] : [];
+    ];
+  }, [dashboardData?.metrics]);
 
-  // Show loading state
-  if (isLoading) {
+  // Show loading state only for initial load
+  if (isLoadingInitial) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.3 }}
         className="p-6 page-transition"
       >
         <div className="mb-8">
