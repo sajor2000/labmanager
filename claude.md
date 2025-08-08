@@ -554,3 +554,91 @@ interface Permissions {
 ```
 
 This refined specification incorporates all the UI/UX elements from the screenshots while maintaining the comprehensive technical architecture for a modern research management platform.
+
+## CRITICAL: Pre-Push Checklist
+
+### ⚠️ ALWAYS CHECK BEFORE PUSHING TO GIT ⚠️
+
+#### 1. React Query Provider Fix
+**Issue**: Application crashes with "No QueryClient set, use QueryClientProvider to set one"
+**Location**: `/lib/providers/query-provider.tsx`
+**Fix**: Ensure ReactQueryDevtools is properly imported at the top of the file, NOT dynamically required.
+
+✅ **Correct Implementation**:
+```typescript
+'use client';
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useState } from 'react';
+
+export function QueryProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60 * 1000,
+            gcTime: 5 * 60 * 1000,
+            retry: 1,
+            refetchOnWindowFocus: false,
+          },
+          mutations: {
+            retry: 1,
+          },
+        },
+      })
+  );
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+      {process.env.NODE_ENV === 'development' && (
+        <ReactQueryDevtools initialIsOpen={false} />
+      )}
+    </QueryClientProvider>
+  );
+}
+```
+
+❌ **Incorrect Implementation** (causes app crash):
+```typescript
+// DO NOT USE DYNAMIC IMPORTS LIKE THIS:
+let ReactQueryDevtools: any;
+if (process.env.NODE_ENV === 'development') {
+  ReactQueryDevtools = require('@tanstack/react-query-devtools').ReactQueryDevtools;
+}
+```
+
+#### 2. Navigation Testing
+Before pushing, verify all routes are accessible:
+```bash
+# Start dev server
+npm run dev
+
+# Test all routes (in another terminal)
+for route in "/" "/labs" "/buckets" "/studies" "/stacked" "/kanban" "/tasks" "/ideas" "/calendar" "/deadlines" "/team" "/standups"; do
+  http_status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000$route)
+  echo "$route: $http_status"
+done
+```
+
+All routes should return `200` status codes.
+
+#### 3. Build Verification
+Always run a production build before pushing:
+```bash
+npm run build
+```
+
+If the build fails, DO NOT push. Fix all errors first.
+
+#### 4. Common Issues to Check
+- [ ] QueryProvider properly configured with static imports
+- [ ] All sidebar navigation links working
+- [ ] No hardcoded data (check for hardcoded lab names, bucket names, etc.)
+- [ ] All API endpoints returning proper responses
+- [ ] No TypeScript errors in build
+- [ ] Environment variables properly configured
+
+**Remember**: A broken QueryProvider will crash the entire application on load. This must be the first thing checked before any commit.

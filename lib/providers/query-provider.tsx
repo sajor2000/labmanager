@@ -1,6 +1,7 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState } from 'react';
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
@@ -31,10 +32,4 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       )}
     </QueryClientProvider>
   );
-}
-
-// Lazy load devtools only in development
-let ReactQueryDevtools: any;
-if (process.env.NODE_ENV === 'development') {
-  ReactQueryDevtools = require('@tanstack/react-query-devtools').ReactQueryDevtools;
 }
