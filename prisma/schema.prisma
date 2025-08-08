@@ -22,7 +22,7 @@ model User {
   name      String   // Full name (computed from firstName + lastName)
   firstName String   @default("") @map("firstName") // Added for better name management
   lastName  String   @default("") @map("lastName") // Added for better name management
-  role      UserRole @default(RESEARCH_MEMBER)
+  role      UserRole @default(VOLUNTEER_RESEARCH_ASSISTANT)
   avatar    String?  // Avatar color from palette (fallback)
   avatarUrl String?  @map("avatarUrl") // URL to avatar image (PNG/JPG)
   avatarImage Bytes? @map("avatarImage") // Optional: store image data directly
@@ -69,7 +69,15 @@ model User {
 enum UserRole {
   PRINCIPAL_INVESTIGATOR
   CO_PRINCIPAL_INVESTIGATOR
-  RESEARCH_MEMBER
+  DATA_SCIENTIST
+  DATA_ANALYST
+  CLINICAL_RESEARCH_COORDINATOR
+  REGULATORY_COORDINATOR
+  STAFF_COORDINATOR
+  FELLOW
+  MEDICAL_STUDENT
+  VOLUNTEER_RESEARCH_ASSISTANT
+  RESEARCH_ASSISTANT
   LAB_ADMINISTRATOR
   EXTERNAL_COLLABORATOR
 }

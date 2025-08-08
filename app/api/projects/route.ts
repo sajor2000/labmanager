@@ -4,6 +4,9 @@ import { z } from 'zod';
 import type { Prisma, ProjectStatus } from '@prisma/client';
 import { handleApiError } from '@/lib/utils/api-error-handler';
 import { projectToStudy, projectsToStudies } from '@/lib/mappers/project-mapper';
+import { ProjectSchema, PaginationSchema, validateRequest } from '@/lib/validation/schemas';
+import { sanitizeInput } from '@/lib/security/middleware';
+import { logger } from '@/lib/utils/production-logger';
 
 // Cache configuration
 const CACHE_TTL = 300; // 5 minutes cache for GET requests
