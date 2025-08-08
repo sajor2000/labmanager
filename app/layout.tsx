@@ -36,7 +36,7 @@ export default function RootLayout({
             <UserProvider>
               <LabProvider>
                 <QueryProvider>
-                  <div className="flex h-screen">
+                  <div className="flex h-screen" style={{ position: 'relative' }}>
                     <Sidebar />
                     <div className="flex flex-1 flex-col overflow-hidden">
                       <TopNav />

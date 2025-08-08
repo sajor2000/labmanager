@@ -56,6 +56,14 @@ model User {
   presence          UserPresence[]
   actionItems      ActionItem[]
   sentEmails       EmailLog[]
+  
+  // Phase 1: Critical Collaboration Features
+  comments          Comment[]
+  mentions          Mention[]
+  uploadedFiles     FileAttachment[] @relation("FileUploader")
+  enhancedNotifications EnhancedNotification[] @relation("UserNotifications")
+  statusChanges     StatusHistory[] @relation("StatusChanger")
+  timeEntries       TimeEntry[]   @relation("TimeTracker")
 }
 
 enum UserRole {
@@ -150,6 +158,7 @@ model Project {
   relatedIdeas IdeaStudyRelation[]
   deadlines  Deadline[]
   comments   ProjectComment[]
+  timeEntries TimeEntry[] @relation("ProjectTimeEntries")
   
   @@index([labId, status])
   @@index([oraNumber])
@@ -266,6 +275,7 @@ model Task {
   dependencies  TaskDependency[] @relation("DependentTask")
   dependents    TaskDependency[] @relation("DependsOnTask")
   comments      TaskComment[]
+  timeEntries   TimeEntry[]
   
   @@index([projectId, status])
   @@index([projectId, position]) // Kanban ordering within project
@@ -866,6 +876,177 @@ model Notification {
   
   @@index([userId, isRead, createdAt])
   @@index([entityType, entityId])
+}
+
+// ==========================================
+// PHASE 1: CRITICAL COLLABORATION FEATURES
+// ==========================================
+
+// Unified Comment System for all entities
+model Comment {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  entityType  CommentableType
+  entityId    String   @map("entityId")
+  parentId    String?  @map("parentId") // For threaded discussions
+  
+  authorId    String   @map("authorId")
+  editedAt    DateTime? @map("editedAt")
+  isDeleted   Boolean  @default(false) @map("isDeleted") // Soft delete
+  createdAt   DateTime @default(now()) @map("createdAt")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
+  
+  // Relations
+  author      User     @relation(fields: [authorId], references: [id])
+  parent      Comment? @relation("CommentThread", fields: [parentId], references: [id])
+  replies     Comment[] @relation("CommentThread")
+  mentions    Mention[]
+  
+  @@index([entityType, entityId, createdAt])
+  @@index([authorId, createdAt])
+  @@index([parentId])
+}
+
+// Mention system for comments
+model Mention {
+  id        String   @id @default(cuid())
+  commentId String   @map("commentId")
+  userId    String   @map("userId")
+  read      Boolean  @default(false)
+  readAt    DateTime? @map("readAt")
+  createdAt DateTime @default(now()) @map("createdAt")
+  
+  // Relations
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@unique([commentId, userId])
+  @@index([userId, read])
+}
+
+// Enhanced Attachment System (replacing the existing one)
+model FileAttachment {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String  @map("originalName")
+  url         String   // S3/CloudStorage URL
+  fileSize    Int      @map("fileSize") // in bytes
+  mimeType    String   @map("mimeType")
+  thumbnailUrl String? @map("thumbnailUrl") // For images/videos
+  
+  entityType  AttachableType @map("entityType")
+  entityId    String   @map("entityId")
+  
+  uploadedById String  @map("uploadedById")
+  uploadedAt   DateTime @default(now()) @map("uploadedAt")
+  isDeleted    Boolean @default(false) @map("isDeleted")
+  
+  // Relations
+  uploadedBy   User    @relation("FileUploader", fields: [uploadedById], references: [id])
+  
+  @@index([entityType, entityId, uploadedAt])
+  @@index([uploadedById, uploadedAt])
+}
+
+// Enhanced Notification System (replacing the existing one)
+model EnhancedNotification {
+  id         String   @id @default(cuid())
+  userId     String   @map("userId")
+  type       EnhancedNotificationType
+  title      String
+  message    String   @db.Text
+  
+  entityType String?  @map("entityType")
+  entityId   String?  @map("entityId")
+  metadata   Json?    // Additional context
+  
+  isRead     Boolean  @default(false) @map("isRead")
+  readAt     DateTime? @map("readAt")
+  createdAt  DateTime @default(now()) @map("createdAt")
+  
+  // Relations
+  user       User     @relation("UserNotifications", fields: [userId], references: [id])
+  
+  @@index([userId, isRead, createdAt])
+  @@index([entityType, entityId])
+  @@index([type, userId])
+}
+
+// Status Change History for audit trail
+model StatusHistory {
+  id          String   @id @default(cuid())
+  entityType  String   @map("entityType") // 'Project' | 'Task'
+  entityId    String   @map("entityId")
+  fromStatus  String?  @map("fromStatus") // null for initial status
+  toStatus    String   @map("toStatus")
+  reason      String?  @db.Text // Optional change reason
+  changedById String   @map("changedById")
+  changedAt   DateTime @default(now()) @map("changedAt")
+  
+  // Relations
+  changedBy   User     @relation("StatusChanger", fields: [changedById], references: [id])
+  
+  @@index([entityType, entityId, changedAt])
+  @@index([changedById, changedAt])
+}
+
+// Time Tracking with Decimal precision
+model TimeEntry {
+  id          String   @id @default(cuid())
+  taskId      String   @map("taskId")
+  userId      String   @map("userId")
+  projectId   String   @map("projectId") // Denormalized for queries
+  
+  hours       Decimal  @db.Decimal(5, 2) // Use Decimal not Float!
+  description String?  @db.Text
+  date        DateTime @db.Date
+  billable    Boolean  @default(true) // For grant reporting
+  
+  createdAt   DateTime @default(now()) @map("createdAt")
+  updatedAt   DateTime @updatedAt @map("updatedAt")
+  
+  // Relations
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user        User     @relation("TimeTracker", fields: [userId], references: [id])
+  project     Project  @relation("ProjectTimeEntries", fields: [projectId], references: [id])
+  
+  @@index([userId, date])
+  @@index([projectId, date])
+  @@index([taskId, userId, date])
+}
+
+// New Enums for Phase 1 Features
+enum CommentableType {
+  PROJECT
+  TASK
+  IDEA
+  STANDUP
+  BUCKET
+  DEADLINE
+}
+
+enum AttachableType {
+  PROJECT
+  TASK
+  COMMENT
+  IDEA
+  ACTION_ITEM
+  DEADLINE
+}
+
+enum EnhancedNotificationType {
+  TASK_ASSIGNED
+  TASK_COMPLETED
+  TASK_DUE_SOON
+  TASK_OVERDUE
+  PROJECT_STATUS_CHANGE
+  COMMENT_MENTION
+  COMMENT_REPLY
+  DEADLINE_APPROACHING
+  REVIEW_REQUESTED
+  BUCKET_ASSIGNMENT
+  IDEA_VOTE
+  STANDUP_ACTION_ITEM
 }
 
 enum NotificationType {
