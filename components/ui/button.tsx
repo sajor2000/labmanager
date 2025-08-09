@@ -42,12 +42,52 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, onClick, type = 'button', disabled, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    
+    // Create a stable click handler that prevents issues in production
+    const handleClick = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+      // Don't do anything if button is disabled
+      if (disabled) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      
+      // For non-submit buttons in forms, prevent default to avoid accidental form submission
+      if (type !== 'submit' && type !== 'reset') {
+        // Check if button is inside a form
+        const form = (e.target as HTMLElement).closest('form');
+        if (form) {
+          e.preventDefault();
+        }
+      }
+      
+      // Call the onClick handler if it exists and is a function
+      if (onClick && typeof onClick === 'function') {
+        try {
+          onClick(e);
+        } catch (error) {
+          console.error('Button onClick handler error:', error);
+        }
+      }
+    }, [onClick, type, disabled]);
+    
+    // Ensure button has proper type attribute
+    const buttonType = type || 'button';
+    
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          // Add cursor styles for better UX
+          disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+        )}
         ref={ref}
+        type={buttonType}
+        disabled={disabled}
+        onClick={asChild ? onClick : handleClick}
+        aria-disabled={disabled}
         {...props}
       />
     )

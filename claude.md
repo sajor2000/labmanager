@@ -640,5 +640,23 @@ If the build fails, DO NOT push. Fix all errors first.
 - [ ] All API endpoints returning proper responses
 - [ ] No TypeScript errors in build
 - [ ] Environment variables properly configured
+- [ ] Button onClick handlers working (check Button component has proper event handling)
 
 **Remember**: A broken QueryProvider will crash the entire application on load. This must be the first thing checked before any commit.
+
+#### 5. Button Click Issues Fix
+**Issue**: Buttons don't work when clicked on production site
+**Location**: `/components/ui/button.tsx`
+**Fix**: Ensure proper event handling and prevent default behavior issues
+
+✅ **Button Component Must Include**:
+- Proper type attribute (default to 'button' not 'submit')
+- Event handler wrapper to prevent production issues
+- Disabled state handling
+- Try-catch for onClick to prevent crashes
+
+The Button component must handle onClick events properly to work in production. Check that:
+1. Button type defaults to 'button' not 'submit'
+2. onClick handlers are wrapped in try-catch
+3. Disabled state prevents all interactions
+4. Form buttons properly handle preventDefault
