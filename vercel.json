@@ -4,6 +4,9 @@
   "framework": "nextjs",
   "regions": ["iad1"],
   "functions": {
+    "app/api/users/route.ts": {
+      "maxDuration": 30
+    },
     "app/api/studies/route.ts": {
       "maxDuration": 10
     },

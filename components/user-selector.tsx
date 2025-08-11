@@ -32,6 +32,7 @@ interface UserSelectorProps {
 export function UserSelector({ onUserSelect, selectedUser }: UserSelectorProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadUsers();
@@ -40,6 +41,7 @@ export function UserSelector({ onUserSelect, selectedUser }: UserSelectorProps) 
   const loadUsers = async () => {
     try {
       setLoading(true);
+      setError(null);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
       
@@ -57,19 +59,26 @@ export function UserSelector({ onUserSelect, selectedUser }: UserSelectorProps) 
         // Validate data structure
         if (Array.isArray(userData)) {
           setUsers(userData);
+          if (userData.length === 0) {
+            setError('No users found in database. Please check database configuration.');
+          }
         } else {
           console.error('Invalid user data format received');
+          setError('Invalid data format received from server');
           setUsers([]);
         }
       } else {
         console.error(`Failed to load users: ${response.status} ${response.statusText}`);
+        setError(`Unable to load users (Error ${response.status})`);
         setUsers([]);
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.error('Request timed out loading users');
+        setError('Request timed out. Please check your connection.');
       } else {
         console.error('Error loading users:', error);
+        setError('Failed to connect to server. Please check database configuration.');
       }
       setUsers([]);
     } finally {
@@ -135,6 +144,51 @@ export function UserSelector({ onUserSelect, selectedUser }: UserSelectorProps) 
     return renderContent();
   }
 
+  // Show error state if there's an error and no users
+  if (error && users.length === 0) {
+    return (
+      <Card className="mb-6 bg-red-50 border-red-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center space-x-2 text-red-900">
+            <Users className="h-5 w-5" />
+            <span>Database Connection Required</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-red-100 border border-red-300 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="text-red-600 mt-0.5">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-red-800 font-medium">Unable to Load Users</p>
+                <p className="text-red-700 text-sm mt-1">{error}</p>
+                <div className="mt-3 text-sm text-red-700">
+                  <p className="font-medium">To fix this issue:</p>
+                  <ol className="list-decimal list-inside mt-1 space-y-1">
+                    <li>Ensure DATABASE_URL is set in Vercel environment variables</li>
+                    <li>Run database migrations: <code className="bg-red-200 px-1 rounded">npx prisma migrate deploy</code></li>
+                    <li>Seed initial data: <code className="bg-red-200 px-1 rounded">npx prisma db seed</code></li>
+                  </ol>
+                </div>
+                <Button 
+                  onClick={loadUsers} 
+                  className="mt-3" 
+                  variant="outline"
+                  size="sm"
+                >
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mb-6 bg-blue-50 border-blue-200">
       <CardHeader className="pb-3">
@@ -152,28 +206,37 @@ export function UserSelector({ onUserSelect, selectedUser }: UserSelectorProps) 
             <Select
               value={selectedUser?.id || 'none'}
               onValueChange={handleUserChange}
+              disabled={users.length === 0}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a user to customize experience..." />
+                <SelectValue placeholder={users.length === 0 ? "No users available" : "Select a user to customize experience..."} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4" />
-                    <span>No User Selected</span>
-                  </div>
-                </SelectItem>
-                {users.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4" />
-                      <div>
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
-                      </div>
-                    </div>
+                {users.length === 0 ? (
+                  <SelectItem value="none" disabled>
+                    <span className="text-gray-500">No users available</span>
                   </SelectItem>
-                ))}
+                ) : (
+                  <>
+                    <SelectItem value="none">
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4" />
+                        <span>No User Selected</span>
+                      </div>
+                    </SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        <div className="flex items-center space-x-2">
+                          <User className="h-4 w-4" />
+                          <div>
+                            <div className="font-medium">{user.name}</div>
+                            <div className="text-xs text-gray-500">{user.email}</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -202,7 +265,7 @@ export function UserSelector({ onUserSelect, selectedUser }: UserSelectorProps) 
           )}
         </div>
 
-        {!selectedUser && (
+        {!selectedUser && users.length > 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
             <div className="flex items-start space-x-2">
               <div className="text-amber-600 mt-0.5">
