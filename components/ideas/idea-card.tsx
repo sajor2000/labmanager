@@ -54,9 +54,9 @@ export function IdeaCard({
 }: IdeaCardProps) {
   const [isVoting, setIsVoting] = useState(false);
   
-  const userVote = idea.votes.find(v => v.userId === currentUserId);
-  const upvotes = idea.votes.filter(v => v.voteType === 'UP').length;
-  const downvotes = idea.votes.filter(v => v.voteType === 'DOWN').length;
+  const userVote = idea.votes?.find(v => v.userId === currentUserId);
+  const upvotes = idea.votes?.filter(v => v.voteType === 'UP').length || 0;
+  const downvotes = idea.votes?.filter(v => v.voteType === 'DOWN').length || 0;
   const netVotes = upvotes - downvotes;
   
   const StageIcon = stageIcons[idea.stage] || Lightbulb;
@@ -110,12 +110,12 @@ export function IdeaCard({
             </Badge>
           )}
           
-          {idea.tags.slice(0, 2).map((tag, i) => (
+          {idea.tags?.slice(0, 2).map((tag, i) => (
             <Badge key={i} variant="outline" className="text-xs">
               {tag}
             </Badge>
           ))}
-          {idea.tags.length > 2 && (
+          {idea.tags && idea.tags.length > 2 && (
             <Badge variant="outline" className="text-xs">
               +{idea.tags.length - 2}
             </Badge>
