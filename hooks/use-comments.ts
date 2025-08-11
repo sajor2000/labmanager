@@ -260,8 +260,11 @@ export function useDeleteComment(commentId: string) {
         throw new Error('User not authenticated');
       }
 
-      const response = await fetch(`/api/comments/${commentId}?userId=${user.id}`, {
+      const response = await fetch(`/api/comments/${commentId}`, {
         method: 'DELETE',
+        headers: {
+          'x-selected-user-id': user.id,
+        },
       });
 
       if (!response.ok) {

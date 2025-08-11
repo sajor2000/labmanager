@@ -150,7 +150,7 @@ export const useTaskStore = create<TaskState>()(
         
         deleteTask: async (id) => {
           try {
-            const response = await fetch(`/api/tasks?id=${id}`, {
+            const response = await fetch(`/api/tasks/${id}`, {
               method: 'DELETE',
             });
             

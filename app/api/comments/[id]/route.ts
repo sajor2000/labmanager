@@ -269,13 +269,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('userId');
+    const userId = request.headers.get('x-selected-user-id');
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
+        { error: 'User authentication required' },
+        { status: 401 }
       );
     }
 

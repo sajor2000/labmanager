@@ -1,0 +1,1539 @@
+{
+  "info": {
+    "name": "LabSync API Collection",
+    "description": "Comprehensive API testing collection for LabSync Research Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "x-selected-user-id",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{user_id}}",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('Executing request:', pm.request.name);",
+          "",
+          "// Set common headers",
+          "pm.request.headers.add({",
+          "    key: 'Content-Type',",
+          "    value: 'application/json'",
+          "});",
+          "",
+          "// Add timestamp for tracking",
+          "pm.environment.set('request_timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "const responseTime = pm.response.responseTime;",
+          "",
+          "// Log response time",
+          "console.log(`Response time: ${responseTime}ms`);",
+          "",
+          "// Performance test",
+          "pm.test('Response time is acceptable', () => {",
+          "    pm.expect(responseTime).to.be.below(1000);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "🏥 Labs Management",
+      "item": [
+        {
+          "name": "Get All Labs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Each lab has required fields', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        jsonData.forEach(lab => {",
+                  "            pm.expect(lab).to.have.property('id');",
+                  "            pm.expect(lab).to.have.property('name');",
+                  "            pm.expect(lab).to.have.property('shortName');",
+                  "        });",
+                  "    }",
+                  "});",
+                  "",
+                  "// Store first lab ID for subsequent requests",
+                  "const labs = pm.response.json();",
+                  "if (labs.length > 0) {",
+                  "    pm.environment.set('lab_id', labs[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/labs",
+              "host": ["{{base_url}}"],
+              "path": ["labs"]
+            },
+            "description": "Retrieve all active labs with member counts and project statistics"
+          }
+        },
+        {
+          "name": "Get Lab by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Lab has correct structure', () => {",
+                  "    const lab = pm.response.json();",
+                  "    pm.expect(lab).to.have.property('id');",
+                  "    pm.expect(lab).to.have.property('name');",
+                  "    pm.expect(lab).to.have.property('members');",
+                  "    pm.expect(lab.members).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/labs/{{lab_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["labs", "{{lab_id}}"]
+            },
+            "description": "Get detailed information about a specific lab"
+          }
+        },
+        {
+          "name": "Create New Lab",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate unique lab name",
+                  "const timestamp = Date.now();",
+                  "const labName = `Test Lab ${timestamp}`;",
+                  "const shortName = `TL${timestamp.toString().slice(-6)}`;",
+                  "",
+                  "pm.environment.set('new_lab_name', labName);",
+                  "pm.environment.set('new_lab_short', shortName);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Lab was created with correct data', () => {",
+                  "    const lab = pm.response.json();",
+                  "    pm.expect(lab).to.have.property('id');",
+                  "    pm.expect(lab.name).to.equal(pm.environment.get('new_lab_name'));",
+                  "});",
+                  "",
+                  "// Store created lab ID for cleanup",
+                  "const lab = pm.response.json();",
+                  "pm.environment.set('created_lab_id', lab.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{new_lab_name}}\",\n  \"shortName\": \"{{new_lab_short}}\",\n  \"description\": \"Test lab created via Postman\",\n  \"color\": \"#3B82F6\",\n  \"icon\": \"flask\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/labs",
+              "host": ["{{base_url}}"],
+              "path": ["labs"]
+            },
+            "description": "Create a new research lab"
+          }
+        },
+        {
+          "name": "Update Lab",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Lab was updated', () => {",
+                  "    const lab = pm.response.json();",
+                  "    pm.expect(lab.description).to.include('Updated');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description via Postman\",\n  \"color\": \"#10B981\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/labs/{{lab_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["labs", "{{lab_id}}"]
+            },
+            "description": "Update lab information"
+          }
+        },
+        {
+          "name": "Get Lab Members",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains members array', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('members');",
+                  "    pm.expect(jsonData.members).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/labs/{{lab_id}}/members",
+              "host": ["{{base_url}}"],
+              "path": ["labs", "{{lab_id}}", "members"]
+            },
+            "description": "Get all members of a specific lab"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Buckets",
+      "item": [
+        {
+          "name": "Get All Buckets",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response structure is correct', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "// Store first bucket ID",
+                  "const buckets = pm.response.json();",
+                  "if (buckets.length > 0) {",
+                  "    pm.environment.set('bucket_id', buckets[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/buckets?labId={{lab_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["buckets"],
+              "query": [
+                {
+                  "key": "labId",
+                  "value": "{{lab_id}}"
+                }
+              ]
+            },
+            "description": "Get all buckets for a specific lab"
+          }
+        },
+        {
+          "name": "Create Bucket",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate unique bucket name",
+                  "const bucketName = `Test Bucket ${Date.now()}`;",
+                  "pm.environment.set('new_bucket_name', bucketName);",
+                  "",
+                  "// Random color",
+                  "const colors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'];",
+                  "const randomColor = colors[Math.floor(Math.random() * colors.length)];",
+                  "pm.environment.set('bucket_color', randomColor);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Bucket was created', () => {",
+                  "    const bucket = pm.response.json();",
+                  "    pm.expect(bucket).to.have.property('id');",
+                  "    pm.expect(bucket.name).to.equal(pm.environment.get('new_bucket_name'));",
+                  "});",
+                  "",
+                  "// Store created bucket ID",
+                  "const bucket = pm.response.json();",
+                  "pm.environment.set('created_bucket_id', bucket.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{new_bucket_name}}\",\n  \"description\": \"Test bucket created via Postman\",\n  \"color\": \"{{bucket_color}}\",\n  \"labId\": \"{{lab_id}}\",\n  \"icon\": \"folder\",\n  \"position\": 999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/buckets",
+              "host": ["{{base_url}}"],
+              "path": ["buckets"]
+            },
+            "description": "Create a new project bucket"
+          }
+        },
+        {
+          "name": "Update Bucket Position",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Position was updated', () => {",
+                  "    const bucket = pm.response.json();",
+                  "    pm.expect(bucket.position).to.equal(1);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{bucket_id}}\",\n  \"position\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/buckets",
+              "host": ["{{base_url}}"],
+              "path": ["buckets"]
+            },
+            "description": "Update bucket position for drag-and-drop reordering"
+          }
+        },
+        {
+          "name": "Delete Bucket",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 204', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/buckets?id={{created_bucket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["buckets"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{created_bucket_id}}"
+                }
+              ]
+            },
+            "description": "Delete a bucket (soft delete)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔬 Projects/Studies",
+      "item": [
+        {
+          "name": "Get All Projects",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has projects array', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('projects');",
+                  "    pm.expect(jsonData.projects).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Pagination info is present', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('pagination');",
+                  "    pm.expect(jsonData.pagination).to.have.property('total');",
+                  "    pm.expect(jsonData.pagination).to.have.property('page');",
+                  "    pm.expect(jsonData.pagination).to.have.property('limit');",
+                  "});",
+                  "",
+                  "// Store first project ID",
+                  "const data = pm.response.json();",
+                  "if (data.projects && data.projects.length > 0) {",
+                  "    pm.environment.set('project_id', data.projects[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects?labId={{lab_id}}&page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["projects"],
+              "query": [
+                {
+                  "key": "labId",
+                  "value": "{{lab_id}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": "Get paginated list of projects with filtering and sorting"
+          }
+        },
+        {
+          "name": "Create Project",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate test project data",
+                  "const timestamp = Date.now();",
+                  "const projectName = `Test Study ${timestamp}`;",
+                  "const oraNumber = `ORA-${new Date().getFullYear()}-${timestamp.toString().slice(-3)}`;",
+                  "",
+                  "pm.environment.set('new_project_name', projectName);",
+                  "pm.environment.set('new_ora_number', oraNumber);",
+                  "",
+                  "// Generate future due date",
+                  "const dueDate = new Date();",
+                  "dueDate.setMonth(dueDate.getMonth() + 3);",
+                  "pm.environment.set('project_due_date', dueDate.toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Project was created successfully', () => {",
+                  "    const project = pm.response.json();",
+                  "    pm.expect(project).to.have.property('id');",
+                  "    pm.expect(project.name).to.equal(pm.environment.get('new_project_name'));",
+                  "    pm.expect(project.oraNumber).to.equal(pm.environment.get('new_ora_number'));",
+                  "});",
+                  "",
+                  "// Store created project ID",
+                  "const project = pm.response.json();",
+                  "pm.environment.set('created_project_id', project.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-selected-user-id",
+                "value": "{{user_id}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{new_project_name}}\",\n  \"description\": \"Test project created via Postman API testing\",\n  \"oraNumber\": \"{{new_ora_number}}\",\n  \"status\": \"PLANNING\",\n  \"priority\": \"MEDIUM\",\n  \"projectType\": \"Clinical Research\",\n  \"studyType\": \"Retrospective\",\n  \"fundingSource\": \"NIH\",\n  \"fundingDetails\": \"R01 Grant\",\n  \"externalCollaborators\": \"Northwestern University, University of Chicago\",\n  \"dueDate\": \"{{project_due_date}}\",\n  \"notes\": \"This is a test project for API validation\",\n  \"labId\": \"{{lab_id}}\",\n  \"bucketId\": \"{{bucket_id}}\",\n  \"createdById\": \"{{user_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/projects",
+              "host": ["{{base_url}}"],
+              "path": ["projects"]
+            },
+            "description": "Create a new research project/study"
+          }
+        },
+        {
+          "name": "Update Project Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Status was updated', () => {",
+                  "    const project = pm.response.json();",
+                  "    pm.expect(project.status).to.equal('DATA_COLLECTION');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-selected-user-id",
+                "value": "{{user_id}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DATA_COLLECTION\",\n  \"notes\": \"Moving to data collection phase\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "{{project_id}}", "status"]
+            },
+            "description": "Update project status with activity logging"
+          }
+        },
+        {
+          "name": "Search Projects",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Search returns results', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('projects');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects?search=test&status=ACTIVE,PLANNING&priority=HIGH,MEDIUM",
+              "host": ["{{base_url}}"],
+              "path": ["projects"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "test"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE,PLANNING"
+                },
+                {
+                  "key": "priority",
+                  "value": "HIGH,MEDIUM"
+                }
+              ]
+            },
+            "description": "Search projects with filters"
+          }
+        }
+      ]
+    },
+    {
+      "name": "✅ Tasks",
+      "item": [
+        {
+          "name": "Get All Tasks",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array of tasks', () => {",
+                  "    const tasks = pm.response.json();",
+                  "    pm.expect(tasks).to.be.an('array');",
+                  "});",
+                  "",
+                  "// Store first task ID if exists",
+                  "const tasks = pm.response.json();",
+                  "if (tasks.length > 0) {",
+                  "    pm.environment.set('task_id', tasks[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tasks?projectId={{project_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tasks"],
+              "query": [
+                {
+                  "key": "projectId",
+                  "value": "{{project_id}}"
+                }
+              ]
+            },
+            "description": "Get all tasks for a project"
+          }
+        },
+        {
+          "name": "Create Task",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate task data",
+                  "const taskTitle = `Test Task ${Date.now()}`;",
+                  "pm.environment.set('new_task_title', taskTitle);",
+                  "",
+                  "// Set due date to next week",
+                  "const dueDate = new Date();",
+                  "dueDate.setDate(dueDate.getDate() + 7);",
+                  "pm.environment.set('task_due_date', dueDate.toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Task was created', () => {",
+                  "    const task = pm.response.json();",
+                  "    pm.expect(task).to.have.property('id');",
+                  "    pm.expect(task.title).to.equal(pm.environment.get('new_task_title'));",
+                  "});",
+                  "",
+                  "// Store created task ID",
+                  "const task = pm.response.json();",
+                  "pm.environment.set('created_task_id', task.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{new_task_title}}\",\n  \"description\": \"Task created via Postman testing\",\n  \"status\": \"TODO\",\n  \"priority\": \"MEDIUM\",\n  \"projectId\": \"{{project_id}}\",\n  \"assigneeIds\": [\"{{user_id}}\"],\n  \"dueDate\": \"{{task_due_date}}\",\n  \"createdById\": \"{{user_id}}\",\n  \"tags\": [\"api-test\", \"automated\"],\n  \"estimatedHours\": 8\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["tasks"]
+            },
+            "description": "Create a new task"
+          }
+        },
+        {
+          "name": "Update Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Task was updated', () => {",
+                  "    const task = pm.response.json();",
+                  "    pm.expect(task.status).to.equal('IN_PROGRESS');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"actualHours\": 2,\n  \"description\": \"Updated task description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/tasks/{{task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tasks", "{{task_id}}"]
+            },
+            "description": "Update task details"
+          }
+        },
+        {
+          "name": "Move Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Task was moved', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('message');",
+                  "    pm.expect(response.message).to.include('successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-selected-user-id",
+                "value": "{{user_id}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newStatus\": \"REVIEW\",\n  \"newPosition\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/tasks/{{task_id}}/move",
+              "host": ["{{base_url}}"],
+              "path": ["tasks", "{{task_id}}", "move"]
+            },
+            "description": "Move task between columns or projects"
+          }
+        },
+        {
+          "name": "Delete Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 204', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tasks/{{created_task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tasks", "{{created_task_id}}"]
+            },
+            "description": "Delete a task"
+          }
+        }
+      ]
+    },
+    {
+      "name": "💬 Comments",
+      "item": [
+        {
+          "name": "Get Comments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has comments and pagination', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('comments');",
+                  "    pm.expect(jsonData).to.have.property('pagination');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comments?entityType=PROJECT&entityId={{project_id}}&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["comments"],
+              "query": [
+                {
+                  "key": "entityType",
+                  "value": "PROJECT"
+                },
+                {
+                  "key": "entityId",
+                  "value": "{{project_id}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get comments for a specific entity"
+          }
+        },
+        {
+          "name": "Create Comment",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate comment with mention",
+                  "const comment = `Test comment @JohnDoe created at ${new Date().toISOString()}`;",
+                  "pm.environment.set('comment_content', comment);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Comment was created', () => {",
+                  "    const comment = pm.response.json();",
+                  "    pm.expect(comment).to.have.property('id');",
+                  "    pm.expect(comment.content).to.include('Test comment');",
+                  "});",
+                  "",
+                  "// Store comment ID",
+                  "const comment = pm.response.json();",
+                  "pm.environment.set('comment_id', comment.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"{{comment_content}}\",\n  \"entityType\": \"PROJECT\",\n  \"entityId\": \"{{project_id}}\",\n  \"authorId\": \"{{user_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/comments",
+              "host": ["{{base_url}}"],
+              "path": ["comments"]
+            },
+            "description": "Create a new comment with mentions"
+          }
+        },
+        {
+          "name": "Get Comment Replies",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has replies array', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('replies');",
+                  "    pm.expect(jsonData.replies).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comments/{{comment_id}}/replies",
+              "host": ["{{base_url}}"],
+              "path": ["comments", "{{comment_id}}", "replies"]
+            },
+            "description": "Get replies for a specific comment"
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Comment was deleted', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-selected-user-id",
+                "value": "{{user_id}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/comments/{{comment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["comments", "{{comment_id}}"]
+            },
+            "description": "Soft delete a comment"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Team & Users",
+      "item": [
+        {
+          "name": "Get Current User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('User has required fields', () => {",
+                  "    const user = pm.response.json();",
+                  "    pm.expect(user).to.have.property('id');",
+                  "    pm.expect(user).to.have.property('email');",
+                  "    pm.expect(user).to.have.property('name');",
+                  "    pm.expect(user).to.have.property('role');",
+                  "});",
+                  "",
+                  "// Store user ID for other requests",
+                  "const user = pm.response.json();",
+                  "if (user.id) {",
+                  "    pm.environment.set('current_user_id', user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/current",
+              "host": ["{{base_url}}"],
+              "path": ["users", "current"]
+            },
+            "description": "Get current authenticated user information"
+          }
+        },
+        {
+          "name": "Get Team Members",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has team members', () => {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('id');",
+                  "        pm.expect(jsonData[0]).to.have.property('firstName');",
+                  "        pm.expect(jsonData[0]).to.have.property('lastName');",
+                  "        pm.expect(jsonData[0]).to.have.property('role');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/team",
+              "host": ["{{base_url}}"],
+              "path": ["team"]
+            },
+            "description": "Get all team members with their roles and capacity"
+          }
+        },
+        {
+          "name": "Search Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Search returns users', () => {",
+                  "    const users = pm.response.json();",
+                  "    pm.expect(users).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/search?q=john",
+              "host": ["{{base_url}}"],
+              "path": ["users", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "john"
+                }
+              ]
+            },
+            "description": "Search for users by name or email"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Dashboard & Analytics",
+      "item": [
+        {
+          "name": "Get Dashboard Metrics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Metrics have required fields', () => {",
+                  "    const data = pm.response.json();",
+                  "    pm.expect(data).to.have.property('metrics');",
+                  "    const metrics = data.metrics;",
+                  "    pm.expect(metrics).to.have.property('totalLabs');",
+                  "    pm.expect(metrics).to.have.property('activeProjects');",
+                  "    pm.expect(metrics).to.have.property('totalTasks');",
+                  "    pm.expect(metrics).to.have.property('completedTasks');",
+                  "});",
+                  "",
+                  "pm.test('Recent activity is included', () => {",
+                  "    const data = pm.response.json();",
+                  "    pm.expect(data).to.have.property('recentProjects');",
+                  "    pm.expect(data).to.have.property('upcomingDeadlines');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/metrics?labId={{lab_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "metrics"],
+              "query": [
+                {
+                  "key": "labId",
+                  "value": "{{lab_id}}"
+                }
+              ]
+            },
+            "description": "Get dashboard metrics and statistics"
+          }
+        },
+        {
+          "name": "Get Deadlines",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Deadlines are properly structured', () => {",
+                  "    const deadlines = pm.response.json();",
+                  "    pm.expect(deadlines).to.be.an('array');",
+                  "    if (deadlines.length > 0) {",
+                  "        pm.expect(deadlines[0]).to.have.property('id');",
+                  "        pm.expect(deadlines[0]).to.have.property('title');",
+                  "        pm.expect(deadlines[0]).to.have.property('dueDate');",
+                  "        pm.expect(deadlines[0]).to.have.property('type');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/deadlines?labId={{lab_id}}&days=30",
+              "host": ["{{base_url}}"],
+              "path": ["deadlines"],
+              "query": [
+                {
+                  "key": "labId",
+                  "value": "{{lab_id}}"
+                },
+                {
+                  "key": "days",
+                  "value": "30"
+                }
+              ]
+            },
+            "description": "Get upcoming deadlines for the next 30 days"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔍 Search",
+      "item": [
+        {
+          "name": "Global Search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Search returns results', () => {",
+                  "    const results = pm.response.json();",
+                  "    pm.expect(results).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Results have correct structure', () => {",
+                  "    const results = pm.response.json();",
+                  "    if (results.length > 0) {",
+                  "        pm.expect(results[0]).to.have.property('id');",
+                  "        pm.expect(results[0]).to.have.property('title');",
+                  "        pm.expect(results[0]).to.have.property('type');",
+                  "        pm.expect(results[0]).to.have.property('url');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/search?q=test&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "test"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Global search across all resources"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎯 Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Health check response is valid', () => {",
+                  "    const health = pm.response.json();",
+                  "    pm.expect(health).to.have.property('status');",
+                  "    pm.expect(health.status).to.equal('healthy');",
+                  "    pm.expect(health).to.have.property('database');",
+                  "    pm.expect(health).to.have.property('timestamp');",
+                  "});",
+                  "",
+                  "pm.test('Database is connected', () => {",
+                  "    const health = pm.response.json();",
+                  "    pm.expect(health.database).to.equal('connected');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check API health status and database connectivity"
+          }
+        }
+      ]
+    },
+    {
+      "name": "❌ Error Handling Tests",
+      "item": [
+        {
+          "name": "404 - Resource Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error message is present', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/invalid-id-12345",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "invalid-id-12345"]
+            },
+            "description": "Test 404 error handling"
+          }
+        },
+        {
+          "name": "400 - Bad Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Validation error is returned', () => {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invalid_field\": \"test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/projects",
+              "host": ["{{base_url}}"],
+              "path": ["projects"]
+            },
+            "description": "Test validation error handling"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001/api",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lab_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "project_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bucket_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "task_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "comment_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

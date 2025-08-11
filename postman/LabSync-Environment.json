@@ -1,0 +1,196 @@
+{
+  "name": "LabSync Development",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001/api",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "user_id",
+      "value": "cme34q9mn00002hknz9vz5b7m",
+      "enabled": true,
+      "type": "default",
+      "description": "Default user ID - J.C. Rojas"
+    },
+    {
+      "key": "lab_id",
+      "value": "cme34q9mn00012hknpvxan9es",
+      "enabled": true,
+      "type": "default",
+      "description": "RICCC Lab ID"
+    },
+    {
+      "key": "lab_id_2",
+      "value": "cme34q9mn00022hknvcqgv0kn",
+      "enabled": true,
+      "type": "default",
+      "description": "RHEDAS Lab ID"
+    },
+    {
+      "key": "project_id",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Will be populated dynamically"
+    },
+    {
+      "key": "bucket_id",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Will be populated dynamically"
+    },
+    {
+      "key": "task_id",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Will be populated dynamically"
+    },
+    {
+      "key": "comment_id",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Will be populated dynamically"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "enabled": true,
+      "type": "secret",
+      "description": "Bearer token if authentication is implemented"
+    },
+    {
+      "key": "test_email",
+      "value": "Juan_rojas@rush.edu",
+      "enabled": true,
+      "type": "default",
+      "description": "Test user email"
+    },
+    {
+      "key": "cron_secret",
+      "value": "your-cron-secret-here",
+      "enabled": true,
+      "type": "secret",
+      "description": "Secret for cron job endpoints"
+    },
+    {
+      "key": "new_lab_name",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - generated during test"
+    },
+    {
+      "key": "new_lab_short",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - generated during test"
+    },
+    {
+      "key": "created_lab_id",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - stores created lab ID"
+    },
+    {
+      "key": "new_bucket_name",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - generated during test"
+    },
+    {
+      "key": "bucket_color",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - random color"
+    },
+    {
+      "key": "created_bucket_id",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - stores created bucket ID"
+    },
+    {
+      "key": "new_project_name",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - generated during test"
+    },
+    {
+      "key": "new_ora_number",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - generated ORA number"
+    },
+    {
+      "key": "project_due_date",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - future date"
+    },
+    {
+      "key": "created_project_id",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - stores created project ID"
+    },
+    {
+      "key": "new_task_title",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - generated during test"
+    },
+    {
+      "key": "task_due_date",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - future date for task"
+    },
+    {
+      "key": "created_task_id",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - stores created task ID"
+    },
+    {
+      "key": "comment_content",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - generated comment text"
+    },
+    {
+      "key": "current_user_id",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - from current user endpoint"
+    },
+    {
+      "key": "request_timestamp",
+      "value": "",
+      "enabled": true,
+      "type": "default",
+      "description": "Dynamic - timestamp of request"
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2024-01-11T00:00:00.000Z",
+  "_postman_exported_using": "Postman/10.0.0"
+}

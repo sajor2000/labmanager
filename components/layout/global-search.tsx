@@ -194,7 +194,7 @@ export function GlobalSearch({
   const router = useRouter();
   const { currentLab } = useLab();
   
-  // Merge user config with defaults
+  // Merge user config with defaults - memoize properly to prevent recreation
   const config = useMemo(() => ({
     ...DEFAULT_CONFIG,
     ...userConfig,
@@ -216,6 +216,24 @@ export function GlobalSearch({
   const resultsRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   
+  // Store refs to prevent recreating dependencies
+  const configRef = useRef(config);
+  const currentLabRef = useRef(currentLab);
+  const onSearchRef = useRef(onSearch);
+  
+  // Update refs when props change
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
+  
+  useEffect(() => {
+    currentLabRef.current = currentLab;
+  }, [currentLab]);
+  
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+  
   // Debounced search query
   const debouncedQuery = useDebounce(query, config.debounceDelay);
 
@@ -230,9 +248,13 @@ export function GlobalSearch({
     }, {} as Record<string, SearchResult[]>);
   }, [results]);
 
-  // Perform search with error handling and abort support
+  // Perform search with error handling and abort support - stable function reference
   const performSearch = useCallback(async (searchQuery: string) => {
-    if (searchQuery.length < config.minQueryLength) {
+    const currentConfig = configRef.current;
+    const currentLabValue = currentLabRef.current;
+    const onSearchCallback = onSearchRef.current;
+    
+    if (searchQuery.length < currentConfig.minQueryLength) {
       setResults([]);
       setError(null);
       return;
@@ -252,11 +274,11 @@ export function GlobalSearch({
     try {
       const params = new URLSearchParams({
         q: searchQuery,
-        ...(currentLab && { labId: currentLab.id }),
-        limit: config.maxResults.toString(),
+        ...(currentLabValue && { labId: currentLabValue.id }),
+        limit: currentConfig.maxResults.toString(),
       });
 
-      const response = await fetch(`${config.searchEndpoint}?${params}`, {
+      const response = await fetch(`${currentConfig.searchEndpoint}?${params}`, {
         signal: abortControllerRef.current.signal,
         headers: {
           'Content-Type': 'application/json',
@@ -278,7 +300,7 @@ export function GlobalSearch({
       setAnnouncement(message);
 
       // Call onSearch callback if provided
-      onSearch?.(searchQuery);
+      onSearchCallback?.(searchQuery);
     } catch (err) {
       // Ignore abort errors
       if (err instanceof Error && err.name !== 'AbortError') {
@@ -290,12 +312,14 @@ export function GlobalSearch({
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [config, currentLab, onSearch]);
+  }, []); // Empty dependency array - function is now stable
 
   // Effect to perform search when debounced query changes
   useEffect(() => {
+    // Always perform search when debounced query changes
+    // This handles both searching and clearing
     performSearch(debouncedQuery);
-  }, [debouncedQuery, performSearch]);
+  }, [debouncedQuery, performSearch]); // Only respond to query changes
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {

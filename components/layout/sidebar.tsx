@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 const navigation = [
-  { name: "Overview", href: "/", icon: BarChart3 },
+  { name: "Overview", href: "/overview", icon: BarChart3 },
   { name: "Labs", href: "/labs", icon: FlaskConical },
   { name: "Buckets", href: "/buckets", icon: FolderOpen },
   { name: "Studies", href: "/studies", icon: Beaker },
@@ -38,16 +38,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    // Prevent default if there's an issue and handle programmatically
-    if (!e.currentTarget.href) {
-      e.preventDefault();
-      router.push(href);
-    }
-  };
-
   return (
-    <div className="sidebar-rush flex h-full w-64 flex-col" style={{ position: 'relative', zIndex: 10 }}>
+    <div className="sidebar-rush flex h-full w-64 flex-col bg-background border-r border-border">
       {/* Logo Section - Rush University Theme */}
       <div className="flex h-16 items-center justify-start px-6 border-b">
         <div className="flex items-center space-x-3">
@@ -62,7 +54,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation - Rush/Slack Theme */}
-      <nav className="flex-1 space-y-1 px-3 py-4" style={{ pointerEvents: 'auto' }}>
+      <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
           const isActive = pathname === item.href || 
                           (item.href !== "/" && pathname.startsWith(item.href));
@@ -71,17 +63,16 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
-              onClick={(e) => handleNavClick(e, item.href)}
-              prefetch={true}
+              prefetch={false}
               className={cn(
                 "px-3 py-2 rounded-lg flex items-center relative w-full transition-all duration-200",
                 "text-foreground/70 dark:text-foreground/60",
-                "hover:bg-[hsl(var(--hover-bg))] dark:hover:bg-[hsl(var(--hover-bg))]",
-                "hover:text-foreground dark:hover:text-foreground",
-                isActive && "bg-primary text-primary-foreground dark:bg-[hsl(var(--active-bg))] dark:text-foreground",
-                "cursor-pointer"
+                "hover:bg-accent hover:text-accent-foreground",
+                isActive && [
+                  "bg-primary text-primary-foreground",
+                  "dark:bg-primary/10 dark:text-primary"
+                ]
               )}
-              style={{ pointerEvents: 'auto', display: 'flex' }}
             >
               {/* Active indicator - left border */}
               {isActive && (
