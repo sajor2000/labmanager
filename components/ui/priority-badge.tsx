@@ -33,9 +33,30 @@ export function PriorityBadge({
   variant = 'soft',
   animated = false
 }: PriorityBadgeProps) {
-  const isDark = typeof window !== 'undefined' && 
-    document.documentElement.classList.contains('dark');
-  const colors = getPriorityColor(priority, isDark);
+  const [isDark, setIsDark] = React.useState(false);
+  
+  React.useEffect(() => {
+    // Check theme on client side only
+    setIsDark(document.documentElement.classList.contains('dark'));
+    
+    // Watch for theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+  
+  const colors = getPriorityColor(priority, isDark) || { bg: '#F5F5F5', text: '#616161', icon: '#9E9E9E' };
   const Icon = priorityIcons[priority.toLowerCase()];
   
   const sizeClasses = {

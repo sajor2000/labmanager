@@ -42,9 +42,30 @@ export function StatusBadge({
   size = 'md',
   variant = 'soft' 
 }: StatusBadgeProps) {
-  const isDark = typeof window !== 'undefined' && 
-    document.documentElement.classList.contains('dark');
-  const colors = getStatusColor(status, isDark);
+  const [isDark, setIsDark] = React.useState(false);
+  
+  React.useEffect(() => {
+    // Check theme on client side only
+    setIsDark(document.documentElement.classList.contains('dark'));
+    
+    // Watch for theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+  
+  const colors = getStatusColor(status, isDark) || { bg: '#F5F5F5', text: '#616161', border: '#E0E0E0' };
   const Icon = statusIcons[status.toLowerCase().replace(/\s+/g, '-')];
   
   const sizeClasses = {

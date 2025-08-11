@@ -81,8 +81,28 @@ export function KanbanBoard({
   const [draggedStudy, setDraggedStudy] = useState<Study | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [columnSettings, setColumnSettings] = useState<Record<string, { collapsed: boolean }>>({});
-  const isDark = typeof window !== 'undefined' && 
-    document.documentElement.classList.contains('dark');
+  const [isDark, setIsDark] = useState(false);
+  
+  useEffect(() => {
+    // Check theme on client side only
+    setIsDark(document.documentElement.classList.contains('dark'));
+    
+    // Watch for theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   // Group studies by status
   const studiesByStatus = studies.reduce((acc, study) => {
@@ -138,7 +158,7 @@ export function KanbanBoard({
       {KANBAN_COLUMNS.map((column) => {
         const columnStudies = studiesByStatus[column.id] || [];
         const isCollapsed = columnSettings[column.id]?.collapsed;
-        const colors = getStatusColor(column.id, isDark);
+        const colors = getStatusColor(column.id, isDark) || { bg: '#F5F5F5', text: '#616161', border: '#E0E0E0' };
         const isOverLimit = column.limit && columnStudies.length > column.limit;
 
         return (
