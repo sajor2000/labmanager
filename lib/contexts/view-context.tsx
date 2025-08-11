@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import type { ViewType, ViewConfiguration, SortOptions, StudyFilters } from '@/types';
+import { safeLocalStorage } from '@/lib/utils/browser';
 
 interface ViewState {
   // Current view configuration
@@ -136,12 +137,12 @@ export function ViewProvider({
     selectedRecordIds: [],
   });
   
-  // Load saved views from localStorage or API
+  // Load saved views from safeLocalStorage or API
   useEffect(() => {
     const loadSavedViews = async () => {
       try {
-        // Try to load from localStorage first
-        const localViews = localStorage.getItem(`views_${workspaceId}_${tableId}`);
+        // Try to load from safeLocalStorage first
+        const localViews = safeLocalStorage.getItem(`views_${workspaceId}_${tableId}`);
         if (localViews) {
           const parsed = JSON.parse(localViews);
           setState(prev => ({ ...prev, savedViews: parsed }));
@@ -152,8 +153,8 @@ export function ViewProvider({
         if (response.ok) {
           const views = await response.json();
           setState(prev => ({ ...prev, savedViews: views }));
-          // Update localStorage
-          localStorage.setItem(`views_${workspaceId}_${tableId}`, JSON.stringify(views));
+          // Update safeLocalStorage
+          safeLocalStorage.setItem(`views_${workspaceId}_${tableId}`, JSON.stringify(views));
         }
       } catch (error) {
         console.error('Error loading saved views:', error);
@@ -163,7 +164,7 @@ export function ViewProvider({
     loadSavedViews();
   }, [workspaceId, tableId]);
   
-  // Save preferences to localStorage whenever they change
+  // Save preferences to safeLocalStorage whenever they change
   useEffect(() => {
     const preferences = {
       cardSize: state.cardSize,
@@ -172,7 +173,7 @@ export function ViewProvider({
       colorBy: state.colorBy,
       isSidebarOpen: state.isSidebarOpen,
     };
-    localStorage.setItem('viewPreferences', JSON.stringify(preferences));
+    safeLocalStorage.setItem('viewPreferences', JSON.stringify(preferences));
   }, [state.cardSize, state.showEmptyGroups, state.showCompletedItems, state.colorBy, state.isSidebarOpen]);
   
   // Calculate filter count
@@ -253,9 +254,9 @@ export function ViewProvider({
           currentView: savedView,
         }));
         
-        // Update localStorage
+        // Update safeLocalStorage
         const updatedViews = [...state.savedViews, savedView];
-        localStorage.setItem(`views_${workspaceId}_${tableId}`, JSON.stringify(updatedViews));
+        safeLocalStorage.setItem(`views_${workspaceId}_${tableId}`, JSON.stringify(updatedViews));
       }
     } catch (error) {
       console.error('Error saving view:', error);
@@ -272,9 +273,9 @@ export function ViewProvider({
           currentView: prev.currentView?.id === viewId ? null : prev.currentView,
         }));
         
-        // Update localStorage
+        // Update safeLocalStorage
         const updatedViews = state.savedViews.filter(v => v.id !== viewId);
-        localStorage.setItem(`views_${workspaceId}_${tableId}`, JSON.stringify(updatedViews));
+        safeLocalStorage.setItem(`views_${workspaceId}_${tableId}`, JSON.stringify(updatedViews));
       }
     } catch (error) {
       console.error('Error deleting view:', error);

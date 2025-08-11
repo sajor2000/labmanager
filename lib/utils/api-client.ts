@@ -1,12 +1,11 @@
 // API client with automatic user context headers
+import { safeLocalStorage } from './browser';
 
 export async function apiClient(url: string, options: RequestInit = {}) {
-  // Get selected user ID from localStorage
+  // Get selected user ID from localStorage (SSR-safe)
   const getSelectedUserId = (): string | null => {
-    if (typeof window === 'undefined') return null;
-    
     try {
-      const stored = localStorage.getItem('labmanage_selected_user');
+      const stored = safeLocalStorage.getItem('labmanage_selected_user');
       if (stored) {
         const user = JSON.parse(stored);
         return user.id;

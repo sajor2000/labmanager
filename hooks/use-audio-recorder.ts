@@ -282,8 +282,10 @@ export async function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-// Utility function to download audio blob
+// Utility function to download audio blob (SSR-safe)
 export function downloadAudioBlob(blob: Blob, filename: string = 'recording.webm') {
+  if (typeof window === 'undefined') return;
+  
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.style.display = 'none';

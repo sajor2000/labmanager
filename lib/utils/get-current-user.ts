@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { headers } from 'next/headers';
+import { safeLocalStorage } from './browser';
 
 // Get current user from temporary auth system
 export async function getCurrentUser() {
@@ -31,12 +32,10 @@ export async function getCurrentUser() {
   }
 }
 
-// Helper function to get selected user ID from client-side storage
+// Helper function to get selected user ID from client-side storage (SSR-safe)
 export function getSelectedUserIdFromClient(): string | null {
-  if (typeof window === 'undefined') return null;
-  
   try {
-    const stored = localStorage.getItem('labmanage_selected_user');
+    const stored = safeLocalStorage.getItem('labmanage_selected_user');
     if (stored) {
       const user = JSON.parse(stored);
       return user.id;

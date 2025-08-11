@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { safeLocalStorage, safeWindow } from '@/lib/utils/browser';
 
 interface Lab {
   id: string;
@@ -47,9 +48,9 @@ export function LabProvider({ children }: { children: ReactNode }) {
             setUserLabs(userData.labs);
             setHasMultipleLabs(userData.labs.length > 1);
             
-            // Get stored lab preference from localStorage
-            const storedLabId = localStorage.getItem('selectedLabId');
-            const storedAllLabsMode = localStorage.getItem('allLabsMode') === 'true';
+            // Get stored lab preference from safeLocalStorage (SSR-safe)
+            const storedLabId = safeLocalStorage.getItem('selectedLabId');
+            const storedAllLabsMode = safeLocalStorage.getItem('allLabsMode') === 'true';
             
             if (storedAllLabsMode && userData.labs.length > 1) {
               // If all labs mode was selected and user has multiple labs
@@ -65,13 +66,13 @@ export function LabProvider({ children }: { children: ReactNode }) {
                 // Default to first user lab if stored lab not found
                 setCurrentLab(userData.labs[0]);
                 setAllLabsMode(false);
-                localStorage.setItem('selectedLabId', userData.labs[0].id);
+                safeLocalStorage.setItem('selectedLabId', userData.labs[0].id);
               }
             } else {
               // Default to first user lab
               setCurrentLab(userData.labs[0]);
               setAllLabsMode(false);
-              localStorage.setItem('selectedLabId', userData.labs[0].id);
+              safeLocalStorage.setItem('selectedLabId', userData.labs[0].id);
             }
           }
         }
@@ -95,31 +96,31 @@ export function LabProvider({ children }: { children: ReactNode }) {
   const handleSetCurrentLab = (lab: Lab | null) => {
     setCurrentLab(lab);
     if (lab) {
-      localStorage.setItem('selectedLabId', lab.id);
-      localStorage.removeItem('allLabsMode');
+      safeLocalStorage.setItem('selectedLabId', lab.id);
+      safeLocalStorage.removeItem('allLabsMode');
       setAllLabsMode(false);
     } else {
-      localStorage.removeItem('selectedLabId');
-      localStorage.setItem('allLabsMode', 'true');
+      safeLocalStorage.removeItem('selectedLabId');
+      safeLocalStorage.setItem('allLabsMode', 'true');
       setAllLabsMode(true);
     }
     // Trigger a custom event so other components can react
-    window.dispatchEvent(new CustomEvent('labChanged', { detail: lab }));
+    safeWindow.dispatchEvent(new CustomEvent('labChanged', { detail: lab }));
   };
 
   const handleSetAllLabsMode = (enabled: boolean) => {
     setAllLabsMode(enabled);
     if (enabled) {
       setCurrentLab(null);
-      localStorage.removeItem('selectedLabId');
-      localStorage.setItem('allLabsMode', 'true');
-      window.dispatchEvent(new CustomEvent('labChanged', { detail: null }));
+      safeLocalStorage.removeItem('selectedLabId');
+      safeLocalStorage.setItem('allLabsMode', 'true');
+      safeWindow.dispatchEvent(new CustomEvent('labChanged', { detail: null }));
     } else if (userLabs.length > 0) {
       // When disabling all labs mode, select the first user lab
       setCurrentLab(userLabs[0]);
-      localStorage.setItem('selectedLabId', userLabs[0].id);
-      localStorage.removeItem('allLabsMode');
-      window.dispatchEvent(new CustomEvent('labChanged', { detail: userLabs[0] }));
+      safeLocalStorage.setItem('selectedLabId', userLabs[0].id);
+      safeLocalStorage.removeItem('allLabsMode');
+      safeWindow.dispatchEvent(new CustomEvent('labChanged', { detail: userLabs[0] }));
     }
   };
 

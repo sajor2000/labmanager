@@ -142,15 +142,17 @@ export function TranscriptArchive({ labId, className }: TranscriptArchiveProps) 
           ?.split('filename=')[1]
           ?.replace(/"/g, '') || 'transcript.txt';
         
-        // Create download link
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        // Create download link (SSR-safe)
+        if (typeof window !== 'undefined') {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }
         
         showToast({
           type: 'success',

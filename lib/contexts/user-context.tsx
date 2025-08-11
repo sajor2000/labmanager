@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { safeLocalStorage } from '@/lib/utils/browser';
 
 export interface SelectedUser {
   id: string;
@@ -34,17 +35,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [selectedUser, setSelectedUserState] = useState<SelectedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from localStorage on mount
+  // Load user from localStorage on mount (SSR-safe)
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem(STORAGE_KEY);
+      const storedUser = safeLocalStorage.getItem(STORAGE_KEY);
       if (storedUser) {
         const user = JSON.parse(storedUser);
         setSelectedUserState(user);
       }
     } catch (error) {
       console.error('Error loading stored user:', error);
-      localStorage.removeItem(STORAGE_KEY);
+      safeLocalStorage.removeItem(STORAGE_KEY);
     }
     setIsLoading(false);
   }, []);
@@ -54,12 +55,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     
     if (user) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+        safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(user));
       } catch (error) {
         console.error('Error storing user:', error);
       }
     } else {
-      localStorage.removeItem(STORAGE_KEY);
+      safeLocalStorage.removeItem(STORAGE_KEY);
     }
   };
 
