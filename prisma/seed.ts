@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Starting database seed...');
+  console.log('Starting database seed with real team members...');
 
   // Create default lab
   const healthEquityLab = await prisma.lab.upsert({
@@ -23,66 +23,126 @@ async function main() {
   // Hash password for all users
   const hashedPassword = await bcrypt.hash('LabSync2025!', 10);
 
-  // Create users
+  // Create real team members with proper admin roles
   const users = [
     {
-      email: 'juan_rojas@rush.edu',
-      firstName: 'Juan',
+      email: 'Juan_rojas@rush.edu',
+      firstName: 'J.C.',
       lastName: 'Rojas',
-      name: 'Juan Rojas',
-      initials: 'JR',
-      role: UserRole.CLINICAL_RESEARCH_COORDINATOR,
-      expertise: ['Community Health', 'Data Collection', 'Study Coordination'],
-      isAdmin: false,
-    },
-    {
-      email: 'mia.thompson@rush.edu',
-      firstName: 'Mia',
-      lastName: 'Thompson',
-      name: 'Dr. Mia Thompson',
-      initials: 'MT',
+      name: 'J.C. Rojas',
+      initials: 'JCR',
       role: UserRole.PRINCIPAL_INVESTIGATOR,
-      expertise: ['Health Equity', 'Public Health', 'Research Design'],
-      isAdmin: true,
+      expertise: ['Critical Care', 'Clinical Research', 'Grant Writing', 'Health Equity'],
+      isAdmin: true, // PI should be admin
     },
     {
-      email: 'sarah.johnson@rush.edu',
-      firstName: 'Sarah',
-      lastName: 'Johnson',
-      name: 'Sarah Johnson',
-      initials: 'SJ',
+      email: 'Kevin_Buell@rush.edu',
+      firstName: 'Kevin',
+      lastName: 'Buell',
+      name: 'Kevin Buell',
+      initials: 'KB',
+      role: UserRole.PRINCIPAL_INVESTIGATOR,
+      expertise: ['Critical Care', 'Medical Education', 'Clinical Research'],
+      isAdmin: true, // PI should be admin
+    },
+    {
+      email: 'Mia_R_McClintic@rush.edu',
+      firstName: 'Mia',
+      lastName: 'McClintic',
+      name: 'Mia R. McClintic',
+      initials: 'MRM',
+      role: UserRole.REGULATORY_COORDINATOR,
+      expertise: ['IRB Submissions', 'Regulatory Compliance', 'Documentation', 'FDA Regulations'],
+      isAdmin: true, // Mia should be admin as requested
+    },
+    {
+      email: 'Jason_Stanghelle@rush.edu',
+      firstName: 'Jason',
+      lastName: 'Stanghelle',
+      name: 'Jason Stanghelle',
+      initials: 'JS',
       role: UserRole.DATA_ANALYST,
-      expertise: ['Statistical Analysis', 'Data Visualization', 'R Programming'],
+      expertise: ['Statistical Analysis', 'Data Visualization', 'Health Equity Research'],
       isAdmin: false,
     },
     {
-      email: 'david.chen@rush.edu',
-      firstName: 'David',
-      lastName: 'Chen',
-      name: 'Dr. David Chen',
-      initials: 'DC',
-      role: UserRole.CO_PRINCIPAL_INVESTIGATOR,
-      expertise: ['Biostatistics', 'Epidemiology', 'Clinical Trials'],
-      isAdmin: true,
+      email: 'Jada_J_Sherrod@rush.edu',
+      firstName: 'Jada',
+      lastName: 'Sherrod',
+      name: 'Jada J. Sherrod',
+      initials: 'JJS',
+      role: UserRole.STAFF_COORDINATOR,
+      expertise: ['Project Management', 'Team Coordination', 'Study Operations'],
+      isAdmin: false,
     },
     {
-      email: 'admin@rush.edu',
-      firstName: 'Lab',
-      lastName: 'Administrator',
-      name: 'Lab Administrator',
-      initials: 'LA',
-      role: UserRole.STAFF_COORDINATOR,
-      expertise: ['Lab Management', 'Administration', 'Coordination'],
-      isAdmin: true,
+      email: 'MeherSapna_Masanpally@rush.edu',
+      firstName: 'Meher Sapna',
+      lastName: 'Masanpally',
+      name: 'Meher Sapna Masanpally',
+      initials: 'MSM',
+      role: UserRole.DATA_ANALYST,
+      expertise: ['Data Analysis', 'Machine Learning', 'Predictive Modeling'],
+      isAdmin: false,
+    },
+    {
+      email: 'kianmokhlesi@gmail.com',
+      firstName: 'Kian',
+      lastName: 'Mokhlesi',
+      name: 'Kian Mokhlesi',
+      initials: 'KM',
+      role: UserRole.MEDICAL_STUDENT,
+      expertise: ['Clinical Research', 'Data Collection'],
+      isAdmin: false,
+    },
+    {
+      email: 'dariushmokhlesi@gmail.com',
+      firstName: 'Dariush',
+      lastName: 'Mokhlesi',
+      name: 'Dariush Mokhlesi',
+      initials: 'DM',
+      role: UserRole.MEDICAL_STUDENT,
+      expertise: ['Clinical Research', 'Literature Review'],
+      isAdmin: false,
+    },
+    {
+      email: 'Connor_P_Lafeber@rush.edu',
+      firstName: 'Connor',
+      lastName: 'Lafeber',
+      name: 'Connor P. Lafeber',
+      initials: 'CPL',
+      role: UserRole.FELLOW,
+      expertise: ['Critical Care', 'Clinical Trials', 'Medical Writing'],
+      isAdmin: false,
+    },
+    {
+      email: 'Vaishvik_Chaudhari@rush.edu',
+      firstName: 'Vaishvik',
+      lastName: 'Chaudhari',
+      name: 'Vaishvik Chaudhari',
+      initials: 'VC',
+      role: UserRole.DATA_SCIENTIST,
+      expertise: ['Machine Learning', 'AI/LLM', 'Predictive Modeling', 'Deep Learning'],
+      isAdmin: false,
+    },
+    {
+      email: 'Hoda_MasteriFarahani@rush.edu',
+      firstName: 'Hoda',
+      lastName: 'Masteri',
+      name: 'Hoda Masteri',
+      initials: 'HM',
+      role: UserRole.DATA_ANALYST,
+      expertise: ['EHR Data', 'Clinical Analytics', 'REDCap', 'Healthcare Data'],
+      isAdmin: false,
     },
   ];
 
   for (const userData of users) {
     const user = await prisma.user.upsert({
-      where: { email: userData.email },
+      where: { email: userData.email.toLowerCase() },
       update: {},
       create: {
-        email: userData.email,
+        email: userData.email.toLowerCase(),
         firstName: userData.firstName,
         lastName: userData.lastName,
         name: userData.name,
@@ -94,7 +154,7 @@ async function main() {
       },
     });
 
-    // Add user to lab
+    // Add user to lab with proper admin permissions
     await prisma.labMember.upsert({
       where: {
         userId_labId: {
@@ -102,7 +162,9 @@ async function main() {
           labId: healthEquityLab.id,
         },
       },
-      update: {},
+      update: {
+        isAdmin: userData.isAdmin,
+      },
       create: {
         userId: user.id,
         labId: healthEquityLab.id,
@@ -112,7 +174,7 @@ async function main() {
       },
     });
 
-    console.log(`Created user: ${user.name} (${user.email})`);
+    console.log(`Created user: ${user.name} (${user.email}) - Admin: ${userData.isAdmin}`);
   }
 
   // Create sample buckets
@@ -200,9 +262,9 @@ async function main() {
     where: { labId: healthEquityLab.id }
   });
 
-  // Get the PI user to be the creator of projects
+  // Get J.C. Rojas as the creator of projects
   const piUser = await prisma.user.findFirst({
-    where: { email: 'mia.thompson@rush.edu' }
+    where: { email: 'juan_rojas@rush.edu' }
   });
 
   if (!piUser) {
@@ -223,16 +285,19 @@ async function main() {
     console.log(`Created project: ${project.name}`);
   }
 
-  console.log('Database seed completed successfully!');
-  console.log('\n📝 Login Credentials:');
-  console.log('====================');
-  console.log('Admin User:');
-  console.log('  Email: mia.thompson@rush.edu');
-  console.log('  Password: LabSync2025!');
-  console.log('\nRegular User:');
-  console.log('  Email: juan_rojas@rush.edu');
-  console.log('  Password: LabSync2025!');
-  console.log('\nAll users share the same password: LabSync2025!');
+  console.log('\n✅ Database seed completed successfully!');
+  console.log('\n📝 Login Credentials for Real Team Members:');
+  console.log('=========================================');
+  console.log('\n🔑 Admin Users (Full Access):');
+  console.log('  J.C. Rojas: Juan_rojas@rush.edu / LabSync2025!');
+  console.log('  Kevin Buell: Kevin_Buell@rush.edu / LabSync2025!');
+  console.log('  Mia McClintic: Mia_R_McClintic@rush.edu / LabSync2025!');
+  console.log('\n👥 Regular Team Members:');
+  console.log('  Jason Stanghelle: Jason_Stanghelle@rush.edu / LabSync2025!');
+  console.log('  Jada Sherrod: Jada_J_Sherrod@rush.edu / LabSync2025!');
+  console.log('  And others...');
+  console.log('\n⚠️  All users share the same password: LabSync2025!');
+  console.log('⚠️  Please change your password after first login.');
 }
 
 main()
