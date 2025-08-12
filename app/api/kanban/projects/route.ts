@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/utils/get-current-user';
+import { auth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const bucketId = searchParams.get('bucketId');
     const assigneeId = searchParams.get('assigneeId');
     const priority = searchParams.get('priority');
-    const labId = searchParams.get('labId') || user.labs?.[0]?.lab?.id;
+    const labId = searchParams.get('labId') || session.user.labs?.[0]?.id;
 
     if (!labId) {
       return NextResponse.json({ error: 'No lab selected' }, { status: 400 });
