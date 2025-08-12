@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,8 +27,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { showToast } from '@/components/ui/toast';
-import { useCurrentUser } from '@/hooks/use-current-user';
-import { useUser } from '@/lib/contexts/user-context';
 import { cn } from '@/lib/utils';
 
 interface UserProfileDropdownProps {
@@ -36,11 +35,12 @@ interface UserProfileDropdownProps {
 }
 
 export function UserProfileDropdown({ className, showFullProfile = true }: UserProfileDropdownProps) {
-  const { user } = useCurrentUser();
-  const { clearUser } = useUser();
+  const { data: session, status } = useSession();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  
+  const user = session?.user;
   
   // Prevent hydration mismatch
   useEffect(() => {
@@ -61,8 +61,9 @@ export function UserProfileDropdown({ className, showFullProfile = true }: UserP
   
   const handleSignOut = async () => {
     try {
-      // Clear the user selection
-      clearUser();
+      await signOut({ 
+        redirect: false 
+      });
       
       showToast({
         type: 'success',
@@ -70,8 +71,8 @@ export function UserProfileDropdown({ className, showFullProfile = true }: UserP
         message: 'You have been signed out successfully',
       });
       
-      // Redirect to auth page
-      router.push('/auth');
+      // Redirect to login page
+      router.push('/login');
     } catch (error) {
       showToast({
         type: 'error',
@@ -90,14 +91,14 @@ export function UserProfileDropdown({ className, showFullProfile = true }: UserP
     });
   };
   
-  if (!user) {
-    return null; // Don't show dropdown if no user
+  if (status === 'loading' || !user) {
+    return null; // Don't show dropdown if no user or still loading
   }
   
   const roleLabel = user.role
-    .split('_')
+    ?.split('_')
     .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-    .join(' ');
+    .join(' ') || 'User';
   
   if (!mounted) {
     return (

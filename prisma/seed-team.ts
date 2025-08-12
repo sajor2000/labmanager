@@ -1,5 +1,6 @@
 import { PrismaClient, UserRole } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -387,6 +388,10 @@ async function createRolePermissions() {
 async function seedTeam() {
   console.log('🌱 Starting enhanced team roster seeding...');
   
+  // Default password for all users - should be changed on first login
+  const defaultPassword = 'LabSync2025!';
+  const hashedPassword = await bcrypt.hash(defaultPassword, 12);
+  
   try {
     // First ensure labs exist with enhanced data
     const labs = await Promise.all([
@@ -451,7 +456,8 @@ async function seedTeam() {
           ...userData,
           name: `${member.firstName}${middleName ? ' ' + middleName : ''} ${member.lastName}`,
           middleName,
-          avatar: generateAvatarColor(member.initials)
+          avatar: generateAvatarColor(member.initials),
+          password: hashedPassword // Add password to existing users
         },
         create: {
           ...userData,
@@ -459,6 +465,7 @@ async function seedTeam() {
           name: `${member.firstName}${middleName ? ' ' + middleName : ''} ${member.lastName}`,
           middleName,
           avatar: generateAvatarColor(member.initials),
+          password: hashedPassword, // Add password to new users
           isActive: true
         }
       });
@@ -619,6 +626,8 @@ async function seedTeam() {
     console.log(`   - Lab Memberships: ${labMemberCount}`);
     console.log(`   - Buckets: ${bucketCount}`);
     console.log(`   - Role Permissions: ${rolePermissionCount}`);
+    console.log('\n⚠️  Default password for all users: LabSync2025!');
+    console.log('⚠️  Please inform users to change their passwords after first login');
     
   } catch (error) {
     console.error('❌ Error seeding enhanced team roster:', error);

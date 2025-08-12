@@ -8,6 +8,15 @@ import {
 } from '@/lib/security/middleware';
 import { logger } from '@/lib/utils/production-logger';
 
+// Public routes that don't require authentication
+const publicRoutes = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/api/auth',
+];
+
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   
@@ -16,8 +25,34 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check authentication for protected routes
+  const isPublicRoute = publicRoutes.some(route => path.startsWith(route));
+  
+  if (!isPublicRoute && !path.startsWith('/api/')) {
+    // Check for session cookie instead of invoking auth in middleware
+    const sessionCookie = req.cookies.get('authjs.session-token') || req.cookies.get('__Secure-authjs.session-token');
+    
+    if (!sessionCookie) {
+      // Redirect to login page
+      const loginUrl = new URL('/login', req.url);
+      loginUrl.searchParams.set('callbackUrl', path);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   // Apply security middleware for API routes
   if (path.startsWith('/api/')) {
+    // Skip auth check for auth-related API routes
+    if (!path.startsWith('/api/auth')) {
+      const sessionCookie = req.cookies.get('authjs.session-token') || req.cookies.get('__Secure-authjs.session-token');
+      if (!sessionCookie) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+    }
+    
     try {
       return await securityMiddleware(req);
     } catch (error) {

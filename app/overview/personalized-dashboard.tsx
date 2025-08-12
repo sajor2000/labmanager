@@ -248,27 +248,31 @@ export function PersonalizedDashboard({ selectedUser }: PersonalizedDashboardPro
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Assigned Tasks"
-          value={dashboardData.metrics.assignedTasks}
-          description="Tasks requiring your attention"
-          icon={<CheckSquare className="h-5 w-5" />}
+          value={dashboardData.metrics.assignedTasks.toString()}
+          subtitle="Tasks requiring your attention"
+          icon={CheckSquare}
+          color="blue"
         />
         <MetricCard
           title="Completed Tasks"
-          value={dashboardData.metrics.completedTasks}
-          description="Tasks completed this month"
-          icon={<Activity className="h-5 w-5" />}
+          value={dashboardData.metrics.completedTasks.toString()}
+          subtitle="Tasks completed this month"
+          icon={Activity}
+          color="green"
         />
         <MetricCard
           title="Active Projects"
-          value={dashboardData.metrics.activeProjects}
-          description="Projects you're involved in"
-          icon={<BookOpen className="h-5 w-5" />}
+          value={dashboardData.metrics.activeProjects.toString()}
+          subtitle="Projects you're involved in"
+          icon={BookOpen}
+          color="purple"
         />
         <MetricCard
           title="Upcoming Deadlines"
-          value={dashboardData.metrics.upcomingDeadlines}
-          description="Deadlines in the next 7 days"
-          icon={<AlertCircle className="h-5 w-5" />}
+          value={dashboardData.metrics.upcomingDeadlines.toString()}
+          subtitle="Deadlines in the next 7 days"
+          icon={AlertCircle}
+          color="amber"
         />
       </div>
 

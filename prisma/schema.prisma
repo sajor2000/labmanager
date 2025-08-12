@@ -14,6 +14,7 @@ model User {
   name                  String
   firstName             String                 @default("") @map("firstName")
   lastName              String                 @default("") @map("lastName")
+  password              String?                // Hashed password for authentication
   role                  UserRole               @default(VOLUNTEER_RESEARCH_ASSISTANT)
   avatar                String?
   avatarUrl             String?                @map("avatarUrl")
@@ -52,6 +53,7 @@ model User {
   timeEntries           TimeEntry[]            @relation("TimeTracker")
   presence              UserPresence[]
   viewConfigurations    ViewConfiguration[]
+  passwordResetTokens   PasswordResetToken[]
 }
 
 model Lab {
@@ -730,6 +732,20 @@ model UserPresence {
 
   @@unique([userId, entityType, entityId])
   @@index([entityType, entityId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("userId")
+  email     String
+  expiresAt DateTime
+  createdAt DateTime @default(now()) @map("createdAt")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 enum UserRole {

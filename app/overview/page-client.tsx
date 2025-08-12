@@ -1,33 +1,37 @@
 'use client';
 
 import { PersonalizedDashboard } from './personalized-dashboard';
-import { UserSelector } from '@/components/user-selector';
-import { useState } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  labs?: Array<{
-    id: string;
-    name: string;
-    shortName: string;
-    isAdmin: boolean;
-  }>;
-}
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export default function OverviewPageClient() {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  // Always show user selector and personalized dashboard - no auth required
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return null; // Will redirect to login
+  }
+
+  // Pass the authenticated user to PersonalizedDashboard
   return (
     <div className="p-6 space-y-6">
-      <UserSelector 
-        selectedUser={selectedUser}
-        onUserSelect={setSelectedUser}
-      />
-      <PersonalizedDashboard selectedUser={selectedUser} />
+      <PersonalizedDashboard selectedUser={session?.user || null} />
     </div>
   );
 }
