@@ -4,9 +4,10 @@ import { prisma } from '@/lib/prisma';
 // GET /api/comments/[id]/replies - Get all replies for a comment
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -17,7 +18,7 @@ export async function GET(
     // Check if parent comment exists
     const parentComment = await prisma.comment.findUnique({
       where: { 
-        id: params.id,
+        id: id,
         isDeleted: false,
       },
       select: { id: true },
@@ -118,7 +119,7 @@ export async function GET(
     const [replies, total] = await Promise.all([
       prisma.comment.findMany({
         where: {
-          parentId: params.id,
+          parentId: id,
           isDeleted: false,
         },
         include: includeObject,
@@ -130,7 +131,7 @@ export async function GET(
       }),
       prisma.comment.count({
         where: {
-          parentId: params.id,
+          parentId: id,
           isDeleted: false,
         },
       }),

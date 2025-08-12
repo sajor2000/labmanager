@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
+import { auditDelete, auditUpdate } from '@/lib/audit/logger';
 
 // GET /api/comments/[id] - Get a single comment with replies
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const comment = await prisma.comment.findUnique({
       where: {
-        id: params.id,
+        id: id,
         isDeleted: false,
       },
       include: {
@@ -112,9 +115,10 @@ export async function GET(
 // PUT /api/comments/[id] - Update a comment
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { content, userId } = body;
 
@@ -127,7 +131,7 @@ export async function PUT(
 
     // Check if comment exists and user is the author
     const existingComment = await prisma.comment.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { authorId: true, isDeleted: true },
     });
 
@@ -174,7 +178,7 @@ export async function PUT(
     const updatedComment = await prisma.$transaction(async (tx) => {
       // Update the comment
       const comment = await tx.comment.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           content,
           editedAt: new Date(),
@@ -183,14 +187,14 @@ export async function PUT(
 
       // Remove old mentions
       await tx.mention.deleteMany({
-        where: { commentId: params.id },
+        where: { commentId: id },
       });
 
       // Create new mentions
       if (mentionedUsers.length > 0) {
         await tx.mention.createMany({
           data: mentionedUsers.map((user) => ({
-            commentId: params.id,
+            commentId: id,
             userId: user.id,
           })),
         });
@@ -214,7 +218,7 @@ export async function PUT(
 
       // Return updated comment with all relations
       return await tx.comment.findUnique({
-        where: { id: params.id },
+        where: { id: id },
         include: {
           author: {
             select: {
@@ -266,24 +270,27 @@ export async function PUT(
 // DELETE /api/comments/[id] - Soft delete a comment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = request.headers.get('x-selected-user-id');
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User authentication required' },
-        { status: 401 }
-      );
+    const { id } = await params;
+    
+    // Check authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
     }
+    const user = authResult;
 
-    // Check if comment exists and user is the author
+    // Check if comment exists and get details
     const existingComment = await prisma.comment.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { 
         authorId: true, 
         isDeleted: true,
+        content: true,
+        commentableType: true,
+        commentableId: true,
         _count: {
           select: {
             replies: {
@@ -310,7 +317,8 @@ export async function DELETE(
       );
     }
 
-    if (existingComment.authorId !== userId) {
+    // Check if user can delete this comment (author only for comments)
+    if (existingComment.authorId !== user.id) {
       return NextResponse.json(
         { error: 'You can only delete your own comments' },
         { status: 403 }
@@ -319,7 +327,7 @@ export async function DELETE(
 
     // Soft delete the comment
     const deletedComment = await prisma.comment.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         isDeleted: true,
         // If there are active replies, keep content as "[deleted]"
@@ -331,6 +339,17 @@ export async function DELETE(
         isDeleted: true,
       },
     });
+    
+    // Create audit log
+    await auditDelete(
+      user.id,
+      'comment',
+      id,
+      existingComment.content?.substring(0, 50), // First 50 chars as name
+      undefined, // Comments don't have a direct lab association
+      request,
+      true // isSoftDelete
+    );
 
     return NextResponse.json({
       message: 'Comment deleted successfully',

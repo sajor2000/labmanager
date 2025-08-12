@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { requireAuth, requireLabAdmin } from '@/lib/auth-helpers';
+import { auditDelete, auditCreate, auditUpdate } from '@/lib/audit/logger';
+import { checkRateLimit, getClientIp } from '@/lib/security/middleware';
 
 // Validation schema for adding a member
 const AddMemberSchema = z.object({
@@ -237,14 +240,38 @@ export async function PUT(
   }
 }
 
-// DELETE /api/labs/[labId]/members/[userId] - Remove a member from the lab
+// DELETE /api/labs/[labId]/members/[userId] - Remove a member from the lab (requires lab admin)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { labId: string } }
 ) {
   try {
-    // TODO: Add auth when NextAuth is configured
-    const mockUserId = 'default-user-id';
+    // Apply rate limiting for DELETE operations
+    const ip = getClientIp(request);
+    if (!checkRateLimit(ip, true)) {
+      return NextResponse.json(
+        { 
+          error: 'Too many delete requests. Please try again later.',
+          message: 'Rate limit: 5 delete requests per minute',
+          retryAfter: 60
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': '60',
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Window': '60s'
+          }
+        }
+      );
+    }
+
+    // Check authentication and require lab admin
+    const authResult = await requireLabAdmin(request, params.labId);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const currentUser = authResult;
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -253,22 +280,40 @@ export async function DELETE(
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // Check if user is admin of this lab
-    const membership = await prisma.labMember.findUnique({
+    // Get the member to be removed
+    const memberToRemove = await prisma.labMember.findUnique({
       where: {
         userId_labId: {
-          userId: mockUserId,
+          userId: userId,
           labId: params.labId,
+        }
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          }
         }
       }
     });
 
-    if (!membership || !membership.isAdmin) {
-      // TODO: Add permission check when auth is configured
+    if (!memberToRemove) {
+      return NextResponse.json(
+        { error: 'Member not found in this lab' },
+        { status: 404 }
+      );
     }
 
-    // TODO: Add last admin check when auth is configured
-    if (false) {
+    if (!memberToRemove.isActive) {
+      return NextResponse.json(
+        { error: 'Member is already inactive' },
+        { status: 400 }
+      );
+    }
+
+    // Prevent removing yourself if you're the last admin
+    if (userId === currentUser.id && memberToRemove.isAdmin) {
       const adminCount = await prisma.labMember.count({
         where: {
           labId: params.labId,
@@ -279,10 +324,47 @@ export async function DELETE(
 
       if (adminCount === 1) {
         return NextResponse.json(
-          { error: 'Cannot remove the last admin from the lab' },
+          { error: 'Cannot remove yourself as the last admin. Promote another member first.' },
           { status: 400 }
         );
       }
+    }
+
+    // Check if member has active assignments
+    const activeAssignments = await prisma.projectMember.count({
+      where: {
+        userId: userId,
+        project: {
+          labId: params.labId,
+          isActive: true,
+        }
+      }
+    });
+
+    const activeTasks = await prisma.taskAssignment.count({
+      where: {
+        userId: userId,
+        task: {
+          project: {
+            labId: params.labId,
+          },
+          isActive: true,
+        }
+      }
+    });
+
+    if (activeAssignments > 0 || activeTasks > 0) {
+      return NextResponse.json(
+        { 
+          error: 'Cannot remove member with active assignments',
+          details: {
+            activeProjects: activeAssignments,
+            activeTasks: activeTasks,
+          },
+          message: 'Please reassign or remove their tasks and project memberships first.'
+        },
+        { status: 400 }
+      );
     }
 
     // Soft delete by setting isActive to false
@@ -298,7 +380,21 @@ export async function DELETE(
       }
     });
 
-    return NextResponse.json({ success: true });
+    // Create audit log
+    await auditDelete(
+      currentUser.id,
+      'lab_member',
+      userId,
+      memberToRemove.user.name || memberToRemove.user.email,
+      params.labId,
+      request,
+      true // soft delete
+    );
+
+    return NextResponse.json({ 
+      success: true,
+      message: `${memberToRemove.user.name || memberToRemove.user.email} has been removed from the lab`
+    });
   } catch (error) {
     console.error('Error removing lab member:', error);
     return NextResponse.json(

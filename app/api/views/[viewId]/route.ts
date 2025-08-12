@@ -1,28 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
+import { auditDelete } from '@/lib/audit/logger';
+import { checkRateLimit, getClientIp } from '@/lib/security/middleware';
 
-// DELETE /api/views/[viewId] - Delete a view
+// DELETE /api/views/[viewId] - Delete a view (requires authentication)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ viewId: string }> }
 ) {
   try {
+    // Apply rate limiting for DELETE operations
+    const ip = getClientIp(request);
+    if (!checkRateLimit(ip, true)) {
+      return NextResponse.json(
+        { 
+          error: 'Too many delete requests. Please try again later.',
+          message: 'Rate limit: 5 delete requests per minute',
+          retryAfter: 60
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': '60',
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Window': '60s'
+          }
+        }
+      );
+    }
+
+    // Check authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const user = authResult;
+
     const { viewId } = await params;
-    const userId = request.headers.get('x-selected-user-id');
 
     // Check if the view exists and user has permission to delete
     const view = await prisma.project.findUnique({
       where: { id: viewId },
       select: {
         id: true,
+        name: true,
         createdById: true,
+        bucketId: true,
         bucket: {
           select: {
+            labId: true,
             lab: {
               select: {
+                name: true,
                 members: {
-                  where: userId ? { userId } : undefined,
-                  select: { role: true },
+                  where: { 
+                    userId: user.id,
+                    isActive: true
+                  },
+                  select: { 
+                    isAdmin: true 
+                  },
                 },
               },
             },
@@ -39,11 +77,10 @@ export async function DELETE(
     }
 
     // Check permission - creator or lab admin can delete
-    const isCreator = view.createdById === userId;
-    const isAdmin = view.bucket?.lab?.members?.[0]?.role === 'PI' || 
-                    view.bucket?.lab?.members?.[0]?.role === 'LAB_MANAGER';
+    const isCreator = view.createdById === user.id;
+    const isLabAdmin = view.bucket?.lab?.members?.[0]?.isAdmin === true;
 
-    if (!isCreator && !isAdmin) {
+    if (!isCreator && !isLabAdmin) {
       return NextResponse.json(
         { error: 'You do not have permission to delete this view' },
         { status: 403 }
@@ -55,8 +92,22 @@ export async function DELETE(
       where: { id: viewId },
     });
 
+    // Create audit log
+    await auditDelete(
+      user.id,
+      'view',
+      viewId,
+      view.name,
+      view.bucket?.labId || undefined,
+      request,
+      false // hard delete
+    );
+
     return NextResponse.json(
-      { message: 'View deleted successfully' },
+      { 
+        success: true,
+        message: 'View deleted successfully' 
+      },
       { status: 200 }
     );
   } catch (error) {

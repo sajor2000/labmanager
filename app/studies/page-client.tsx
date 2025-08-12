@@ -24,6 +24,7 @@ import { CreateStudyDialog } from '@/components/studies/create-study-dialog';
 import { StudyDetailsDialog } from '@/components/studies/study-details-dialog';
 import { BulkActionsBar } from '@/components/studies/bulk-actions-bar';
 import { toast } from 'sonner';
+import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-dialog';
 
 type ViewMode = 'grid' | 'table' | 'kanban';
 
@@ -43,6 +44,9 @@ export default function StudiesPageClient() {
   const [selectedStudies, setSelectedStudies] = useState<Set<string>>(new Set());
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedStudy, setSelectedStudy] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [studyToDelete, setStudyToDelete] = useState<string | null>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   // React Query hooks
   const { 
@@ -118,29 +122,41 @@ export default function StudiesPageClient() {
     }
   }, [updateMutation]);
 
-  const handleDeleteStudy = useCallback(async (id: string) => {
-    if (!confirm('Are you sure you want to delete this study?')) return;
+  const handleDeleteStudy = useCallback((id: string) => {
+    setStudyToDelete(id);
+    setDeleteDialogOpen(true);
+  }, []);
+  
+  const confirmDeleteStudy = useCallback(async () => {
+    if (!studyToDelete) return;
     
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(studyToDelete);
       toast.success('Study deleted successfully');
       setSelectedStudy(null);
+      setStudyToDelete(null);
+      setDeleteDialogOpen(false);
     } catch (error) {
       console.error('Failed to delete study:', error);
+      toast.error('Failed to delete study');
     }
-  }, [deleteMutation]);
+  }, [studyToDelete, deleteMutation]);
 
-  const handleBulkDelete = useCallback(async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedStudies.size} studies?`)) return;
-    
+  const handleBulkDelete = useCallback(() => {
+    setBulkDeleteDialogOpen(true);
+  }, []);
+  
+  const confirmBulkDelete = useCallback(async () => {
     try {
       await Promise.all(
         Array.from(selectedStudies).map(id => deleteMutation.mutateAsync(id))
       );
       toast.success(`${selectedStudies.size} studies deleted successfully`);
       setSelectedStudies(new Set());
+      setBulkDeleteDialogOpen(false);
     } catch (error) {
       console.error('Failed to delete studies:', error);
+      toast.error('Failed to delete studies');
     }
   }, [selectedStudies, deleteMutation]);
 
@@ -390,6 +406,24 @@ export default function StudiesPageClient() {
           onDelete={handleDeleteStudy}
         />
       )}
+      
+      {/* Delete Confirmation Dialogs */}
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDeleteStudy}
+        itemName={studies.find(s => s.id === studyToDelete)?.name}
+        isDeleting={deleteMutation.isPending}
+      />
+      
+      <DeleteConfirmationDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        onConfirm={confirmBulkDelete}
+        title="Delete Multiple Studies?"
+        description={`Are you sure you want to delete ${selectedStudies.size} studies? This action cannot be undone.`}
+        isDeleting={deleteMutation.isPending}
+      />
     </div>
   );
 }

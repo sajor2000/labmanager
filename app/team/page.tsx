@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-dialog';
 
 type ViewMode = 'grid' | 'list' | 'workload';
 type TabValue = 'all' | 'active' | 'inactive';
@@ -48,6 +49,8 @@ export default function TeamPage() {
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabValue>('active');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
 
   // React Query hooks
   const { 
@@ -154,18 +157,25 @@ export default function TeamPage() {
     }
   }, [updateMutation]);
 
-  const handleDeleteMember = useCallback(async (id: string) => {
-    const member = members.find(m => m.id === id);
-    if (!member || !confirm(`Remove ${member.name} from the team?`)) return;
+  const handleDeleteMember = useCallback((id: string) => {
+    setMemberToDelete(id);
+    setDeleteDialogOpen(true);
+  }, []);
+  
+  const confirmDeleteMember = useCallback(async () => {
+    if (!memberToDelete) return;
     
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(memberToDelete);
       toast.success('Team member removed successfully');
       setSelectedMember(null);
+      setMemberToDelete(null);
+      setDeleteDialogOpen(false);
     } catch (error) {
       console.error('Failed to remove team member:', error);
+      toast.error('Failed to remove team member');
     }
-  }, [members, deleteMutation]);
+  }, [memberToDelete, deleteMutation]);
 
   const handleAssignTask = useCallback((memberId: string) => {
     toast.info('Opening task assignment dialog...');
@@ -479,6 +489,15 @@ export default function TeamPage() {
           (data) => handleUpdateMember(selectedMember, data) : 
           handleCreateMember
         }
+      />
+      
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDeleteMember}
+        itemName={members.find(m => m.id === memberToDelete)?.name}
+        isDeleting={deleteMutation.isPending}
       />
     </div>
   );

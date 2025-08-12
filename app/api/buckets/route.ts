@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
+import { requireAuth, requireLabAdmin } from '@/lib/auth-helpers';
+import { auditDelete, auditCreate, auditUpdate } from '@/lib/audit/logger';
 
 // Cache configuration
 const CACHE_TTL = 300; // 5 minutes cache for buckets
@@ -162,7 +164,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE /api/buckets - Delete a bucket
+// DELETE /api/buckets - Delete a bucket (requires lab admin)
 export async function DELETE(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -175,7 +177,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    // Check if bucket has projects
+    // Check if bucket exists and get full details
     const bucket = await prisma.bucket.findUnique({
       where: { id },
       include: {
@@ -194,18 +196,46 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
+    // Check authentication and authorization (must be lab admin)
+    const authResult = await requireLabAdmin(request, bucket.labId);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const user = authResult;
+    
+    // Check for dependent projects
     if (bucket._count.projects > 0) {
       return NextResponse.json(
-        { error: 'Cannot delete bucket with projects. Please move or delete projects first.' },
+        { 
+          error: `Cannot delete bucket with ${bucket._count.projects} project(s). Please move or delete projects first.`,
+          dependencies: {
+            projects: bucket._count.projects,
+          }
+        },
         { status: 400 }
       );
     }
 
+    // Delete the bucket
     await prisma.bucket.delete({
       where: { id },
     });
+    
+    // Create audit log
+    await auditDelete(
+      user.id,
+      'bucket',
+      id,
+      bucket.name,
+      bucket.labId,
+      request,
+      false // hard delete
+    );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      message: 'Bucket deleted successfully'
+    });
   } catch (error) {
     console.error('Error deleting bucket:', error);
     return NextResponse.json(

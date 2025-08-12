@@ -25,6 +25,7 @@ import { TaskColumn } from '@/components/tasks/task-column';
 import { CreateTaskDialog } from '@/components/tasks/create-task-dialog';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-dialog';
 
 const TASK_COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: 'todo', title: 'To Do', color: 'bg-gray-500' },
@@ -49,6 +50,8 @@ export default function TasksPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('todo');
   const [isMounted, setIsMounted] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
   // React Query hooks
   const { 
@@ -178,16 +181,24 @@ export default function TasksPage() {
     }
   }, [completeMutation]);
 
-  const handleDeleteTask = useCallback(async (taskId: string) => {
-    if (!confirm('Are you sure you want to delete this task?')) return;
+  const handleDeleteTask = useCallback((taskId: string) => {
+    setTaskToDelete(taskId);
+    setDeleteDialogOpen(true);
+  }, []);
+  
+  const confirmDeleteTask = useCallback(async () => {
+    if (!taskToDelete) return;
     
     try {
-      await deleteMutation.mutateAsync(taskId);
+      await deleteMutation.mutateAsync(taskToDelete);
       toast.success('Task deleted successfully');
+      setTaskToDelete(null);
+      setDeleteDialogOpen(false);
     } catch (error) {
       console.error('Failed to delete task:', error);
+      toast.error('Failed to delete task');
     }
-  }, [deleteMutation]);
+  }, [taskToDelete, deleteMutation]);
 
   // Loading state
   if (labLoading || tasksLoading) {
@@ -438,6 +449,15 @@ export default function TasksPage() {
         defaultStatus={defaultStatus}
         studies={studies}
         teamMembers={teamMembers}
+      />
+      
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDeleteTask}
+        itemName={tasks.find(t => t.id === taskToDelete)?.title}
+        isDeleting={deleteMutation.isPending}
       />
     </div>
   );

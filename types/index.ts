@@ -12,6 +12,18 @@ export * from './standup';
 export * from './bucket';
 export * from './deadline';
 
+// Dashboard types
+export interface DashboardMetrics {
+  totalLabs: number;
+  activeStudies: number;
+  totalStudies: number;
+  projectBuckets: number;
+  tasksCompleted: number;
+  totalTasks: number;
+  upcomingDeadlines: number;
+  recentActivity: number;
+}
+
 // User types
 export type UserRole = 
   | "Principal Investigator"

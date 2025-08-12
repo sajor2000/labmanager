@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
+import { auditDelete, auditUpdate } from '@/lib/audit/logger';
 
 // GET /api/tasks/[taskId] - Get a specific task with assignees
 export async function GET(
@@ -117,12 +119,17 @@ export async function GET(
   }
 }
 
-// PUT /api/tasks/[taskId] - Update a task
+// PUT /api/tasks/[taskId] - Update a task (any lab member can update)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
+    // Require authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const user = authResult;
+    
     const { taskId } = await params;
     const body = await request.json();
     
@@ -256,6 +263,49 @@ export async function DELETE(
   try {
     const { taskId } = await params;
     
+    // Check authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const user = authResult;
+    
+    // Get task details for authorization and audit
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+      include: {
+        project: {
+          select: {
+            labId: true,
+            name: true,
+          }
+        }
+      }
+    });
+    
+    if (!task) {
+      return NextResponse.json(
+        { error: 'Task not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Check if user is a member of the lab (any member can delete)
+    const labMembership = await prisma.labMember.findFirst({
+      where: {
+        userId: user.id,
+        labId: task.project?.labId,
+        isActive: true
+      }
+    });
+    
+    if (!labMembership) {
+      return NextResponse.json(
+        { error: 'You must be a member of this lab to delete tasks' },
+        { status: 403 }
+      );
+    }
+    
     // Soft delete by setting isActive to false
     const deletedTask = await prisma.task.update({
       where: { id: taskId },
@@ -263,6 +313,17 @@ export async function DELETE(
         isActive: false,
       },
     });
+    
+    // Create audit log
+    await auditDelete(
+      user.id,
+      'task',
+      taskId,
+      task.title,
+      task.project?.labId,
+      request,
+      true // isSoftDelete
+    );
 
     return NextResponse.json({
       success: true,

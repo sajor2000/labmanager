@@ -23,6 +23,7 @@ export interface ConfirmationDialogProps {
   cancelText?: string;
   variant?: 'destructive' | 'warning' | 'info';
   loading?: boolean;
+  showWarning?: boolean; // Show "cannot be undone" warning
 }
 
 const variantConfig = {
@@ -53,6 +54,7 @@ export function ConfirmationDialog({
   cancelText = "Cancel",
   variant = 'destructive',
   loading = false,
+  showWarning = true, // Default to showing warning for destructive actions
 }: ConfirmationDialogProps) {
   const config = variantConfig[variant];
   const Icon = config.icon;
@@ -74,8 +76,13 @@ export function ConfirmationDialog({
               <DialogTitle>{title}</DialogTitle>
             </div>
           </div>
-          <DialogDescription className="mt-3 text-left">
-            {description}
+          <DialogDescription className="mt-3 text-left space-y-2">
+            <span>{description}</span>
+            {showWarning && variant === 'destructive' && (
+              <span className="block font-semibold text-red-600 dark:text-red-400">
+                ⚠️ This action cannot be undone.
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
 

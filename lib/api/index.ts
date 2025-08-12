@@ -111,7 +111,7 @@ class ApiClient extends BaseApiClient {
       this.post<Idea>('/api/ideas', data),
     
     update: (id: string, data: UpdateIdeaPayload) => 
-      this.put<Idea>(`/api/ideas/${id}`, data),
+      this.patch<Idea>(`/api/ideas/${id}`, data),
     
     delete: (id: string) => 
       this.delete<{ success: boolean }>(`/api/ideas/${id}`),
@@ -186,7 +186,7 @@ class ApiClient extends BaseApiClient {
       this.post<Deadline>('/api/deadlines', data),
     
     update: (id: string, data: UpdateDeadlinePayload) => 
-      this.put<Deadline>(`/api/deadlines/${id}`, data),
+      this.patch<Deadline>(`/api/deadlines/${id}`, data),
     
     delete: (id: string) => 
       this.delete<{ success: boolean }>(`/api/deadlines/${id}`),
@@ -245,6 +245,30 @@ class ApiClient extends BaseApiClient {
     updateProject: (id: string, data: any) =>
       this.put(`/api/kanban/projects/${id}`, data),
   };
+
+  // Documents
+  documents = {
+    getByEntity: (entityType: string, entityId: string, includeDeleted = false) => 
+      this.get(`/api/documents`, { entityType, entityId, includeDeleted }),
+    
+    upload: (formData: FormData) => 
+      fetch('/api/documents', {
+        method: 'POST',
+        body: formData,
+      }).then(res => res.json()),
+    
+    download: (documentId: string) => 
+      this.get(`/api/documents/${documentId}`),
+    
+    delete: (documentId: string) => 
+      this.delete(`/api/documents/${documentId}`),
+  };
+
+  // Labs
+  labs = {
+    getStorageStats: (labId: string) => 
+      this.get(`/api/labs/${labId}/storage`),
+  };
 }
 
 // Export singleton instance
@@ -252,7 +276,10 @@ export const api = new ApiClient();
 
 // Export cache keys for each domain
 export const cacheKeys = {
-  labs: createCacheKeys('labs'),
+  labs: {
+    ...createCacheKeys('labs'),
+    storage: (id: string) => ['labs', id, 'storage'] as const,
+  },
   studies: createCacheKeys('studies'),
   tasks: createCacheKeys('tasks'),
   ideas: createCacheKeys('ideas'),
@@ -262,10 +289,15 @@ export const cacheKeys = {
   team: createCacheKeys('team'),
   dashboard: createCacheKeys('dashboard'),
   kanban: createCacheKeys('kanban'),
+  documents: {
+    byEntity: (entityType: string, entityId: string) => ['documents', entityType, entityId] as const,
+    detail: (id: string) => ['documents', id] as const,
+  },
 };
 
 // Export stale times
 export { STALE_TIMES };
 
 // Re-export base utilities
-export { ApiError, type ApiClient } from './base';
+export { ApiError } from './base';
+export type { BaseApiClient as ApiClient } from './base';

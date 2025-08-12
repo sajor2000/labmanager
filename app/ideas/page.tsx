@@ -28,6 +28,7 @@ import { IdeaDetailModal } from '@/components/ideas/idea-detail-modal';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-dialog';
 
 type SortOption = 'created' | 'votes' | 'feasibility' | 'impact' | 'priority';
 type ViewMode = 'grid' | 'list' | 'kanban';
@@ -50,6 +51,8 @@ export default function IdeasPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedIdea, setSelectedIdea] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'converted'>('active');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [ideaToDelete, setIdeaToDelete] = useState<string | null>(null);
 
   // React Query hooks
   const { 
@@ -200,17 +203,25 @@ export default function IdeasPage() {
     }
   }, [updateMutation]);
 
-  const handleDelete = useCallback(async (ideaId: string) => {
-    if (!confirm('Are you sure you want to delete this idea?')) return;
+  const handleDelete = useCallback((ideaId: string) => {
+    setIdeaToDelete(ideaId);
+    setDeleteDialogOpen(true);
+  }, []);
+  
+  const confirmDeleteIdea = useCallback(async () => {
+    if (!ideaToDelete) return;
     
     try {
-      await deleteMutation.mutateAsync(ideaId);
+      await deleteMutation.mutateAsync(ideaToDelete);
       toast.success('Idea deleted successfully');
       setSelectedIdea(null);
+      setIdeaToDelete(null);
+      setDeleteDialogOpen(false);
     } catch (error) {
       console.error('Failed to delete idea:', error);
+      toast.error('Failed to delete idea');
     }
-  }, [deleteMutation]);
+  }, [ideaToDelete, deleteMutation]);
 
   // Loading state
   if (labLoading || ideasLoading) {
@@ -495,6 +506,15 @@ export default function IdeasPage() {
           onConvert={handleConvertToStudy}
         />
       )}
+      
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDeleteIdea}
+        itemName={ideas.find(i => i.id === ideaToDelete)?.title}
+        isDeleting={deleteMutation.isPending}
+      />
     </div>
   );
 }

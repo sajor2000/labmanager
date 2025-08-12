@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { handleApiError } from '@/lib/utils/api-error-handler';
 import StandupService from '@/lib/services/standup.service';
+import { requireAuth, requireLabAdmin } from '@/lib/auth-helpers';
+import { auditDelete, auditUpdate } from '@/lib/audit/logger';
+import { prisma } from '@/lib/prisma';
 
 // Validation schema for updating a standup
 const UpdateStandupSchema = z.object({
@@ -84,7 +87,44 @@ export async function DELETE(
         { status: 400 }
       );
     }
+    
+    // Check authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const user = authResult;
+    
+    // Get standup details for authorization
+    const standup = await prisma.standup.findUnique({
+      where: { id: standupId },
+      select: {
+        id: true,
+        labId: true,
+        title: true,
+        lab: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
+    });
+    
+    if (!standup) {
+      return NextResponse.json(
+        { error: 'Standup not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Check if user is lab admin
+    const authCheck = await requireLabAdmin(request, standup.labId);
+    if (authCheck instanceof NextResponse) {
+      return authCheck;
+    }
 
+    // Use the service to delete (which handles soft delete)
     const success = await StandupService.deleteStandup(standupId);
     
     if (!success) {
@@ -93,8 +133,22 @@ export async function DELETE(
         { status: 500 }
       );
     }
+    
+    // Create audit log
+    await auditDelete(
+      user.id,
+      'standup',
+      standupId,
+      standup.title || 'Standup',
+      standup.labId,
+      request,
+      true // soft delete
+    );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      message: 'Standup deleted successfully'
+    });
   } catch (error) {
     return handleApiError(error);
   }

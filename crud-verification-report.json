@@ -1,0 +1,1963 @@
+{
+  "endpoints": [
+    {
+      "file": "app/api/transcripts/route.ts",
+      "method": "GET",
+      "path": "/api/transcripts",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/views/route.ts",
+      "method": "GET",
+      "path": "/api/views",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/views/route.ts",
+      "method": "POST",
+      "path": "/api/views",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/route.ts",
+      "method": "GET",
+      "path": "/api/users",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/route.ts",
+      "method": "POST",
+      "path": "/api/users",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/team/route.ts",
+      "method": "GET",
+      "path": "/api/team",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/team/route.ts",
+      "method": "POST",
+      "path": "/api/team",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/team/route.ts",
+      "method": "PUT",
+      "path": "/api/team",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/team/route.ts",
+      "method": "DELETE",
+      "path": "/api/team",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/tasks/route.ts",
+      "method": "GET",
+      "path": "/api/tasks",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/tasks/route.ts",
+      "method": "POST",
+      "path": "/api/tasks",
+      "hasAuth": true,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/tasks/route.ts",
+      "method": "PUT",
+      "path": "/api/tasks",
+      "hasAuth": true,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/tasks/route.ts",
+      "method": "DELETE",
+      "path": "/api/tasks",
+      "hasAuth": true,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/tasks/route.ts",
+      "method": "PATCH",
+      "path": "/api/tasks",
+      "hasAuth": true,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/studies/route.ts",
+      "method": "GET",
+      "path": "/api/studies",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/studies/route.ts",
+      "method": "POST",
+      "path": "/api/studies",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/search/route.ts",
+      "method": "GET",
+      "path": "/api/search",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/projects/route.ts",
+      "method": "GET",
+      "path": "/api/projects",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/projects/route.ts",
+      "method": "POST",
+      "path": "/api/projects",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/projects/route.ts",
+      "method": "PUT",
+      "path": "/api/projects",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/projects/route.ts",
+      "method": "DELETE",
+      "path": "/api/projects",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/labs/route.ts",
+      "method": "GET",
+      "path": "/api/labs",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/labs/route.ts",
+      "method": "POST",
+      "path": "/api/labs",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/project-types/route.ts",
+      "method": "GET",
+      "path": "/api/project-types",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/logs/route.ts",
+      "method": "POST",
+      "path": "/api/logs",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/logs/route.ts",
+      "method": "GET",
+      "path": "/api/logs",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/logs/route.ts",
+      "method": "DELETE",
+      "path": "/api/logs",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/standups/route.ts",
+      "method": "GET",
+      "path": "/api/standups",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/standups/route.ts",
+      "method": "POST",
+      "path": "/api/standups",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/ideas/route.ts",
+      "method": "GET",
+      "path": "/api/ideas",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/ideas/route.ts",
+      "method": "POST",
+      "path": "/api/ideas",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/ideas/route.ts",
+      "method": "PUT",
+      "path": "/api/ideas",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/ideas/route.ts",
+      "method": "DELETE",
+      "path": "/api/ideas",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/health/route.ts",
+      "method": "GET",
+      "path": "/api/health",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/deadlines/route.ts",
+      "method": "GET",
+      "path": "/api/deadlines",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/deadlines/route.ts",
+      "method": "POST",
+      "path": "/api/deadlines",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/deadlines/route.ts",
+      "method": "PUT",
+      "path": "/api/deadlines",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/deadlines/route.ts",
+      "method": "DELETE",
+      "path": "/api/deadlines",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/dashboard/route.ts",
+      "method": "GET",
+      "path": "/api/dashboard",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/buckets/route.ts",
+      "method": "GET",
+      "path": "/api/buckets",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/buckets/route.ts",
+      "method": "POST",
+      "path": "/api/buckets",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/buckets/route.ts",
+      "method": "PUT",
+      "path": "/api/buckets",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/buckets/route.ts",
+      "method": "DELETE",
+      "path": "/api/buckets",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/buckets/route.ts",
+      "method": "PATCH",
+      "path": "/api/buckets",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/audit-logs/route.ts",
+      "method": "GET",
+      "path": "/api/audit-logs",
+      "hasAuth": true,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/audit-logs/route.ts",
+      "method": "DELETE",
+      "path": "/api/audit-logs",
+      "hasAuth": true,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/comments/route.ts",
+      "method": "GET",
+      "path": "/api/comments",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/comments/route.ts",
+      "method": "POST",
+      "path": "/api/comments",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/transcripts/stats/route.ts",
+      "method": "GET",
+      "path": "/api/transcripts/stats",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/transcripts/cleanup/route.ts",
+      "method": "POST",
+      "path": "/api/transcripts/cleanup",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/transcripts/cleanup/route.ts",
+      "method": "GET",
+      "path": "/api/transcripts/cleanup",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/views/[viewId]/route.ts",
+      "method": "DELETE",
+      "path": "/api/views/:viewId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/views/[viewId]/route.ts",
+      "method": "GET",
+      "path": "/api/views/:viewId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/views/[viewId]/route.ts",
+      "method": "PUT",
+      "path": "/api/views/:viewId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/transcripts/[standupId]/route.ts",
+      "method": "GET",
+      "path": "/api/transcripts/:standupId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/transcripts/[standupId]/route.ts",
+      "method": "DELETE",
+      "path": "/api/transcripts/:standupId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/tasks/[taskId]/route.ts",
+      "method": "GET",
+      "path": "/api/tasks/:taskId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/tasks/[taskId]/route.ts",
+      "method": "PUT",
+      "path": "/api/tasks/:taskId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/tasks/[taskId]/route.ts",
+      "method": "PATCH",
+      "path": "/api/tasks/:taskId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/tasks/[taskId]/route.ts",
+      "method": "DELETE",
+      "path": "/api/tasks/:taskId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/studies/[studyId]/route.ts",
+      "method": "DELETE",
+      "path": "/api/studies/:studyId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/studies/[studyId]/route.ts",
+      "method": "GET",
+      "path": "/api/studies/:studyId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/studies/[studyId]/route.ts",
+      "method": "PATCH",
+      "path": "/api/studies/:studyId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/search/route.ts",
+      "method": "GET",
+      "path": "/api/users/search",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/current/route.ts",
+      "method": "GET",
+      "path": "/api/users/current",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/current/route.ts",
+      "method": "PUT",
+      "path": "/api/users/current",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/[userId]/route.ts",
+      "method": "GET",
+      "path": "/api/users/:userId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/[userId]/route.ts",
+      "method": "PUT",
+      "path": "/api/users/:userId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/[userId]/route.ts",
+      "method": "PATCH",
+      "path": "/api/users/:userId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/[userId]/route.ts",
+      "method": "DELETE",
+      "path": "/api/users/:userId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/labs/[labId]/route.ts",
+      "method": "GET",
+      "path": "/api/labs/:labId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/labs/[labId]/route.ts",
+      "method": "PUT",
+      "path": "/api/labs/:labId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/labs/[labId]/route.ts",
+      "method": "DELETE",
+      "path": "/api/labs/:labId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/standups/transcribe/route.ts",
+      "method": "POST",
+      "path": "/api/standups/transcribe",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/standups/analyze/route.ts",
+      "method": "POST",
+      "path": "/api/standups/analyze",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/ideas/vote/route.ts",
+      "method": "POST",
+      "path": "/api/ideas/vote",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/ideas/vote/route.ts",
+      "method": "GET",
+      "path": "/api/ideas/vote",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/standups/stats/route.ts",
+      "method": "GET",
+      "path": "/api/standups/stats",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/kanban/buckets/route.ts",
+      "method": "GET",
+      "path": "/api/kanban/buckets",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/kanban/projects/route.ts",
+      "method": "GET",
+      "path": "/api/kanban/projects",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/calendar/events/route.ts",
+      "method": "GET",
+      "path": "/api/calendar/events",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/calendar/events/route.ts",
+      "method": "POST",
+      "path": "/api/calendar/events",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/comments/[id]/route.ts",
+      "method": "GET",
+      "path": "/api/comments/:id",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/comments/[id]/route.ts",
+      "method": "PUT",
+      "path": "/api/comments/:id",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/comments/[id]/route.ts",
+      "method": "DELETE",
+      "path": "/api/comments/:id",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/standups/[standupId]/route.ts",
+      "method": "GET",
+      "path": "/api/standups/:standupId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/standups/[standupId]/route.ts",
+      "method": "PUT",
+      "path": "/api/standups/:standupId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/standups/[standupId]/route.ts",
+      "method": "DELETE",
+      "path": "/api/standups/:standupId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/cron/daily-reminder/route.ts",
+      "method": "GET",
+      "path": "/api/cron/daily-reminder",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/cron/daily-reminder/route.ts",
+      "method": "POST",
+      "path": "/api/cron/daily-reminder",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/auth/register/route.ts",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/dashboard/metrics/route.ts",
+      "method": "GET",
+      "path": "/api/dashboard/metrics",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/transcripts/[standupId]/extend/route.ts",
+      "method": "POST",
+      "path": "/api/transcripts/:standupId/extend",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/transcripts/[standupId]/export/route.ts",
+      "method": "GET",
+      "path": "/api/transcripts/:standupId/export",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/tasks/[taskId]/move/route.ts",
+      "method": "POST",
+      "path": "/api/tasks/:taskId/move",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/projects/[projectId]/status/route.ts",
+      "method": "PATCH",
+      "path": "/api/projects/:projectId/status",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/projects/[projectId]/status/route.ts",
+      "method": "GET",
+      "path": "/api/projects/:projectId/status",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/[userId]/avatar/route.ts",
+      "method": "POST",
+      "path": "/api/users/:userId/avatar",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/[userId]/avatar/route.ts",
+      "method": "GET",
+      "path": "/api/users/:userId/avatar",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/users/[userId]/avatar/route.ts",
+      "method": "DELETE",
+      "path": "/api/users/:userId/avatar",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/kanban/projects/[projectId]/route.ts",
+      "method": "PATCH",
+      "path": "/api/kanban/projects/:projectId",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/calendar/events/[id]/route.ts",
+      "method": "PUT",
+      "path": "/api/calendar/events/:id",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/calendar/events/[id]/route.ts",
+      "method": "DELETE",
+      "path": "/api/calendar/events/:id",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/comments/[id]/replies/route.ts",
+      "method": "GET",
+      "path": "/api/comments/:id/replies",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/labs/[labId]/members/route.ts",
+      "method": "GET",
+      "path": "/api/labs/:labId/members",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/labs/[labId]/members/route.ts",
+      "method": "POST",
+      "path": "/api/labs/:labId/members",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/labs/[labId]/members/route.ts",
+      "method": "PUT",
+      "path": "/api/labs/:labId/members",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/labs/[labId]/members/route.ts",
+      "method": "DELETE",
+      "path": "/api/labs/:labId/members",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": false,
+      "isSoftDelete": false,
+      "errors": [
+        "❌ NO AUTHENTICATION - Critical security vulnerability!",
+        "⚠️ No audit logging for delete operation",
+        "⚠️ No cascade protection check"
+      ]
+    },
+    {
+      "file": "app/api/standups/[standupId]/send-email/route.ts",
+      "method": "POST",
+      "path": "/api/standups/:standupId/send-email",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/standups/[standupId]/send-email/route.ts",
+      "method": "GET",
+      "path": "/api/standups/:standupId/send-email",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/auth/forgot-password/route.ts",
+      "method": "POST",
+      "path": "/api/auth/forgot-password",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/auth/reset-password/route.ts",
+      "method": "POST",
+      "path": "/api/auth/reset-password",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/auth/reset-password/route.ts",
+      "method": "GET",
+      "path": "/api/auth/reset-password",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    },
+    {
+      "file": "app/api/standups/[standupId]/process/route.ts",
+      "method": "POST",
+      "path": "/api/standups/:standupId/process",
+      "hasAuth": false,
+      "hasAudit": false,
+      "hasCascadeCheck": true,
+      "isSoftDelete": false,
+      "errors": []
+    }
+  ],
+  "uiComponents": [
+    {
+      "file": "app/team/page.tsx",
+      "component": "page",
+      "hasConfirmDialog": true,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "app/studies/page-client.tsx",
+      "component": "page-client",
+      "hasConfirmDialog": true,
+      "hasWarningText": true,
+      "hasDestructiveStyle": true,
+      "errors": []
+    },
+    {
+      "file": "app/tasks/page.tsx",
+      "component": "page",
+      "hasConfirmDialog": true,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "app/notifications/page.tsx",
+      "component": "page",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "app/login/page.tsx",
+      "component": "page",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "app/labs/page.tsx",
+      "component": "page",
+      "hasConfirmDialog": true,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "app/ideas/page.tsx",
+      "component": "page",
+      "hasConfirmDialog": true,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "app/buckets/page.tsx",
+      "component": "page",
+      "hasConfirmDialog": false,
+      "hasWarningText": true,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "app/studies/[studyId]/page.tsx",
+      "component": "page",
+      "hasConfirmDialog": true,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "app/labs/[labId]/page.tsx",
+      "component": "page",
+      "hasConfirmDialog": true,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/team/team-member-table.tsx",
+      "component": "team-member-table",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/team/team-member-form.tsx",
+      "component": "team-member-form",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/team/team-member-card.tsx",
+      "component": "team-member-card",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/studies/study-table.tsx",
+      "component": "study-table",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/studies/study-details-dialog.tsx",
+      "component": "study-details-dialog",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/studies/study-creation-form.tsx",
+      "component": "study-creation-form",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/studies/studies-data-table.tsx",
+      "component": "studies-data-table",
+      "hasConfirmDialog": true,
+      "hasWarningText": true,
+      "hasDestructiveStyle": true,
+      "errors": []
+    },
+    {
+      "file": "components/studies/kanban-board.tsx",
+      "component": "kanban-board",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/studies/bulk-actions-bar.tsx",
+      "component": "bulk-actions-bar",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/tasks/task-edit-form.tsx",
+      "component": "task-edit-form",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/tasks/task-card.tsx",
+      "component": "task-card",
+      "hasConfirmDialog": true,
+      "hasWarningText": true,
+      "hasDestructiveStyle": true,
+      "errors": []
+    },
+    {
+      "file": "components/tasks/task-board.tsx",
+      "component": "task-board",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/layout/lab-selector.tsx",
+      "component": "lab-selector",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/layout/global-search.tsx",
+      "component": "global-search",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/labs/lab-card-virtualized.tsx",
+      "component": "lab-card-virtualized",
+      "hasConfirmDialog": true,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/ui/toast.tsx",
+      "component": "toast",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/ui/delete-confirmation-dialog.tsx",
+      "component": "delete-confirmation-dialog",
+      "hasConfirmDialog": true,
+      "hasWarningText": true,
+      "hasDestructiveStyle": true,
+      "errors": []
+    },
+    {
+      "file": "components/ui/confirmation-dialog.tsx",
+      "component": "confirmation-dialog",
+      "hasConfirmDialog": true,
+      "hasWarningText": true,
+      "hasDestructiveStyle": true,
+      "errors": []
+    },
+    {
+      "file": "components/ui/avatar-upload.tsx",
+      "component": "avatar-upload",
+      "hasConfirmDialog": true,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/ui/advanced-filter.tsx",
+      "component": "advanced-filter",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/standup/transcript-archive.tsx",
+      "component": "transcript-archive",
+      "hasConfirmDialog": true,
+      "hasWarningText": true,
+      "hasDestructiveStyle": true,
+      "errors": []
+    },
+    {
+      "file": "components/standup/email-recipient-selector.tsx",
+      "component": "email-recipient-selector",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/deadlines/deadline-creation-form.tsx",
+      "component": "deadline-creation-form",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/comments/comment-thread.tsx",
+      "component": "comment-thread",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/comments/comment-item.tsx",
+      "component": "comment-item",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/kanban/task-mini-card.tsx",
+      "component": "task-mini-card",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/kanban/project-card.tsx",
+      "component": "project-card",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/calendar/event-modal.tsx",
+      "component": "event-modal",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/buckets/project-assignment-view.tsx",
+      "component": "project-assignment-view",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/buckets/nested-bucket-view.tsx",
+      "component": "nested-bucket-view",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/buckets/bulk-action-toolbar.tsx",
+      "component": "bulk-action-toolbar",
+      "hasConfirmDialog": true,
+      "hasWarningText": true,
+      "hasDestructiveStyle": true,
+      "errors": []
+    },
+    {
+      "file": "components/buckets/bucket-rules-modal.tsx",
+      "component": "bucket-rules-modal",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/buckets/bucket-card.tsx",
+      "component": "bucket-card",
+      "hasConfirmDialog": true,
+      "hasWarningText": true,
+      "hasDestructiveStyle": true,
+      "errors": []
+    },
+    {
+      "file": "components/ideas/idea-detail-modal.tsx",
+      "component": "idea-detail-modal",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/ideas/idea-creation-form.tsx",
+      "component": "idea-creation-form",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/ideas/idea-creation-dialog.tsx",
+      "component": "idea-creation-dialog",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/airtable/performance/virtual-scroll.tsx",
+      "component": "virtual-scroll",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/airtable/performance/performance-monitor.tsx",
+      "component": "performance-monitor",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/airtable/performance/data-cache.tsx",
+      "component": "data-cache",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/airtable/kanban/enhanced-kanban-column.tsx",
+      "component": "enhanced-kanban-column",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/airtable/kanban/enhanced-kanban-card.tsx",
+      "component": "enhanced-kanban-card",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/airtable/kanban/enhanced-kanban-board.tsx",
+      "component": "enhanced-kanban-board",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/airtable/kanban/bulk-actions-toolbar.tsx",
+      "component": "bulk-actions-toolbar",
+      "hasConfirmDialog": false,
+      "hasWarningText": true,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation"
+      ]
+    },
+    {
+      "file": "components/airtable/panels/record-detail-panel.tsx",
+      "component": "record-detail-panel",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/airtable/panels/filter-panel.tsx",
+      "component": "filter-panel",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/airtable/collaboration/presence-system.tsx",
+      "component": "presence-system",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/airtable/collaboration/comment-system.tsx",
+      "component": "comment-system",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/airtable/collaboration/activity-feed.tsx",
+      "component": "activity-feed",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/airtable/interactive/view-configuration-panel.tsx",
+      "component": "view-configuration-panel",
+      "hasConfirmDialog": false,
+      "hasWarningText": true,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation"
+      ]
+    },
+    {
+      "file": "components/airtable/interactive/sort-configuration.tsx",
+      "component": "sort-configuration",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/airtable/interactive/advanced-search.tsx",
+      "component": "advanced-search",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/airtable/responsive/touch-gestures.tsx",
+      "component": "touch-gestures",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/airtable/responsive/responsive-table.tsx",
+      "component": "responsive-table",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/airtable/responsive/keyboard-navigation.tsx",
+      "component": "keyboard-navigation",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": false,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning",
+        "⚠️ No destructive visual styling"
+      ]
+    },
+    {
+      "file": "components/airtable/responsive/accessibility-announcer.tsx",
+      "component": "accessibility-announcer",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    },
+    {
+      "file": "components/airtable/fields/field-configuration.tsx",
+      "component": "field-configuration",
+      "hasConfirmDialog": false,
+      "hasWarningText": false,
+      "hasDestructiveStyle": true,
+      "errors": [
+        "❌ No confirmation dialog for delete operation",
+        "⚠️ No \"cannot be undone\" warning"
+      ]
+    }
+  ],
+  "summary": {
+    "totalEndpoints": 114,
+    "secureEndpoints": 4,
+    "insecureEndpoints": 110,
+    "totalDeleteButtons": 66,
+    "safeDeleteButtons": 8,
+    "unsafeDeleteButtons": 58
+  },
+  "criticalIssues": [
+    "🚨 CRITICAL: 17 DELETE endpoints have NO authentication!",
+    "   - /api/team (app/api/team/route.ts)",
+    "   - /api/projects (app/api/projects/route.ts)",
+    "   - /api/logs (app/api/logs/route.ts)",
+    "   - /api/ideas (app/api/ideas/route.ts)",
+    "   - /api/deadlines (app/api/deadlines/route.ts)",
+    "   - /api/buckets (app/api/buckets/route.ts)",
+    "   - /api/views/:viewId (app/api/views/[viewId]/route.ts)",
+    "   - /api/transcripts/:standupId (app/api/transcripts/[standupId]/route.ts)",
+    "   - /api/tasks/:taskId (app/api/tasks/[taskId]/route.ts)",
+    "   - /api/studies/:studyId (app/api/studies/[studyId]/route.ts)",
+    "   - /api/users/:userId (app/api/users/[userId]/route.ts)",
+    "   - /api/labs/:labId (app/api/labs/[labId]/route.ts)",
+    "   - /api/comments/:id (app/api/comments/[id]/route.ts)",
+    "   - /api/standups/:standupId (app/api/standups/[standupId]/route.ts)",
+    "   - /api/users/:userId/avatar (app/api/users/[userId]/avatar/route.ts)",
+    "   - /api/calendar/events/:id (app/api/calendar/events/[id]/route.ts)",
+    "   - /api/labs/:labId/members (app/api/labs/[labId]/members/route.ts)",
+    "⚠️ WARNING: 19 DELETE endpoints lack cascade protection",
+    "⚠️ WARNING: 50 UI components have delete operations without confirmation"
+  ],
+  "recommendations": [
+    "1. URGENT: Add authentication to all DELETE endpoints immediately",
+    "2. Add audit logging to 19 DELETE endpoints",
+    "3. Add confirmation dialogs to 58 UI components",
+    "4. Consider implementing soft deletes for recoverable entities",
+    "5. Add rate limiting to prevent deletion abuse",
+    "6. Implement a recovery mechanism for accidentally deleted items"
+  ]
+}

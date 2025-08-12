@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { requireAuth } from '@/lib/auth-helpers';
+import { auditDelete, auditCreate, auditUpdate } from '@/lib/audit/logger';
 import type { Prisma } from '@prisma/client';
 
 // Validation schema for creating a deadline
@@ -148,13 +150,43 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/deadlines - Create a new deadline
+// POST /api/deadlines - Create a new deadline (any authenticated user can create)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication but allow any authenticated user
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const user = authResult;
+    
     const body = await request.json();
     
     // Validate the request body
     const validatedData = CreateDeadlineSchema.parse(body);
+    
+    // If projectId is provided, verify user has access to the project's lab
+    if (validatedData.projectId) {
+      const project = await prisma.project.findUnique({
+        where: { id: validatedData.projectId },
+        select: { labId: true }
+      });
+      
+      if (project?.labId) {
+        const labMembership = await prisma.labMember.findFirst({
+          where: {
+            userId: user.id,
+            labId: project.labId,
+            isActive: true
+          }
+        });
+        
+        if (!labMembership) {
+          return NextResponse.json(
+            { error: 'You must be a member of the project\'s lab to create deadlines' },
+            { status: 403 }
+          );
+        }
+      }
+    }
     
     // Extract assigneeIds for separate processing
     const { assigneeIds, dueDate, reminderDays, ...deadlineData } = validatedData;
@@ -333,28 +365,4 @@ export async function PUT(request: NextRequest) {
 }
 
 // DELETE /api/deadlines - Delete a deadline
-export async function DELETE(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const id = searchParams.get('id');
-    
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Deadline ID is required' },
-        { status: 400 }
-      );
-    }
-
-    await prisma.deadline.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting deadline:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete deadline' },
-      { status: 500 }
-    );
-  }
-}
+// DELETE method moved to /api/deadlines/[deadlineId]/route.ts for RESTful consistency

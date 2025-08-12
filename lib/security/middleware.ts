@@ -6,7 +6,9 @@ import { logger } from '@/lib/utils/production-logger';
  * Rate limiting configuration
  */
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+const deleteRateLimitMap = new Map<string, { count: number; lastReset: number }>();
 const RATE_LIMIT = parseInt(process.env.RATE_LIMIT_PER_MINUTE || '60');
+const DELETE_RATE_LIMIT = parseInt(process.env.DELETE_RATE_LIMIT_PER_MINUTE || '5'); // Strict limit for DELETE
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 
 /**
@@ -23,8 +25,27 @@ const securityHeaders = {
 /**
  * Check rate limit for IP address
  */
-export function checkRateLimit(ip: string): boolean {
+export function checkRateLimit(ip: string, isDelete: boolean = false): boolean {
   const now = Date.now();
+  
+  // Use stricter limits for DELETE operations
+  if (isDelete) {
+    const deleteLimit = deleteRateLimitMap.get(ip);
+    
+    if (!deleteLimit || now - deleteLimit.lastReset > RATE_LIMIT_WINDOW) {
+      deleteRateLimitMap.set(ip, { count: 1, lastReset: now });
+      return true;
+    }
+    
+    if (deleteLimit.count >= DELETE_RATE_LIMIT) {
+      return false;
+    }
+    
+    deleteLimit.count++;
+    return true;
+  }
+  
+  // Regular rate limiting for non-DELETE operations
   const limit = rateLimitMap.get(ip);
 
   if (!limit || now - limit.lastReset > RATE_LIMIT_WINDOW) {
@@ -117,12 +138,26 @@ export async function securityMiddleware(request: NextRequest) {
 
     // Skip rate limiting for health checks
     if (!path.includes('/health')) {
-      // Check rate limit
-      if (!checkRateLimit(ip)) {
-        logger.warn(`Rate limit exceeded for IP: ${ip}`);
+      // Check rate limit (stricter for DELETE operations)
+      const isDeleteRequest = request.method === 'DELETE';
+      if (!checkRateLimit(ip, isDeleteRequest)) {
+        const limitType = isDeleteRequest ? 'DELETE' : 'general';
+        const limit = isDeleteRequest ? DELETE_RATE_LIMIT : RATE_LIMIT;
+        logger.warn(`${limitType} rate limit exceeded for IP: ${ip}`);
         return NextResponse.json(
-          { error: 'Too many requests. Please try again later.' },
-          { status: 429 }
+          { 
+            error: 'Too many requests. Please try again later.',
+            message: `Rate limit: ${limit} ${isDeleteRequest ? 'delete' : ''} requests per minute`,
+            retryAfter: 60 // seconds
+          },
+          { 
+            status: 429,
+            headers: {
+              'Retry-After': '60',
+              'X-RateLimit-Limit': limit.toString(),
+              'X-RateLimit-Window': '60s'
+            }
+          }
         );
       }
     }

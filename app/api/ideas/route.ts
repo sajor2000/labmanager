@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
+import { requireAuth, requireResourceOwnerOrAdmin } from '@/lib/auth-helpers';
+import { auditDelete, auditCreate, auditUpdate } from '@/lib/audit/logger';
 
 // Validation schema for creating an idea
 const CreateIdeaSchema = z.object({
@@ -163,13 +165,36 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/ideas - Create a new idea
+// POST /api/ideas - Create a new idea (any authenticated user can create)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication but allow any authenticated user
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const user = authResult;
+    
     const body = await request.json();
     
     // Validate the request body
     const validatedData = CreateIdeaSchema.parse(body);
+    
+    // If labId is provided, verify user is a member (optional check)
+    if (validatedData.labId) {
+      const labMembership = await prisma.labMember.findFirst({
+        where: {
+          userId: user.id,
+          labId: validatedData.labId,
+          isActive: true
+        }
+      });
+      
+      if (!labMembership) {
+        return NextResponse.json(
+          { error: 'You must be a member of this lab to create ideas for it' },
+          { status: 403 }
+        );
+      }
+    }
     
     // Extract related studies for separate processing
     const { relatedStudyIds, ...ideaData } = validatedData;
@@ -333,28 +358,4 @@ export async function PUT(request: NextRequest) {
 }
 
 // DELETE /api/ideas - Delete an idea
-export async function DELETE(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const id = searchParams.get('id');
-    
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Idea ID is required' },
-        { status: 400 }
-      );
-    }
-
-    await prisma.idea.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting idea:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete idea' },
-      { status: 500 }
-    );
-  }
-}
+// DELETE method moved to /api/ideas/[ideaId]/route.ts for RESTful consistency

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +60,7 @@ interface PersonalizedDashboardProps {
 }
 
 export function PersonalizedDashboard({ selectedUser }: PersonalizedDashboardProps) {
+  const router = useRouter();
   const [dashboardData, setDashboardData] = useState<PersonalizedData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -294,7 +296,7 @@ export function PersonalizedDashboard({ selectedUser }: PersonalizedDashboardPro
                 key={index}
                 variant="outline"
                 className="h-auto p-4 flex flex-col items-start space-y-2 hover:shadow-md transition-shadow"
-                onClick={() => window.location.href = action.href}
+                onClick={() => router.push(action.href)}
               >
                 <div className={`p-2 rounded-md ${action.color} text-white`}>
                   {action.icon}
@@ -335,7 +337,7 @@ export function PersonalizedDashboard({ selectedUser }: PersonalizedDashboardPro
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.location.href = `/labs/${lab.id}`}
+                    onClick={() => router.push(`/labs/${lab.id}`)}
                   >
                     View Lab
                   </Button>

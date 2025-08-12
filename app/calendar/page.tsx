@@ -28,6 +28,7 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showEventModal, setShowEventModal] = useState(false);
 
   useEffect(() => {
     fetchEvents();
@@ -81,6 +82,13 @@ export default function CalendarPage() {
     setSelectedDate(new Date());
   };
 
+  const handleAddEvent = () => {
+    setShowEventModal(true);
+    toast.success('Event creation feature coming soon!');
+    // TODO: Implement event creation modal
+    setTimeout(() => setShowEventModal(false), 2000);
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       {/* Header */}
@@ -95,7 +103,7 @@ export default function CalendarPage() {
               Manage deadlines, meetings, and milestones
             </p>
           </div>
-          <Button>
+          <Button onClick={handleAddEvent}>
             <Plus className="h-4 w-4 mr-2" />
             Add Event
           </Button>

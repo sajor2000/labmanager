@@ -644,9 +644,161 @@ If the build fails, DO NOT push. Fix all errors first.
 
 **Remember**: A broken QueryProvider will crash the entire application on load. This must be the first thing checked before any commit.
 
-#### 5. Button Click Issues Fix
-**Issue**: Buttons don't work when clicked on production site
-**Location**: `/components/ui/button.tsx`
+## CRITICAL: Import Verification Rules
+
+### ⚠️ MANDATORY: Check Imports Before Using ANY Component ⚠️
+
+**RULE**: Never use a component, icon, or utility without first confirming its import exists at the top of the file.
+
+#### Pre-Implementation Checklist
+Before writing ANY JSX element or using any function:
+
+1. **Is it a HTML element?** (div, span, button, input, form)
+   - ✅ No import needed
+   
+2. **Is it capitalized?** (Button, Card, MoreVertical, useState)
+   - ❌ MUST be imported at the top of the file
+   
+3. **Is it from a library?**
+   - ❌ MUST check the library's import pattern
+
+#### Import Patterns for Common Libraries
+
+```typescript
+// React hooks - ALWAYS needed for state and effects
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+
+// Next.js navigation - ALWAYS needed for routing
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
+// Lucide React icons - REQUIRED for any icon usage
+import { 
+  MoreVertical,    // For dropdown menus
+  ChevronDown,     // For collapsible sections
+  Plus,            // For add buttons
+  Edit2,           // For edit actions
+  Trash2,          // For delete actions
+  Search,          // For search bars
+  X,               // For close buttons
+  Loader2,         // For loading spinners
+  AlertCircle,     // For alerts
+  CheckCircle2     // For success states
+} from 'lucide-react';
+
+// UI Components - REQUIRED for any custom components
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog';
+
+// Utilities - REQUIRED for helper functions
+import { cn } from '@/lib/utils';  // For className merging
+import { format } from 'date-fns';  // For date formatting
+import { toast } from 'sonner';     // For notifications
+```
+
+#### Validation Process Before Each Component Use
+
+When adding ANY new JSX element:
+
+```typescript
+// BEFORE writing this:
+<MoreVertical className="h-4 w-4" />
+
+// CHECK:
+// 1. Is MoreVertical in the imports at the top?
+// 2. If not, add: import { MoreVertical } from 'lucide-react';
+```
+
+#### Common Missing Imports Checklist
+
+Before committing any file changes, verify:
+
+- [ ] **Icons**: All Lucide icons used are imported
+- [ ] **UI Components**: All @/components/ui/* components are imported
+- [ ] **React Hooks**: useState, useEffect, etc. are imported if used
+- [ ] **Next.js**: useRouter, Link, Image are imported if used
+- [ ] **Utilities**: cn, format, toast are imported if used
+- [ ] **Types**: All TypeScript types are imported or defined
+
+#### Automated Verification Command
+
+After implementing any feature, run this mental check:
+
+1. **List all capitalized components in your JSX**
+   ```
+   Example: [Button, Card, MoreVertical, DropdownMenu]
+   ```
+
+2. **List all imports at the top of the file**
+   ```
+   Example: [Button, Card, ...]
+   ```
+
+3. **Identify missing imports**
+   ```
+   Missing: [MoreVertical, DropdownMenu]
+   ```
+
+4. **Add missing imports IMMEDIATELY**
+
+#### Common Error Patterns to Avoid
+
+❌ **NEVER DO THIS**:
+```typescript
+// Using a component without importing it
+export function MyComponent() {
+  return <MoreVertical />;  // ERROR: MoreVertical not imported!
+}
+```
+
+✅ **ALWAYS DO THIS**:
+```typescript
+import { MoreVertical } from 'lucide-react';
+
+export function MyComponent() {
+  return <MoreVertical />;  // SUCCESS: Properly imported!
+}
+```
+
+#### Prevention Pattern for New Features
+
+When implementing any new feature:
+
+1. **FIRST**: List all components/icons you plan to use
+2. **SECOND**: Add ALL necessary imports before writing any JSX
+3. **THIRD**: Write your component code
+4. **FOURTH**: Verify each capitalized component has a corresponding import
+5. **FIFTH**: If unsure about import path, check existing similar files
+
+#### Import Path Reference
+
+| Component Type | Import Path |
+|---------------|-------------|
+| Lucide Icons | `'lucide-react'` |
+| UI Components | `'@/components/ui/[component]'` |
+| Custom Components | `'@/components/[folder]/[component]'` |
+| React Hooks | `'react'` |
+| Next.js Router | `'next/navigation'` |
+| Utilities | `'@/lib/utils'` |
+| Types | `'@/types'` or inline definition |
+
+**CRITICAL**: This import check must be performed BEFORE writing any component code. Failure to import components will cause runtime errors that break the application.
 **Fix**: Ensure proper event handling and prevent default behavior issues
 
 ✅ **Button Component Must Include**:
@@ -660,3 +812,12 @@ The Button component must handle onClick events properly to work in production. 
 2. onClick handlers are wrapped in try-catch
 3. Disabled state prevents all interactions
 4. Form buttons properly handle preventDefault
+
+# Important Instruction Reminders
+
+## Always Follow These Rules:
+1. **Do what has been asked; nothing more, nothing less.**
+2. **NEVER create files unless they're absolutely necessary for achieving your goal.**
+3. **ALWAYS prefer editing an existing file to creating a new one.**
+4. **NEVER proactively create documentation files (*.md) or README files.** Only create documentation files if explicitly requested by the User.
+5. **ALWAYS check imports before using any component** - see Import Verification Rules section above.

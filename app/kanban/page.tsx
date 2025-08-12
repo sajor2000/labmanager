@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useKanbanStore } from '@/lib/store/kanban-store';
 import { ProjectKanbanBoard } from '@/components/kanban/project-kanban-board';
 import { KanbanFilters } from '@/components/kanban/kanban-filters';
@@ -27,10 +27,16 @@ export default function KanbanPage() {
     setViewMode,
     projects,
   } = useKanbanStore();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
     refreshData();
   }, [refreshData]);
+
+  const handleCreateProject = () => {
+    setShowCreateDialog(true);
+    // TODO: Implement project creation dialog
+  };
 
   const viewModes = [
     { id: 'standard', label: 'Standard', icon: LayoutGrid },
@@ -63,7 +69,7 @@ export default function KanbanPage() {
                 <RefreshCw className={cn('h-4 w-4 mr-2', isLoading && 'animate-spin')} />
                 Refresh
               </Button>
-              <Button size="sm">
+              <Button size="sm" onClick={handleCreateProject}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Project
               </Button>

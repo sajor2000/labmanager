@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
+import { requireAuth, requireLabAdmin } from '@/lib/auth-helpers';
+import { auditDelete, auditUpdate, auditCreate } from '@/lib/audit/logger';
 
 // Cache configuration
 const CACHE_TTL = 180; // 3 minutes cache for team data (changes frequently)
@@ -346,6 +348,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
+    const labId = searchParams.get('labId');
     
     if (!id) {
       return NextResponse.json(
@@ -353,11 +356,28 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    if (!labId) {
+      return NextResponse.json(
+        { error: 'Lab ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Check authentication and require lab admin
+    const authResult = await requireLabAdmin(request, labId);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const adminUser = authResult;
 
-    // Check if user has any active assignments
+    // Check if user exists and has any active assignments
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
+        labs: {
+          where: { labId },
+        },
         assignedTasks: {
           where: {
             task: {
@@ -381,12 +401,20 @@ export async function DELETE(request: NextRequest) {
         { status: 404 }
       );
     }
+    
+    // Check if user is a member of this lab
+    if (user.labs.length === 0) {
+      return NextResponse.json(
+        { error: 'User is not a member of this lab' },
+        { status: 404 }
+      );
+    }
 
     // Check for active assignments
     if (user.assignedTasks.length > 0 || user.projectMembers.length > 0) {
       return NextResponse.json(
         { 
-          error: 'Cannot delete team member with active task or project assignments',
+          error: 'Cannot remove team member with active task or project assignments',
           details: {
             activeTasks: user.assignedTasks.length,
             activeProjects: user.projectMembers.length,
@@ -396,11 +424,32 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await prisma.user.delete({
-      where: { id },
+    // Remove user from the lab (soft delete - remove lab membership)
+    await prisma.labMember.updateMany({
+      where: { 
+        userId: id,
+        labId: labId,
+      },
+      data: {
+        isActive: false,
+      }
     });
+    
+    // Create audit log
+    await auditDelete(
+      adminUser.id,
+      'team_member',
+      id,
+      user.name,
+      labId,
+      request,
+      true // soft delete - removing from lab
+    );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      message: 'Team member removed from lab successfully'
+    });
   } catch (error) {
     console.error('Error deleting team member:', error);
     return NextResponse.json(

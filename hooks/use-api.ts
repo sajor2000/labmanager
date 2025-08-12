@@ -462,6 +462,39 @@ export function useCreateDeadline(options?: UseMutationOptions<Deadline, Error, 
   });
 }
 
+export function useUpdateDeadline(options?: UseMutationOptions<Deadline, Error, { id: string } & UpdateDeadlinePayload>) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string } & UpdateDeadlinePayload) => api.deadlines.update(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: cacheKeys.deadlines.all });
+      queryClient.invalidateQueries({ queryKey: cacheKeys.deadlines.detail(id) });
+      toast.success('Deadline updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update deadline');
+    },
+    ...options,
+  });
+}
+
+export function useDeleteDeadline(options?: UseMutationOptions<{ success: boolean }, Error, string>) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: api.deadlines.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cacheKeys.deadlines.all });
+      toast.success('Deadline deleted successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete deadline');
+    },
+    ...options,
+  });
+}
+
 export function useCalendarEvents(start: Date, end: Date, options?: UseQueryOptions<any>) {
   return useQuery({
     queryKey: [...cacheKeys.deadlines.all, 'calendar', start, end],
@@ -643,6 +676,92 @@ export function useUpdateKanbanProject(options?: UseMutationOptions<any, Error, 
     onError: (error) => {
       toast.error(error.message || 'Failed to update project');
     },
+    ...options,
+  });
+}
+
+// ============================================
+// DOCUMENT HOOKS
+// ============================================
+
+export function useDocuments(
+  entityType: string,
+  entityId: string,
+  includeDeleted = false,
+  options?: UseQueryOptions<any[]>
+) {
+  return useQuery({
+    queryKey: [...cacheKeys.documents.byEntity(entityType, entityId), includeDeleted],
+    queryFn: () => api.documents.getByEntity(entityType, entityId, includeDeleted),
+    staleTime: STALE_TIMES.short,
+    enabled: !!entityType && !!entityId,
+    ...options,
+  });
+}
+
+export function useUploadDocument(options?: UseMutationOptions<any, Error, {
+  file: File;
+  entityType: string;
+  entityId: string;
+  labId: string;
+  description?: string;
+  tags?: string;
+}>) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ file, entityType, entityId, labId, description, tags }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('entityType', entityType);
+      formData.append('entityId', entityId);
+      formData.append('labId', labId);
+      if (description) formData.append('description', description);
+      if (tags) formData.append('tags', tags);
+      
+      return api.documents.upload(formData);
+    },
+    onSuccess: (_, { entityType, entityId }) => {
+      queryClient.invalidateQueries({ 
+        queryKey: cacheKeys.documents.byEntity(entityType, entityId) 
+      });
+      toast.success('Document uploaded successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to upload document');
+    },
+    ...options,
+  });
+}
+
+export function useDeleteDocument(options?: UseMutationOptions<any, Error, {
+  documentId: string;
+  entityType: string;
+  entityId: string;
+}>) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ documentId }) => api.documents.delete(documentId),
+    onSuccess: (_, { entityType, entityId }) => {
+      queryClient.invalidateQueries({ 
+        queryKey: cacheKeys.documents.byEntity(entityType, entityId) 
+      });
+      toast.success('Document deleted successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete document');
+    },
+    ...options,
+  });
+}
+
+export function useLabStorageStats(labId: string, options?: UseQueryOptions<any>) {
+  return useQuery({
+    queryKey: [...cacheKeys.labs.storage(labId)],
+    queryFn: () => api.labs.getStorageStats(labId),
+    staleTime: STALE_TIMES.medium,
+    enabled: !!labId,
     ...options,
   });
 }

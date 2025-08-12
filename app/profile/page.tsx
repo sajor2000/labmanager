@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { Camera, User, Shield, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { showToast } from '@/components/ui/toast';
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { user, loading } = useCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -30,10 +32,29 @@ export default function ProfilePage() {
   });
   
   const handleSave = async () => {
+    if (!user?.id) return;
+    
     setIsSaving(true);
     try {
-      // TODO: Implement profile update API call
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      const response = await fetch('/api/users/current', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          bio: formData.bio,
+          department: formData.department,
+          expertise: formData.expertise,
+          phone: formData.phone,
+          location: formData.location,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update profile');
+      }
       
       showToast({
         type: 'success',
@@ -41,11 +62,12 @@ export default function ProfilePage() {
         message: 'Your profile has been updated successfully',
       });
       setIsEditing(false);
-    } catch {
+      router.refresh();
+    } catch (error) {
       showToast({
         type: 'error',
         title: 'Update failed',
-        message: 'Failed to update profile. Please try again.',
+        message: error instanceof Error ? error.message : 'Failed to update profile',
       });
     } finally {
       setIsSaving(false);
@@ -90,7 +112,7 @@ export default function ProfilePage() {
       });
 
       // Refresh the page to show new avatar
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       showToast({
         type: 'error',

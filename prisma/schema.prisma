@@ -54,6 +54,8 @@ model User {
   presence              UserPresence[]
   viewConfigurations    ViewConfiguration[]
   passwordResetTokens   PasswordResetToken[]
+  auditLogs             AuditLog[]
+  uploadedDocuments     Document[]
 }
 
 model Lab {
@@ -65,17 +67,22 @@ model Lab {
   icon               String?
   color              String?
   isActive           Boolean             @default(true) @map("isActive")
+  storageUsed        BigInt              @default(0) @map("storageUsed") // Bytes used
+  storageLimit       BigInt              @default(209715200) @map("storageLimit") // 200MB default per lab
   createdAt          DateTime            @default(now()) @map("createdAt")
   updatedAt          DateTime            @updatedAt @map("updatedAt")
+  deletedAt          DateTime?           @map("deletedAt")
   automationRules    AutomationRule[]
   buckets            Bucket[]
   customFields       CustomField[]
   deadlines          Deadline[]
+  documents          Document[]
   ideas              Idea[]
   members            LabMember[]
   projects           Project[]
   standups           Standup[]
   viewConfigurations ViewConfiguration[]
+  auditLogs          AuditLog[]
 }
 
 /// Associates users with labs - represents lab membership and permissions
@@ -123,6 +130,7 @@ model Project {
   metadata              Json?
   createdAt             DateTime            @default(now()) @map("createdAt")
   updatedAt             DateTime            @updatedAt @map("updatedAt")
+  deletedAt             DateTime?           @map("deletedAt")
   labId                 String              @map("labId")
   bucketId              String              @map("bucketId")
   createdById           String              @map("createdById")
@@ -196,6 +204,7 @@ model Task {
   metadata       Json?
   createdAt      DateTime         @default(now()) @map("createdAt")
   updatedAt      DateTime         @updatedAt @map("updatedAt")
+  deletedAt      DateTime?        @map("deletedAt")
   projectId      String           @map("projectId")
   createdById    String           @map("createdById")
   completedById  String?          @map("completedById")
@@ -259,6 +268,7 @@ model Idea {
   isActive               Boolean             @default(true) @map("isActive")
   createdAt              DateTime            @default(now()) @map("createdAt")
   updatedAt              DateTime            @updatedAt @map("updatedAt")
+  deletedAt              DateTime?           @map("deletedAt")
   labId                  String              @map("labId")
   createdById            String              @map("createdById")
   convertedToProjectId   String?             @unique @map("convertedToProjectId")
@@ -956,4 +966,77 @@ enum NotificationType {
   TASK_COMPLETED
   PROJECT_UPDATE
   SYSTEM_ALERT
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  SOFT_DELETE
+  RESTORE
+  ARCHIVE
+  UNARCHIVE
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  action      AuditAction
+  entityType  String      // e.g., "task", "project", "idea"
+  entityId    String      // ID of the affected entity
+  entityName  String?     // Human-readable name of the entity
+  changes     Json?       // JSON object with before/after values for updates
+  metadata    Json?       // Additional context (IP address, user agent, etc.)
+  labId       String?
+  lab         Lab?        @relation(fields: [labId], references: [id])
+  createdAt   DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([labId])
+  @@index([createdAt])
+}
+
+// Document storage model for attachments to tasks, ideas, deadlines
+model Document {
+  id           String         @id @default(cuid())
+  
+  // File information
+  filename     String         @map("filename")
+  mimeType     String         @map("mimeType")
+  fileSize     Int            @map("fileSize") // Size in bytes of stored data
+  data         Bytes          @map("data") // Binary file data
+  
+  // Compression info
+  isCompressed Boolean        @default(false) @map("isCompressed")
+  originalSize Int?           @map("originalSize") // Size before compression
+  
+  // Polymorphic relationship (like Comment model)
+  entityType   AttachableType @map("entityType") // TASK, IDEA, DEADLINE
+  entityId     String         @map("entityId")
+  
+  // Lab tracking for storage limits
+  labId        String         @map("labId")
+  
+  // Metadata
+  description  String?        @map("description")
+  tags         String[]       @map("tags")
+  uploadedById String         @map("uploadedById")
+  uploadedAt   DateTime       @default(now()) @map("uploadedAt")
+  lastAccessed DateTime?      @map("lastAccessed")
+  accessCount  Int            @default(0) @map("accessCount")
+  
+  // Soft delete
+  isDeleted    Boolean        @default(false) @map("isDeleted")
+  deletedAt    DateTime?      @map("deletedAt")
+  
+  // Relations
+  lab          Lab            @relation(fields: [labId], references: [id])
+  uploadedBy   User           @relation(fields: [uploadedById], references: [id])
+  
+  @@index([entityType, entityId, isDeleted])
+  @@index([labId, isDeleted])
+  @@index([uploadedAt])
+  @@index([uploadedById])
 }

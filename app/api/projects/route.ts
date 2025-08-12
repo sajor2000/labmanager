@@ -7,6 +7,8 @@ import { projectToStudy, projectsToStudies } from '@/lib/mappers/project-mapper'
 import { ProjectSchema, PaginationSchema, validateRequest } from '@/lib/validation/schemas';
 import { sanitizeInput } from '@/lib/security/middleware';
 import { logger } from '@/lib/utils/production-logger';
+import { requireAuth, requireLabAdmin } from '@/lib/auth-helpers';
+import { auditDelete, auditCreate, auditUpdate } from '@/lib/audit/logger';
 
 // Cache configuration
 const CACHE_TTL = 300; // 5 minutes cache for GET requests
@@ -157,13 +159,41 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/projects - Create a new project
+// POST /api/projects - Create a new project (any lab member can create)
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const user = authResult;
+    
     const body = await request.json();
     
     // Validate the request body
     const validatedData = CreateProjectSchema.parse(body);
+    
+    // Check if user is a member of the lab (any member can create projects)
+    if (validatedData.labId) {
+      const labMembership = await prisma.labMember.findFirst({
+        where: {
+          labId: validatedData.labId,
+          userId: user.id,
+          isActive: true
+        }
+      });
+      
+      if (!labMembership) {
+        return NextResponse.json(
+          { error: 'You must be a member of this lab to create projects' },
+          { status: 403 }
+        );
+      }
+    }
+    
+    // Set the creator
+    if (!validatedData.createdById) {
+      validatedData.createdById = user.id;
+    }
     
     // Extract memberIds for separate processing
     const { memberIds, dueDate, ...projectData } = validatedData;
@@ -191,9 +221,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/projects - Update a project
+// PUT /api/projects - Update a project (any lab member can update)
 export async function PUT(request: NextRequest) {
   try {
+    // Require authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const user = authResult;
+    
     const body = await request.json();
     const { id, memberIds, dueDate, ...updateData } = body;
     
@@ -201,6 +236,35 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         { error: 'Project ID is required' },
         { status: 400 }
+      );
+    }
+    
+    // Check if project exists and user has access
+    const existingProject = await prisma.project.findUnique({
+      where: { id },
+      select: { labId: true }
+    });
+    
+    if (!existingProject) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Verify user is a member of the lab
+    const labMembership = await prisma.labMember.findFirst({
+      where: {
+        labId: existingProject.labId,
+        userId: user.id,
+        isActive: true
+      }
+    });
+    
+    if (!labMembership) {
+      return NextResponse.json(
+        { error: 'You must be a member of this lab to update projects' },
+        { status: 403 }
       );
     }
 
@@ -244,12 +308,97 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // Check authentication
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const user = authResult;
+    
+    // Get project details for authorization and cascade check
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            tasks: true,
+            comments: true,
+            members: true,
+          }
+        }
+      }
+    });
+    
+    if (!project) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Check if user is a member of the lab (any member can delete)
+    const labMembership = await prisma.labMember.findFirst({
+      where: {
+        userId: user.id,
+        labId: project.labId,
+        isActive: true
+      }
+    });
+    
+    if (!labMembership) {
+      return NextResponse.json(
+        { error: 'You must be a member of this lab to delete projects' },
+        { status: 403 }
+      );
+    }
+    
+    // Check for dependent data
+    const dependentData = [];
+    if (project._count.tasks > 0) {
+      dependentData.push(`${project._count.tasks} task(s)`);
+    }
+    if (project._count.comments > 0) {
+      dependentData.push(`${project._count.comments} comment(s)`);
+    }
+    if (project._count.members > 0) {
+      dependentData.push(`${project._count.members} member(s)`);
+    }
+    
+    if (dependentData.length > 0) {
+      return NextResponse.json(
+        { 
+          error: `Cannot delete project with existing data: ${dependentData.join(', ')}. Please remove or reassign these items first.`,
+          dependencies: {
+            tasks: project._count.tasks,
+            comments: project._count.comments,
+            members: project._count.members,
+          }
+        },
+        { status: 400 }
+      );
+    }
 
+    // Delete the project
     await prisma.project.delete({
       where: { id },
     });
+    
+    // Create audit log
+    await auditDelete(
+      user.id,
+      'project',
+      id,
+      project.name,
+      project.labId,
+      request,
+      false // hard delete
+    );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      message: 'Project deleted successfully'
+    });
   } catch (error) {
     return handleApiError(error);
   }

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { requireLabMember, requireLabAdmin, getAuthUser } from '@/lib/auth-helpers';
+import { auditDelete, auditUpdate } from '@/lib/audit/logger';
+import { checkRateLimit, getClientIp } from '@/lib/security/middleware';
 
 // Validation schema for updating a lab
 const UpdateLabSchema = z.object({
@@ -15,14 +18,16 @@ const UpdateLabSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { labId: string } }
+  { params }: { params: Promise<{ labId: string }> }
 ) {
   try {
-    // TODO: Add auth when NextAuth is configured
-    const mockUserId = 'default-user-id';
+    const { labId } = await params;
+    
+    // Authentication is optional for GET - public labs can be viewed
+    const user = await getAuthUser(request);
 
     const lab = await prisma.lab.findUnique({
-      where: { id: params.labId },
+      where: { id: labId },
       include: {
         members: {
           include: {
@@ -119,8 +124,8 @@ export async function GET(
       );
     }
     
-    // TODO: Add member check when auth is configured
-    // const isMember = lab.members.some(member => member.userId === mockUserId);
+    // Check if user is a member for private data
+    const isMember = user ? lab.members.some(member => member.userId === user.id) : false;
     // if (!isMember) {
     //   return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     // }
@@ -137,14 +142,15 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { labId: string } }
+  { params }: { params: Promise<{ labId: string }> }
 ) {
   try {
-    // TODO: Add auth when NextAuth is configured
-    const mockUserId = 'default-user-id';
-
-    // TODO: Add auth when NextAuth is configured
-    // For now, skip auth checks
+    const { labId } = await params;
+    
+    // Require admin privileges to update lab
+    const authResult = await requireLabAdmin(request, labId);
+    if (authResult instanceof NextResponse) return authResult;
+    const user = authResult;
 
     const body = await request.json();
     
@@ -153,7 +159,7 @@ export async function PUT(
     
     // Check if the lab exists
     const existingLab = await prisma.lab.findUnique({
-      where: { id: params.labId }
+      where: { id: labId }
     });
     
     if (!existingLab) {
@@ -179,7 +185,7 @@ export async function PUT(
     
     // Update the lab
     const updatedLab = await prisma.lab.update({
-      where: { id: params.labId },
+      where: { id: labId },
       data: {
         ...(validatedData.name && { name: validatedData.name }),
         ...(validatedData.shortName && { shortName: validatedData.shortName }),
@@ -227,22 +233,48 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { labId: string } }
+  { params }: { params: Promise<{ labId: string }> }
 ) {
   try {
-    // TODO: Add auth when NextAuth is configured
-    const mockUserId = 'default-user-id';
+    // Apply rate limiting for DELETE operations
+    const ip = getClientIp(request);
+    if (!checkRateLimit(ip, true)) {
+      return NextResponse.json(
+        { 
+          error: 'Too many delete requests. Please try again later.',
+          message: 'Rate limit: 5 delete requests per minute',
+          retryAfter: 60
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': '60',
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Window': '60s'
+          }
+        }
+      );
+    }
 
-    // TODO: Add auth when NextAuth is configured
-    // For now, skip auth checks
-    // Check if the lab exists
+    const { labId } = await params;
+    
+    // Require admin privileges to delete lab
+    const authResult = await requireLabAdmin(request, labId);
+    if (authResult instanceof NextResponse) return authResult;
+    const user = authResult;
+    
+    // Check if the lab exists and has dependencies
     const existingLab = await prisma.lab.findUnique({
-      where: { id: params.labId },
+      where: { id: labId },
       include: {
         _count: {
           select: {
             projects: true,
             members: true,
+            buckets: true,
+            ideas: true,
+            standups: true,
+            auditLogs: true,
           }
         }
       }
@@ -255,21 +287,63 @@ export async function DELETE(
       );
     }
     
-    // Don't allow deletion if lab has projects or members
-    if (existingLab._count.projects > 0 || existingLab._count.members > 0) {
+    // Build list of dependencies
+    const dependencies = [];
+    if (existingLab._count.projects > 0) {
+      dependencies.push(`${existingLab._count.projects} project(s)`);
+    }
+    if (existingLab._count.members > 0) {
+      dependencies.push(`${existingLab._count.members} member(s)`);
+    }
+    if (existingLab._count.buckets > 0) {
+      dependencies.push(`${existingLab._count.buckets} bucket(s)`);
+    }
+    if (existingLab._count.ideas > 0) {
+      dependencies.push(`${existingLab._count.ideas} idea(s)`);
+    }
+    if (existingLab._count.standups > 0) {
+      dependencies.push(`${existingLab._count.standups} standup(s)`);
+    }
+    
+    // Don't allow deletion if lab has any dependencies
+    if (dependencies.length > 0) {
       return NextResponse.json(
-        { error: 'Cannot delete lab with existing projects or members' },
+        { 
+          error: 'Cannot delete lab with existing data',
+          details: `Please remove or migrate: ${dependencies.join(', ')}`,
+          dependencies: {
+            projects: existingLab._count.projects,
+            members: existingLab._count.members,
+            buckets: existingLab._count.buckets,
+            ideas: existingLab._count.ideas,
+            standups: existingLab._count.standups,
+          }
+        },
         { status: 400 }
       );
     }
     
     // Soft delete by setting isActive to false
     await prisma.lab.update({
-      where: { id: params.labId },
+      where: { id: labId },
       data: { isActive: false }
     });
     
-    return NextResponse.json({ success: true });
+    // Create audit log
+    await auditDelete(
+      user.id,
+      'lab',
+      labId,
+      existingLab.name,
+      labId,
+      request,
+      true // soft delete
+    );
+    
+    return NextResponse.json({ 
+      success: true,
+      message: `Lab "${existingLab.name}" has been deactivated successfully`
+    });
   } catch (error) {
     console.error('Error deleting lab:', error);
     return NextResponse.json(
