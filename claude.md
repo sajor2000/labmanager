@@ -8,7 +8,7 @@
 
 #### ✅ ONLY These Real Labs Are Allowed:
 1. **RICCC** - Rush Interdisciplinary Consortium for Critical Care Trials and Data Science
-2. **RHEDAS** - Rush Health Equity Data Analytics & Science
+2. **RHEDAS** - Rush Health Equity Analytics Studio
 
 #### ❌ NEVER Use These Fake Labs:
 - Health Equity Labs (HEL)

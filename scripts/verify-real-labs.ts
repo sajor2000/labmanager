@@ -118,8 +118,8 @@ async function verifyRealLabs() {
     process.exit(1);
   } else {
     console.log('\n✅ SUCCESS: Database contains only REAL Rush labs!');
-    console.log('- RICCC: Rush Institute for Critical Care & Community Health Research');
-    console.log('- RHEDAS: Rush Health Equity Data Analytics & Science');
+    console.log('- RICCC: Rush Interdisciplinary Consortium for Critical Care Trials and Data Science');
+    console.log('- RHEDAS: Rush Health Equity Analytics Studio');
   }
 }
 

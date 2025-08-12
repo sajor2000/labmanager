@@ -22,7 +22,7 @@ async function main() {
     where: { shortName: 'RHEDAS' },
     update: {},
     create: {
-      name: 'Rush Health Equity Data Analytics & Science',
+      name: 'Rush Health Equity Analytics Studio',
       shortName: 'RHEDAS',
       description: 'Data science and analytics for health equity research, focusing on disparities and social determinants of health',
       isActive: true,
@@ -398,7 +398,7 @@ async function main() {
   console.log('\n📋 REAL Labs Created:');
   console.log('====================');
   console.log('1. RICCC - Rush Interdisciplinary Consortium for Critical Care Trials and Data Science');
-  console.log('2. RHEDAS - Rush Health Equity Data Analytics & Science');
+  console.log('2. RHEDAS - Rush Health Equity Analytics Studio');
   console.log('\n🚫 NO FAKE LABS (like "Health Equity Labs") were created!');
   
   console.log('\n📝 Login Credentials for REAL Team Members:');
