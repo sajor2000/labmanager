@@ -1,5 +1,54 @@
 # Scientific Lab Project Management Platform - Technical Specification
 
+## 🚨 CRITICAL: NO FAKE DATA RULES 🚨
+
+### MANDATORY: Use ONLY Real Rush Labs and Real Team Members
+
+**ABSOLUTELY NO FAKE DATA ALLOWED IN THIS CODEBASE**
+
+#### ✅ ONLY These Real Labs Are Allowed:
+1. **RICCC** - Rush Interdisciplinary Consortium for Critical Care Trials and Data Science
+2. **RHEDAS** - Rush Health Equity Data Analytics & Science
+
+#### ❌ NEVER Use These Fake Labs:
+- Health Equity Labs (HEL)
+- Any test/demo labs
+- Any placeholder labs
+
+#### ✅ ONLY Real Team Members (11 Total):
+**Admins (3):**
+- J.C. Rojas (Juan_rojas@rush.edu) - PI, Admin for RICCC & RHEDAS
+- Kevin Buell (Kevin_Buell@rush.edu) - PI, Admin for RICCC
+- Mia McClintic (Mia_R_McClintic@rush.edu) - Regulatory Coordinator, Admin for RICCC
+
+**Regular Members (8):**
+- Jason Stanghelle - Data Analyst (RHEDAS)
+- Meher Sapna Masanpally - Data Analyst (RHEDAS)
+- Jada Sherrod - Staff Coordinator (RHEDAS)
+- Vaishvik Chaudhari - Data Scientist (RICCC)
+- Hoda Masteri - Data Analyst (RICCC)
+- Connor Lafeber - Fellow (RICCC)
+- Kian Mokhlesi - Medical Student (RICCC)
+- Dariush Mokhlesi - Medical Student (RICCC)
+
+#### Implementation Rules:
+1. **NEVER** create fake users, test users, or demo users
+2. **NEVER** create labs other than RICCC and RHEDAS
+3. **ALWAYS** use real team member emails from the list above
+4. **ALWAYS** validate against this list before creating any user or lab data
+5. **DELETE** any fake data immediately if found
+
+#### Verification Checklist:
+- [ ] No "Health Equity Labs" or "HEL" references anywhere
+- [ ] Only RICCC and RHEDAS labs exist in database
+- [ ] Only the 11 real team members listed above exist as users
+- [ ] No test/demo/fake users in seed data or code
+- [ ] All hardcoded examples use real labs and real users
+
+**This rule supersedes all other documentation. If any code or documentation conflicts with this rule, this rule takes precedence.**
+
+---
+
 ## Executive Summary
 A modern research management platform combining Monday.com's visual workflows with Airtable's flexible data management, specifically designed for scientific research labs. The platform emphasizes intuitive UI/UX, real-time collaboration, and AI-powered insights.
 
@@ -51,7 +100,7 @@ interface TopNavigation {
   
   labSelector: {
     icon: 'Building';
-    currentLab: 'Health Equity Labs';
+    currentLab: 'RICCC'; // Use real lab name only
     dropdown: true;
   };
   
