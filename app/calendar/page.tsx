@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useLabStore } from '@/stores/lab-store';
+// import { useLabStore } from '@/stores/lab-store'; // TODO: Implement lab store
 
 interface CalendarEvent {
   id: string;
@@ -30,7 +30,8 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEventModal, setShowEventModal] = useState(false);
-  const { currentLab } = useLabStore();
+  // const { currentLab } = useLabStore(); // TODO: Implement lab store
+  const currentLab = null; // Temporary until lab store is implemented
 
   useEffect(() => {
     fetchEvents();
