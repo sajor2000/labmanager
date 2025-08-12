@@ -98,7 +98,7 @@ export async function GET(
 const UpdateIdeaSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
-  category: z.enum(['METHODOLOGY', 'RESEARCH_QUESTION', 'COLLABORATION', 'TOOL', 'PROCESS', 'OTHER']).optional(),
+  category: z.enum(['RESEARCH_QUESTION', 'METHOD_IMPROVEMENT', 'COLLABORATION', 'GRANT_OPPORTUNITY', 'TECHNOLOGY', 'OTHER']).optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
   stage: z.enum(['CONCEPT', 'EVALUATION', 'PLANNING', 'IN_PROGRESS', 'IMPLEMENTED', 'ARCHIVED']).optional(),
   impact: z.string().optional(),

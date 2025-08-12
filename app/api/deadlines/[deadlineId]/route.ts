@@ -76,9 +76,9 @@ export async function GET(
 const UpdateDeadlineSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional().nullable(),
-  type: z.enum(['SUBMISSION', 'REVIEW', 'MEETING', 'MILESTONE', 'OTHER']).optional(),
+  type: z.enum(['IRB_RENEWAL', 'GRANT_SUBMISSION', 'PAPER_DEADLINE', 'CONFERENCE_ABSTRACT', 'MILESTONE', 'MEETING', 'OTHER']).optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE', 'CANCELLED']).optional(),
+  status: z.enum(['UPCOMING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE', 'CANCELLED']).optional(),
   dueDate: z.string().optional(),
   reminderDate: z.string().optional().nullable(),
   tags: z.array(z.string()).optional(),
