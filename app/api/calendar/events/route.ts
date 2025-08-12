@@ -27,15 +27,15 @@ export async function GET(request: NextRequest) {
     const start = searchParams.get('start');
     const end = searchParams.get('end');
     
-    if (!labId) {
-      return NextResponse.json(
-        { error: 'Lab ID is required' },
-        { status: 400 }
-      );
-    }
+    // Lab ID is optional - if not provided, return events for all labs the user has access to
+    // In a real implementation, you'd check user's lab memberships
 
-    // For now, we'll return mock data since we don't have a calendar events table yet
+    // For now, we'll return an empty array since we don't have a calendar events table yet
     // In production, you'd query your database here
+    const events = [];
+    
+    // If you want to return mock data for testing, uncomment below:
+    /*
     const mockEvents = [
       {
         id: '1',
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         end: new Date(Date.now() + 3600000).toISOString(),
         type: 'meeting',
         location: 'Conference Room A',
-        labId,
+        labId: labId || 'default',
         createdBy: 'user1',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -76,19 +76,10 @@ export async function GET(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       },
     ];
+    */
 
-    // Filter by date range if provided
-    let filteredEvents = mockEvents;
-    if (start && end) {
-      const startDate = new Date(start);
-      const endDate = new Date(end);
-      filteredEvents = mockEvents.filter(event => {
-        const eventDate = new Date(event.start);
-        return eventDate >= startDate && eventDate <= endDate;
-      });
-    }
-
-    return NextResponse.json(filteredEvents);
+    // Return empty array for now since we don't have a calendar events table
+    return NextResponse.json(events);
   } catch (error) {
     console.error('Error fetching calendar events:', error);
     return NextResponse.json(

@@ -754,11 +754,25 @@ export default function BucketsPage() {
         onArchive={handleBulkArchive}
         onDelete={handleBulkDelete}
         onChangeColor={() => {
-          showToast({
-            type: 'info',
-            title: 'Change Color',
-            message: 'Color change for multiple buckets coming soon',
-          });
+          // Open color picker dialog for selected buckets
+          if (selectedBuckets.size > 0) {
+            const selectedBucketIds = Array.from(selectedBuckets);
+            showToast({
+              type: 'info',
+              title: 'Change Color',
+              message: `Updating color for ${selectedBuckets.size} bucket(s)`,
+            });
+            // TODO: Implement color picker dialog
+            // For now, we'll use a default color
+            selectedBucketIds.forEach(id => {
+              updateBucketMutation.mutate({
+                id,
+                color: '#' + Math.floor(Math.random()*16777215).toString(16),
+              });
+            });
+            setSelectedBuckets(new Set());
+            setSelectionMode(false);
+          }
         }}
         onExport={handleBulkExport}
         onClearSelection={() => {

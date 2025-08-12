@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useLabStore } from '@/stores/lab-store';
 
 interface CalendarEvent {
   id: string;
@@ -29,10 +30,11 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEventModal, setShowEventModal] = useState(false);
+  const { currentLab } = useLabStore();
 
   useEffect(() => {
     fetchEvents();
-  }, [currentDate]);
+  }, [currentDate, currentLab]);
 
   const fetchEvents = async () => {
     try {
@@ -40,9 +42,17 @@ export default function CalendarPage() {
       const start = startOfMonth(currentDate);
       const end = endOfMonth(currentDate);
       
-      const response = await fetch(
-        `/api/calendar/events?start=${start.toISOString()}&end=${end.toISOString()}`
-      );
+      // Include labId if available
+      const params = new URLSearchParams({
+        start: start.toISOString(),
+        end: end.toISOString(),
+      });
+      
+      if (currentLab?.id) {
+        params.append('labId', currentLab.id);
+      }
+      
+      const response = await fetch(`/api/calendar/events?${params.toString()}`);
       
       if (!response.ok) throw new Error('Failed to fetch events');
       
@@ -84,9 +94,6 @@ export default function CalendarPage() {
 
   const handleAddEvent = () => {
     setShowEventModal(true);
-    toast.success('Event creation feature coming soon!');
-    // TODO: Implement event creation modal
-    setTimeout(() => setShowEventModal(false), 2000);
   };
 
   return (
